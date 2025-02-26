@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <declare-styleable name="RouteStrokeTextView" tools:ignore="ResourceName">
+        <attr name="strokeColor" format="color"/>
+        <attr name="strokeWidth" format="dimension"/>
+    </declare-styleable>
+    <declare-styleable name="FlightStatusItemView">
+        <attr name="ifcsv_title" format="string"/>
+        <attr name="ifcsv_content" format="string"/>
+    </declare-styleable>
+    <declare-styleable name="GduSpinner">
+        <attr name="optionArray" format="reference" />
+        <attr name="viewHeight" format="dimension" />
+    </declare-styleable>
+    <declare-styleable name="DoubleDragThumbSeekBar">
+        <attr name="ddt_oneThumb" format="reference" />
+        <attr name="ddt_twoThumb" format="reference" />
+        <attr name="ddt_basePbColor" format="color" />
+        <attr name="ddt_onePbColor" format="color" />
+        <attr name="ddt_twoPbColor" format="color" />
+    </declare-styleable>
+    <declare-styleable name="GduSeekBar">
+        <attr name="seekMin" format="integer" />
+        <attr name="seekMax"  format="integer"/>
+        <attr name="name"  format="reference"/>
+    </declare-styleable>
+    <declare-styleable name="CommonMenuLayout">
+        <attr name="cml_label" format="string"/>
+        <attr name="cml_show_line" format="boolean"/>
+    </declare-styleable>
+    <declare-styleable name="TextImageItemLayout">
+        <attr name="tii_text" format="string"/>
+        <attr name="tii_icon" format="reference"/>
+        <attr name="tii_show_line" format="boolean"/>
+        <attr name="tii_icon_width" format="dimension"/>
+        <attr name="tii_icon_height" format="dimension"/>
+    </declare-styleable>
+    <declare-styleable name="FPVRadarView">
+        <attr name="color_circle_inner_center" format="color"/>
+        <attr name="color_circle_inner_end" format="color"/>
+        <attr name="color_circle_outer" format="color"/>
+        <attr name="color_circle_border" format="color"/>
+        <attr name="width_circle_border" format="dimension"/>
+        <attr name="angle_text_size" format="dimension"/>
+        <attr name="top_text_size" format="dimension"/>
+        <attr name="obstacle_start_angle" format="float"/>
+        <attr name="obstacle_sweep_angle" format="float"/>
+        <attr name="color_center_arrow" format="color"/>
+        <attr name="color_return_point_bg" format="color"/>
+        <attr name="color_return_point_border" format="color"/>
+        <attr name="color_return_point_num" format="color"/>
+        <attr name="radius_obstacle_point" format="dimension"/>
+        <attr name="state_text_size" format="dimension"/>
+        <attr name="state_text_color" format="color"/>
+        <attr name="frv_return_text_size" format="dimension"/>
+    </declare-styleable>
+
+</resources>

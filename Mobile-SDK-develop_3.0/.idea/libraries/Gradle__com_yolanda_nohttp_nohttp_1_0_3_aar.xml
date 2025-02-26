@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Gradle: com.yolanda.nohttp:nohttp:1.0.3@aar" external-system-id="GRADLE">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/6e780510725c3f8f44e704d276780247/transformed/jetified-nohttp-1.0.3/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/6e780510725c3f8f44e704d276780247/transformed/jetified-nohttp-1.0.3/AndroidManifest.xml" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.yolanda.nohttp/nohttp/1.0.3/1de00aae7e0b24c47522383251c29fa952a1047/nohttp-1.0.3-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.yolanda.nohttp/nohttp/1.0.3/754ece7c6ac829857ff1e5b4130c5648d0fb9f80/nohttp-1.0.3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

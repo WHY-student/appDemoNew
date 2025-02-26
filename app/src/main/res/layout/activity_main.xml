@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="GDU Api Demo" />
+
+    <TextView
+        android:id="@+id/tv_connect_state"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:gravity="center"
+        android:text="飞行器未连接"
+        android:textSize="20sp"
+        android:textColor="@color/black"/>
+
+    <TextView
+        android:id="@+id/tv_gimbal_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="云台未连接"
+        android:textSize="20sp"
+        android:textColor="@color/black"/>
+
+
+    <Button
+        android:id="@+id/register_app_button"
+        android:text="注册连接"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:textSize="16sp"
+        android:layout_marginTop="10dp"/>
+
+    <Button
+        android:id="@+id/open_button"
+        android:text="demo测试"
+        android:enabled="false"
+        android:layout_width="match_parent"
+        android:textSize="16sp"
+        android:layout_height="80dp"/>
+
+    <Button
+        android:id="@+id/pairing_button"
+        android:text="对频"
+        android:enabled="false"
+        android:textSize="16sp"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"/>
+
+    <TextView
+        android:id="@+id/version_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btn_open"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="15dp"
+        android:text="@string/sdk_version"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="13sp" />
+
+
+    <TextView
+        android:id="@+id/tv_attention_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="13sp"
+        android:textColor="@color/color_c40000"
+        android:layout_marginTop="3dp"
+        android:text="注意事项："/>
+
+    <TextView
+        android:id="@+id/tv_attention"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="13sp"
+        android:layout_marginLeft="5dp"
+        android:textColor="@color/color_c40000"
+        android:text="1 遥控器开机时请拔掉充电线  \n2 MSDK demo和GDU Flight App 不可同时运行使用"/>
+</LinearLayout>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_ll_set_camera"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_EDF0F1">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <RelativeLayout
+            android:id="@+id/rl_parent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!--下层布局-->
+            <LinearLayout
+                android:id="@+id/camera_main_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingLeft="@dimen/dp_15"
+                android:paddingRight="@dimen/dp_15"
+                android:orientation="vertical">
+
+                <!-- 云台校飘 -->
+                <RelativeLayout
+                    android:id="@+id/rl_check_clound"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_40"
+                    android:visibility="visible">
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:text="@string/check_clound"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/sp_12" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/tv_check_clound"
+                        android:layout_width="@dimen/dp_120"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:background="@drawable/shape_solid_ffffff_stroke_f2f2f2"
+                        android:gravity="center"
+                        android:minHeight="@dimen/dp_26"
+                        android:text="@string/state_check_clound_travel"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/sp_11" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:layout_alignParentBottom="true"
+                        android:background="@color/color_4D999999" />
+                </RelativeLayout>
+
+                <include
+                    android:id="@+id/include_wheel_speed"
+                    layout="@layout/include_wheel_speed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <!-- 云台参数重置 -->
+                <RelativeLayout
+                    android:id="@+id/rl_reset_gimbal"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_40">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:background="@color/color_4D999999" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:text="@string/string_gimbal_reset_params_label"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/sp_12" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/tv_reset_gimbal"
+                        android:layout_width="@dimen/dp_120"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:background="@drawable/shape_solid_ffffff_stroke_f2f2f2"
+                        android:gravity="center"
+                        android:minHeight="@dimen/dp_26"
+                        android:text="@string/string_gimbal_reset_params_content"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/sp_11" />
+                </RelativeLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="@color/color_4D999999" />
+
+            </LinearLayout>
+
+        </RelativeLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+
+</RelativeLayout>
