@@ -6,12 +6,15 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.TextureView;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 
 import com.gdu.beans.WarnBean;
+import com.gdu.camera.SettingsDefinitions;
+import com.gdu.camera.StorageState;
 import com.gdu.common.error.GDUError;
 import com.gdu.config.ConnStateEnum;
 import com.gdu.config.GlobalVariable;
@@ -37,6 +40,8 @@ import com.gdu.drone.TargetMode;
 import com.gdu.gimbal.GimbalState;
 import com.gdu.radar.ObstaclePoint;
 import com.gdu.radar.PerceptionInformation;
+import com.gdu.sdk.camera.GDUCamera;
+import com.gdu.sdk.camera.SystemState;
 import com.gdu.sdk.camera.VideoFeeder;
 import com.gdu.sdk.codec.GDUCodecManager;
 import com.gdu.sdk.flightcontroller.GDUFlightController;
@@ -68,8 +73,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private PaintView paintView;
 
     private ourGDUVision gduVision;
+    private GDUCamera mGDUCamera;
 
     private Context mContext;
+    private int chacktimes=0;
+    private int chacktimes1=0;
+    private Button changeMode;
+    private Button changeFouse;
 
 
     @Override
@@ -169,15 +179,76 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         SettingDao settingDao = SettingDao.getSingle();
         boolean show = settingDao.getBooleanValue(settingDao.ZORRORLabel_Grid, false);
         showNineGridShow(show);
+        changeMode = findViewById(R.id.btn_mode_switch);
+        changeFouse = findViewById(R.id.btn_zoom);
 
         paintView = findViewById(R.id.paint_view);
     }
 
+    private void initCamera() {
+        mGDUCamera = (GDUCamera) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getCamera();
+        if (mGDUCamera != null) {
+            mGDUCamera.setSystemStateCallback(new SystemState.Callback() {
+                @Override
+                public void onUpdate(SystemState systemState) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(" isPhotoStored ");
+                    sb.append(systemState.isPhotoStored());
+                    sb.append(" hasError ");
+                    sb.append(systemState.isHasError());
+                    sb.append(" isRecording ");
+                    sb.append(systemState.isRecording());
+                    sb.append(" mode ");
+                    sb.append(systemState.getMode());
+                    sb.append(" time ");
+                    sb.append(systemState.getCurrentVideoRecordingTimeInSeconds());
+                    //show(mInfoTextView, sb.toString());
+                }
+            });
+            mGDUCamera.setStorageStateCallBack(new StorageState.Callback() {
+                @Override
+                public void onUpdate(StorageState state) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(" isFormatting ");
+                    sb.append(state.isFormatting());
+                    sb.append(" isFormatted ");
+                    sb.append(state.isFormatted());
+                    sb.append(" TotalSpace ");
+                    sb.append(state.getTotalSpace());
+                    sb.append(" RemainingSpace ");
+                    sb.append(state.getRemainingSpace());
+                    //show(mStorageInfoTextView, sb.toString());
+                }
+            });
+        }
+    }
 
     private void initData() {
         new MsgBoxManager(this, 1,this);
         VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(videoDataListener);
         initGduvision();
+        initCamera();
+        mGDUCamera.getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
+            @Override
+            public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
+                if(displayMode == SettingsDefinitions.DisplayMode.THERMAL_ONLY){
+                    changeMode.setText("切换为可见光");
+                }else{
+                    changeMode.setText("切换为红外");
+                }
+                if(displayMode==SettingsDefinitions.DisplayMode.ZL){
+                    changeFouse.setText("变焦");
+                }else{
+                    changeFouse.setText("广角");
+                }
+
+            }
+
+            @Override
+            public void onFailure(GDUError var1) {
+                toast("发送失败");
+            }
+        });
     }
 
     private void initGduvision(){
@@ -282,6 +353,14 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         if (codecManager != null) {
             codecManager.onPause();
         }
+//        if (v.getId() == R.id.iv_msgBoxLabel) {
+//            if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
+//                    || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
+//                return;
+//            }
+//            showMsgBoxPopWindow(msgData);
+//            viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
+//        }
     }
 
     @Override
@@ -334,13 +413,117 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.iv_msgBoxLabel) {
-            if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
-                    || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
-                return;
-            }
-            showMsgBoxPopWindow(msgData);
-            viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
+        switch (v.getId()){
+            case R.id.iv_msgBoxLabel:
+                if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
+                        || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
+                    return;
+                }
+                showMsgBoxPopWindow(msgData);
+                viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
+                break;
+            case R.id.btn_mode_switch:
+                try {
+//                    int width = mGduPlayView.getWidth();
+//                    int height = mGduPlayView.getHeight();
+//                    show(horizenDis, String.format("video width：%d", width));
+//                    show(vercalDis, String.format("video height：%d", height));
+
+                    chacktimes++;
+                    if (chacktimes % 2 == 0) {
+                        mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.THERMAL_ONLY, new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(GDUError error) {
+                                if (error == null) {
+//                                    initData();
+                                    toast("设置成红外");
+                                } else {
+                                    toast("发送失败");
+                                }
+                            }
+                        });
+                        changeMode.setText("切换为可见光");
+
+
+                    } else {
+                        mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.ZL, new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(GDUError error) {
+                                if (error == null) {
+//                                    initData();
+                                    toast("设置成可见光");
+                                } else {
+                                    toast("发送失败");
+                                }
+                            }
+                        });
+                        changeMode.setText("切换为红外");
+                    }
+                }
+                catch (Exception e){
+                    Toast.makeText(mContext, "changeMode Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+                break;
+            case R.id.btn_split_screen:
+                try {
+                    mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.PIP, new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(GDUError error) {
+                            if (error == null) {
+//                            initData();
+                                toast("设置成分屏");
+                            } else {
+                                toast("发送失败");
+                            }
+                        }
+                    });
+                }
+                catch (Exception e){
+                    Toast.makeText(mContext, "setPipView Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+                break;
+            case R.id.btn_zoom:
+                try {
+//                    int width = mGduPlayView.getWidth();
+//                    int height = mGduPlayView.getHeight();
+//                    show(horizenDis, String.format("video width：%d", width));
+//                    show(vercalDis, String.format("video height：%d", height));
+
+                    chacktimes1++;
+                    if (chacktimes1 % 2 == 0) {
+                        mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.ZL, new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(GDUError error) {
+                                if (error == null) {
+//                                    initData();
+                                    toast("设置成变焦");
+                                } else {
+                                    toast("发送失败");
+                                }
+                            }
+                        });
+                        changeFouse.setText("变焦");
+
+
+                    } else {
+                        mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.WAL, new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(GDUError error) {
+                                if (error == null) {
+//                                    initData();
+                                    toast("设置成广角");
+                                } else {
+                                    toast("发送失败");
+                                }
+                            }
+                        });
+                        changeFouse.setText("广角");
+                    }
+                }
+                catch (Exception e){
+                    Toast.makeText(mContext, "changeMode Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+                break;
         }
     }
 

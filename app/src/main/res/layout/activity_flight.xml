@@ -5,13 +5,14 @@
     android:keepScreenOn="true"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-
+    <!-- 背景图片 -->
     <androidx.appcompat.widget.AppCompatImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="fitXY"
         android:src="@drawable/bg_mutipod_shape" />
 
+    <!-- TextureView -->
     <TextureView
         android:id="@+id/texture_view"
         android:layout_width="match_parent"
@@ -24,17 +25,20 @@
         android:background="@android:color/transparent"
         />
 
+    <!-- 九宫格视图 -->
     <com.gdu.demo.widget.CustomJiuGongGeView
         android:id="@+id/night_grid_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"/>
 
+    <!-- 顶部状态栏 -->
     <com.gdu.demo.widget.TopStateView
         android:id="@+id/top_state_view"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         app:layout_constraintTop_toTopOf="parent"/>
+
     <!-- 消息盒子 -->
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/iv_msgBoxLabel"
@@ -47,6 +51,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- 消息数量 -->
     <com.noober.background.view.BLTextView
         android:id="@+id/tv_msgBoxNum"
         android:layout_width="@dimen/dp_10"
@@ -64,6 +69,7 @@
         app:layout_constraintRight_toRightOf="@id/iv_msgBoxLabel"
         app:layout_constraintTop_toTopOf="@id/iv_msgBoxLabel"/>
 
+    <!-- 飞行状态视图 -->
     <com.gdu.demo.widgetlist.flyState.FlyStateView
         android:id="@+id/fly_state"
         android:layout_width="wrap_content"
@@ -73,6 +79,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginBottom="10dp"/>
 
+    <!-- 雷达视图 -->
     <com.gdu.demo.widgetlist.radar.FPVRadarView
         android:id="@+id/fpv_rv"
         app:layout_constraintStart_toStartOf="parent"
@@ -87,5 +94,96 @@
         app:radius_obstacle_point="3dp"
         app:state_text_size="8sp"
         app:top_text_size="12sp"/>
+
+    <!-- 左侧竖排按钮 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="120dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- 一键返航按钮 -->
+        <Button
+            android:id="@+id/btn_take_off"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="一键起飞"
+            android:padding="8dp"
+            android:textColor="@color/white"
+            android:onClick="onClick"
+            android:layout_marginBottom="8dp"/>
+<!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
+
+        <!-- 一键起飞按钮 -->
+        <Button
+            android:id="@+id/btn_return_home"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="一键返航"
+            android:padding="8dp"
+            android:textColor="@color/white"
+            android:onClick="onClick"
+            android:layout_marginBottom="8dp"/>
+<!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
+
+
+        <!-- 一键降落按钮 -->
+        <Button
+            android:id="@+id/btn_land"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="一键降落"
+            android:padding="8dp"
+            android:textColor="@color/white"
+            android:onClick="onClick"
+            android:layout_marginBottom="8dp"/>
+<!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="24dp"
+        android:gravity="left"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+    <!-- 切换模态按钮 -->
+    <Button
+        android:id="@+id/btn_mode_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="切换模态"
+        android:padding="8dp"
+        android:textColor="@color/white"
+        android:onClick="onClick"
+        android:layout_marginEnd="8dp"/>
+
+    <!-- 分屏按钮 -->
+    <Button
+        android:id="@+id/btn_split_screen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="分屏"
+        android:padding="8dp"
+        android:textColor="@color/white"
+        android:onClick="onClick"
+        android:layout_marginEnd="8dp"/>
+
+    <!-- 变焦按钮 -->
+    <Button
+        android:id="@+id/btn_zoom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="变焦"
+        android:padding="8dp"
+        android:onClick="onClick"
+        android:textColor="@color/white"/>
+</LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
