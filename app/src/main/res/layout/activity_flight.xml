@@ -17,6 +17,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <com.gdu.demo.views.PaintView
+        android:id="@+id/paint_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        />
+
     <com.gdu.demo.widget.CustomJiuGongGeView
         android:id="@+id/night_grid_view"
         android:layout_width="match_parent"

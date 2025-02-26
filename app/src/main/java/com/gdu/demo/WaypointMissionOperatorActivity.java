@@ -32,6 +32,7 @@ import com.gdu.common.mission.waypoint.WaypointMissionFinishedAction;
 import com.gdu.common.mission.waypoint.WaypointMissionHeadingMode;
 import com.gdu.common.mission.waypoint.WaypointMissionState;
 import com.gdu.common.mission.waypoint.WaypointMissionUploadEvent;
+import com.gdu.demo.ourgdu.ourGDUAircraft;
 import com.gdu.drone.LocationCoordinate2D;
 import com.gdu.drone.LocationCoordinate3D;
 import com.gdu.rtk.PositioningSolution;
@@ -43,7 +44,7 @@ import com.gdu.sdk.flightcontroller.GDUFlightController;
 import com.gdu.sdk.mission.MissionControl;
 import com.gdu.sdk.mission.waypoint.WaypointMissionOperator;
 import com.gdu.sdk.mission.waypoint.WaypointMissionOperatorListener;
-import com.gdu.sdk.products.GDUAircraft;
+//import com.gdu.sdk.products.GDUAircraft;
 import com.gdu.sdk.simulator.InitializationData;
 import com.gdu.sdk.util.CommonCallbacks;
 
@@ -93,7 +94,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
         if (product == null || !product.isConnected()) {
             return;
         } else {
-            mGDUFlightController = ((GDUAircraft) product).getFlightController();
+            mGDUFlightController = ((ourGDUAircraft) product).getFlightController();
             mGDUFlightController.setStateCallback(new FlightControllerState.Callback() {
                 @Override
                 public void onUpdate(FlightControllerState flightControllerState) {
@@ -114,7 +115,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
             waypointMissionOperator = getWaypointMissionOperator();
             setUpListener();
 
-            mGDUCamera = (GDUCamera) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getCamera();
+            mGDUCamera = (GDUCamera) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getCamera();
 
         }
     }

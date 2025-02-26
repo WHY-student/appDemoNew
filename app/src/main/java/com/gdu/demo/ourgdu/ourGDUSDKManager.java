@@ -219,7 +219,7 @@ public class ourGDUSDKManager {
 
             @Override // com.gdu.socket.IGduSocket.OnConnectListener
             public void onDisConnect() {
-                Log.d("GDUSDKManager", "onDisConnect :" + ourGDUSDKManager.this.isDroneConnected);
+                Log.d("ourGDUSDKManager", "onDisConnect :" + ourGDUSDKManager.this.isDroneConnected);
                 if (ourGDUSDKManager.this.isDroneConnected) {
                     if (ourGDUSDKManager.this.mSDKManagerCallback != null) {
                         ourGDUSDKManager.this.mSDKManagerCallback.onProductDisconnect();

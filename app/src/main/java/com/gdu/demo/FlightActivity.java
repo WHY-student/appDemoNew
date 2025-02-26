@@ -1,5 +1,6 @@
 package com.gdu.demo;
 
+import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -21,14 +22,18 @@ import com.gdu.demo.flight.msgbox.MsgBoxManager;
 import com.gdu.demo.flight.msgbox.MsgBoxPopView;
 import com.gdu.demo.flight.msgbox.MsgBoxViewCallBack;
 import com.gdu.demo.flight.setting.fragment.SettingDialogFragment;
+import com.gdu.demo.ourgdu.ourGDUAircraft;
+import com.gdu.demo.ourgdu.ourGDUVision;
 import com.gdu.demo.utils.CommonDialog;
 import com.gdu.demo.utils.GisUtil;
 import com.gdu.demo.utils.LoadingDialogUtils;
 import com.gdu.demo.utils.SettingDao;
 import com.gdu.demo.utils.ToolManager;
+import com.gdu.demo.views.PaintView;
 import com.gdu.demo.widget.TopStateView;
 import com.gdu.drone.LocationCoordinate2D;
 import com.gdu.drone.LocationCoordinate3D;
+import com.gdu.drone.TargetMode;
 import com.gdu.gimbal.GimbalState;
 import com.gdu.radar.ObstaclePoint;
 import com.gdu.radar.PerceptionInformation;
@@ -36,9 +41,10 @@ import com.gdu.sdk.camera.VideoFeeder;
 import com.gdu.sdk.codec.GDUCodecManager;
 import com.gdu.sdk.flightcontroller.GDUFlightController;
 import com.gdu.sdk.gimbal.GDUGimbal;
-import com.gdu.sdk.products.GDUAircraft;
+//import com.gdu.sdk.products.GDUAircraft;
 import com.gdu.sdk.radar.GDURadar;
 import com.gdu.sdk.util.CommonCallbacks;
+import com.gdu.sdk.vision.OnTargetDetectListener;
 import com.gdu.socketmodel.GduSocketConfig3;
 import com.gdu.util.CollectionUtils;
 import com.gdu.util.StatusBarUtils;
@@ -59,6 +65,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private boolean showSuccess = false;
 
+    private PaintView paintView;
+
+    private ourGDUVision gduVision;
+
+    private Context mContext;
+
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +80,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         initView();
         initData();
         initListener();
+        mContext = this;
     }
 
     private void initListener() {
@@ -155,12 +169,64 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         SettingDao settingDao = SettingDao.getSingle();
         boolean show = settingDao.getBooleanValue(settingDao.ZORRORLabel_Grid, false);
         showNineGridShow(show);
+
+        paintView = findViewById(R.id.paint_view);
     }
 
 
     private void initData() {
         new MsgBoxManager(this, 1,this);
         VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(videoDataListener);
+        initGduvision();
+    }
+
+    private void initGduvision(){
+        gduVision =(ourGDUVision) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGduVision();
+        if (gduVision==null){
+            toast("gduVision出现异常");
+            return;
+        }
+        else{
+            try {
+                gduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
+                    //                    long startTime=System.currentTimeMillis();
+                    @Override
+                    public void onTargetDetecting(List<TargetMode> list) {
+                        if (list == null) {
+                            toast("没有检测物体");
+                        } else {
+
+                            paintView.setRectParams(list);
+                            //long endTime=System.currentTimeMillis();
+                            //long ver= endTime -startTime;
+                            //Log.d("delaytime","延长时间"+ver);
+
+                        }
+                    }
+
+                    @Override
+                    public void onTargetDetectFailed(int i) {
+                        toast("检测失败");
+
+                    }
+
+                    @Override
+                    public void onTargetDetectStart() {
+                        toast("检测开始");
+
+                    }
+
+                    @Override
+                    public void onTargetDetectFinished() {
+                        toast("检测结束");
+
+                    }
+                });
+            }
+            catch (Exception ignored){
+                toast("添加监视器错误");
+            }
+        }
     }
 
 
@@ -171,7 +237,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     public void beginCheckCloud() {
         showSuccess = false;
-        GDUGimbal mGDUGimbal = (GDUGimbal) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+        GDUGimbal mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
         if (mGDUGimbal == null) {
             return;
         }
@@ -325,6 +391,15 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 viewBinding.tvMsgBoxNum.setText("0");
                 viewBinding.tvMsgBoxNum.setVisibility(View.GONE);
 
+            }
+        });
+    }
+
+    public void toast(final String toast) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
             }
         });
     }

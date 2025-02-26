@@ -36,6 +36,7 @@ import com.gdu.common.mission.hotpoint.HotpointStartPoint;
 import com.gdu.common.mission.waypoint.Waypoint;
 import com.gdu.common.mission.waypoint.WaypointMission;
 import com.gdu.config.GlobalVariable;
+import com.gdu.demo.ourgdu.ourGDUAircraft;
 import com.gdu.drone.LocationCoordinate2D;
 import com.gdu.drone.LocationCoordinate3D;
 import com.gdu.flightcontroller.TapFlyState;
@@ -50,7 +51,7 @@ import com.gdu.sdk.mission.followme.FollowMeMissionOperator;
 import com.gdu.sdk.mission.followme.FollowMeMissionOperatorListener;
 import com.gdu.sdk.mission.hotpoint.HotpointMissionOperator;
 import com.gdu.sdk.mission.hotpoint.HotpointMissionOperatorListener;
-import com.gdu.sdk.products.GDUAircraft;
+//import com.gdu.sdk.products.GDUAircraft;
 import com.gdu.sdk.simulator.InitializationData;
 import com.gdu.sdk.util.CommonCallbacks;
 import com.gdu.util.logs.RonLog;
@@ -107,7 +108,7 @@ public class MissionOperatorActivity extends Activity implements LocationSource 
         if (product == null || !product.isConnected()) {
             return;
         } else {
-            mGDUFlightController = ((GDUAircraft) product).getFlightController();
+            mGDUFlightController = ((ourGDUAircraft) product).getFlightController();
             mGDUFlightController.setStateCallback(new FlightControllerState.Callback() {
                 @Override
                 public void onUpdate(FlightControllerState flightControllerState) {
@@ -142,7 +143,7 @@ public class MissionOperatorActivity extends Activity implements LocationSource 
             mFollowMeMissionOperator = getFollowMeMissionOperator();
             setUpListener();
 
-            mGDUCamera = (GDUCamera) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getCamera();
+            mGDUCamera = (GDUCamera) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getCamera();
 
         }
     }
