@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat;
 
 import com.gdu.api.gimbal.Gimbal;
 import com.gdu.common.error.GDUError;
+import com.gdu.demo.ourgdu.ourGDUSDKManager;
 import com.gdu.drone.DroneInfo;
 import com.gdu.drone.GimbalType;
 import com.gdu.sdk.airlink.GDUAirLink;
@@ -23,7 +24,7 @@ import com.gdu.sdk.base.BaseProduct;
 import com.gdu.sdk.camera.GDUCamera;
 import com.gdu.sdk.gimbal.GDUGimbal;
 import com.gdu.sdk.manager.GDUSDKInitEvent;
-import com.gdu.sdk.manager.GDUSDKManager;
+//import com.gdu.sdk.manager.GDUSDKManager;
 import com.gdu.sdk.remotecontroller.GDURemoteController;
 import com.gdu.sdk.util.CommonCallbacks;
 import com.gdu.util.logs.RonLog;
@@ -63,7 +64,7 @@ public class MainActivity extends Activity {
         tv_gimbal_type = findViewById(R.id.tv_gimbal_type);
         mOpenButton.setEnabled(true);
         ((TextView) findViewById(R.id.version_textview)).setText(getResources().getString(R.string.sdk_version,
-                GDUSDKManager.getInstance().getSDKVersion(mContext)));
+                ourGDUSDKManager.getInstance().getSDKVersion(mContext)));
     }
 
     private void initListener() {
@@ -112,11 +113,11 @@ public class MainActivity extends Activity {
     }
 
     private void startSDKRegistration(){
-        GDUSDKManager.getInstance().registerApp(mContext.getApplicationContext(), new GDUSDKManager.SDKManagerCallback() {
+        ourGDUSDKManager.getInstance().registerApp(mContext.getApplicationContext(), new ourGDUSDKManager.SDKManagerCallback() {
             @Override
             public void onRegister(GDUError error) {
                 if (error == GDUError.REGISTRATION_SUCCESS) {
-                    GDUSDKManager.getInstance().startConnectionToProduct();
+                    ourGDUSDKManager.getInstance().startConnectionToProduct();
                 }
             }
 
