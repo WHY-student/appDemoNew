@@ -1,12 +1,23 @@
 package com.gdu.demo;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.SurfaceTexture;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -33,7 +44,9 @@ import com.gdu.demo.utils.LoadingDialogUtils;
 import com.gdu.demo.utils.SettingDao;
 import com.gdu.demo.utils.ToolManager;
 import com.gdu.demo.views.PaintView;
+import com.gdu.demo.widget.GduSeekBar;
 import com.gdu.demo.widget.TopStateView;
+import com.gdu.demo.widget.focalGduSeekBar;
 import com.gdu.drone.LocationCoordinate2D;
 import com.gdu.drone.LocationCoordinate3D;
 import com.gdu.drone.TargetMode;
@@ -52,6 +65,10 @@ import com.gdu.sdk.gimbal.GDUGimbal;
 import com.gdu.sdk.radar.GDURadar;
 import com.gdu.sdk.util.CommonCallbacks;
 import com.gdu.sdk.vision.OnTargetDetectListener;
+import com.gdu.socket.GduCommunication3;
+import com.gdu.socket.GduFrame3;
+import com.gdu.socket.GduSocketManager;
+import com.gdu.socket.SocketCallBack3;
 import com.gdu.socketmodel.GduSocketConfig3;
 import com.gdu.util.CollectionUtils;
 import com.gdu.util.StatusBarUtils;
@@ -79,13 +96,28 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private PaintView paintView;
     private Context mContext;
 
-    private int chacktimes=0;
+    private int chacktimes=1;
     private int chacktimes1=0;
     private Button changeMode;
     private Button changeFouse;
-    private Button changeGimbalRotate;
+//    private Button changeGimbalRotate;
 
-    private boolean isDown = false;
+    private Button startAIRecognize;
+
+    private Button quitAIRecognize;
+
+    private TextView aiState;
+
+    private Boolean isAIStart;
+
+    private focalGduSeekBar zoomSeekBar;
+
+    private GduCommunication3 mGduCommunication3;
+
+    private Handler mHandler = new Handler(Looper.getMainLooper());
+
+    private Boolean isPaused = false;
+
 
 
 
@@ -154,6 +186,27 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw));
             });
         }
+        new Thread(() -> {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    while(true){
+                        if (!isPaused) {
+                            mHandler.postDelayed(this, 1000);
+
+                            int currentProgress = (int)((GlobalVariable.sCurrentCameraZoom-1.0f) / 159.0f * 100.0f);
+//                        int currentProgress = zoomSeekBar.getProgress();
+//                        if (currentProgress < zoomSeekBar.getMax()) {
+                            toast(String.valueOf(currentProgress));
+                            zoomSeekBar.setProgress(currentProgress);
+//                        }
+                        }
+
+                    }
+                }
+            });
+        }).start();
+
     }
 
 
@@ -191,7 +244,21 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
         paintView = findViewById(R.id.paint_view);
 //        设定云台角度，如果云台角度不为0，则置为回正，否则显示向下
-        changeGimbalRotate = findViewById(R.id.button_gimbal_rotate);
+//        changeGimbalRotate = findViewById(R.id.button_gimbal_rotate);
+
+        startAIRecognize = findViewById(R.id.button_ai);
+
+
+        quitAIRecognize = findViewById(R.id.button_quit_ai);
+        quitAIRecognize.setEnabled(false);
+
+        aiState = findViewById(R.id.ai_state);
+
+        isAIStart = false;
+
+
+        zoomSeekBar = findViewById(R.id.zoomSeekBar);
+
 
     }
 
@@ -260,6 +327,51 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 toast("发送失败");
             }
         });
+
+        mGduCommunication3 = GduSocketManager.getInstance().getGduCommunication();
+
+
+        // 假设最小倍数 1.0x，最大倍数 5.0x
+        final float minZoom = 1.0f;
+        final float maxZoom = 160.0f;
+
+        zoomSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // 计算当前倍数
+                float zoomFactor = minZoom + (progress / 100f) * (maxZoom - minZoom);
+                String text = String.format("%.1fx", zoomFactor);
+
+                // 创建新的 Thumb 并设置
+                Drawable thumbDrawable = createThumbDrawable(FlightActivity.this, text);
+                seekBar.setThumb(thumbDrawable);
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isPaused = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                float zoomFactor = minZoom + (seekBar.getProgress() / 100f) * (maxZoom - minZoom);
+                int focal_length = (int) (zoomFactor * 10f);
+                isPaused = false;
+
+                mGduCommunication3.zoomCustomSizeRatio((short)focal_length, new SocketCallBack3() {
+                    public void callBack(int code, GduFrame3 bean) {
+                        if(code==0){
+                            toast("设定焦距为:"+focal_length);
+                        }
+                        else {
+                            toast("设定失败");
+                        }
+                    }
+                });
+            }
+        });
+
     }
 
     private void initGduvision(){
@@ -277,7 +389,12 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         if (list == null) {
                             toast("没有检测物体");
                         } else {
-
+                            if(!isAIStart){
+                                startAIRecognize.setEnabled(false);
+                                quitAIRecognize.setEnabled(true);
+                                isAIStart = true;
+                                show(aiState, "AI状态：未增量");
+                            }
                             paintView.setRectParams(list);
                             //long endTime=System.currentTimeMillis();
                             //long ver= endTime -startTime;
@@ -434,11 +551,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 break;
             case R.id.btn_mode_switch:
                 try {
-//                    int width = mGduPlayView.getWidth();
-//                    int height = mGduPlayView.getHeight();
-//                    show(horizenDis, String.format("video width：%d", width));
-//                    show(vercalDis, String.format("video height：%d", height));
-
                     chacktimes++;
                     if (chacktimes % 2 == 0) {
                         mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.THERMAL_ONLY, new CommonCallbacks.CompletionCallback() {
@@ -494,11 +606,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 break;
             case R.id.btn_zoom:
                 try {
-//                    int width = mGduPlayView.getWidth();
-//                    int height = mGduPlayView.getHeight();
-//                    show(horizenDis, String.format("video width：%d", width));
-//                    show(vercalDis, String.format("video height：%d", height));
-
                     chacktimes1++;
                     if (chacktimes1 % 2 == 0) {
                         mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.ZL, new CommonCallbacks.CompletionCallback() {
@@ -535,37 +642,99 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 }
                 break;
             case R.id.button_gimbal_rotate:  //TODO 俯仰，方位会变
-                if(isDown){
-                    mGDUGimbal.reset(new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(GDUError error) {
-                            if (error == null) {
-                                toast("云台回正");
-                            } else {
-                                toast("发送失败");
-                            }
+                Log.d("demo","开始向下");
+                Rotation rotation = new Rotation();
+                rotation.setMode(RotationMode.ABSOLUTE_ANGLE);
+                rotation.setPitch(-90);
+                //                rotation.set
+                mGDUGimbal.rotate(rotation, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(GDUError error) {
+                        if (error == null) {
+                            toast("云台向下");
+                        } else {
+                            toast("发送失败");
                         }
-                    });
-                    changeGimbalRotate.setText("云台向下");
-                }
-                else{
-                    Rotation rotation = new Rotation();
-                    rotation.setMode(RotationMode.ABSOLUTE_ANGLE);
-                    rotation.setPitch(-90);
-                    //                rotation.set
-                    mGDUGimbal.rotate(rotation, new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(GDUError error) {
-                            if (error == null) {
-                                toast("云台向下");
-                            } else {
-                                toast("发送失败");
-                            }
-                        }
-                    });
-                    changeGimbalRotate.setText("云台回正");
+                    }
+                });
+                break;
 
-                }
+            case R.id.button_gimbal_reset:
+                Log.d("demo","开始回正");
+                mGDUGimbal.reset(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(GDUError error) {
+                        if (error == null) {
+                            toast("云台回正");
+                        } else {
+                            toast("发送失败");
+                        }
+                    }
+                });
+                break;
+
+            case R.id.button_ai:
+                gduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
+                    @Override
+                    public void onTargetDetecting(List<TargetMode> list) {
+                        if (list == null) {
+                            toast("没有检测物体");
+                        } else {
+                            if(!isAIStart){
+                                startAIRecognize.setEnabled(false);
+                                quitAIRecognize.setEnabled(true);
+                                isAIStart = true;
+                            }
+
+                            paintView.setRectParams(list);
+                        }
+                    }
+
+                    @Override
+                    public void onTargetDetectFailed(int i) {
+                        toast("检测失败");
+
+                    }
+
+                    @Override
+                    public void onTargetDetectStart() {
+                        toast("检测开始");
+
+                    }
+
+                    @Override
+                    public void onTargetDetectFinished() {
+                        toast("检测结束");
+
+                    }
+                });
+                startAIRecognize.setEnabled(false);
+                quitAIRecognize.setEnabled(true);
+                show(aiState, "AI状态：未增量");
+                break;
+            case R.id.button_quit_ai:
+                gduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
+                    //                    long startTime=System.currentTimeMillis();
+                    @Override
+                    public void onTargetDetecting(List<TargetMode> list) {
+                    }
+
+                    @Override
+                    public void onTargetDetectFailed(int i) {
+                    }
+
+                    @Override
+                    public void onTargetDetectStart() {
+                    }
+
+                    @Override
+                    public void onTargetDetectFinished() {
+                    }
+                });
+                startAIRecognize.setEnabled(true);
+                quitAIRecognize.setEnabled(false);
+                show(aiState, "");
+                isAIStart = false;
                 break;
         }
     }
@@ -629,4 +798,69 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             }
         });
     }
+
+    public void show(TextView textView, final String toast) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(toast);
+//                Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    //    添加滑动按钮，设置滑动变焦功能
+    private Drawable createThumbDrawable(Context context, String text) {
+        // Thumb 的直径，可根据需要调大或调小
+        int size = dp2px(context, 48);
+
+        // 创建一个空白位图
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        // 1. 先绘制蓝色圆形背景
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(Color.BLUE);
+        float radius = size / 2f;
+        canvas.drawCircle(radius, radius, radius, paint);
+
+        // 2. 绘制白色文字
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(sp2px(context, 14)); // 字体大小，可自行调节
+        paint.setTextAlign(Paint.Align.CENTER);
+
+        // 计算文字垂直居中的基线
+        Paint.FontMetrics fontMetrics = paint.getFontMetrics();
+        float baseline = radius;
+
+
+        // 步骤3：旋转坐标系
+        canvas.rotate(90);
+        // 在圆心位置绘制文字
+        canvas.drawText(text, baseline, -radius - (fontMetrics.descent + fontMetrics.ascent) / 2, paint);
+
+//        canvas.restore();
+
+        // 3. 用生成的 Bitmap 创建 Drawable
+        return new BitmapDrawable(context.getResources(), bitmap);
+    }
+
+    /**
+     * dp 转 px 工具方法
+     */
+    private int dp2px(Context context, float dpValue) {
+        float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (dpValue * scale + 0.5f);
+    }
+
+    /**
+     * sp 转 px 工具方法
+     */
+    private int sp2px(Context context, float spValue) {
+        float scale = context.getResources().getDisplayMetrics().scaledDensity;
+        return (int) (spValue * scale + 0.5f);
+    }
+
 }
+
+

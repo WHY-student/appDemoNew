@@ -94,22 +94,13 @@
         app:state_text_size="8sp"
         app:top_text_size="12sp"/>
 
-    <Button
-        android:id="@+id/button_gimbal_rotate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="云台向下"
-        tools:layout_editor_absoluteX="787dp"
-        tools:layout_editor_absoluteY="476dp"
-        tools:ignore="MissingConstraints" />
-
     <!-- 左侧竖排按钮 -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="120dp"
+        android:layout_marginTop="200dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -120,7 +111,7 @@
             android:layout_height="wrap_content"
             android:text="一键起飞"
             android:padding="8dp"
-            android:textColor="@color/white"
+            android:textColor="@color/black"
             android:onClick="onClick"
             android:layout_marginBottom="8dp"/>
 <!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
@@ -130,11 +121,11 @@
             android:id="@+id/btn_return_home"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="一键返航"
-            android:padding="8dp"
-            android:textColor="@color/white"
+            android:layout_marginBottom="8dp"
             android:onClick="onClick"
-            android:layout_marginBottom="8dp"/>
+            android:padding="8dp"
+            android:text="一键返航"
+            android:textColor="@color/black" />
 <!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
 
 
@@ -145,7 +136,7 @@
             android:layout_height="wrap_content"
             android:text="一键降落"
             android:padding="8dp"
-            android:textColor="@color/white"
+            android:textColor="@color/black"
             android:onClick="onClick"
             android:layout_marginBottom="8dp"/>
 <!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
@@ -166,32 +157,126 @@
             android:id="@+id/btn_mode_switch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="切换模态"
-            android:padding="8dp"
-            android:textColor="@color/white"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:onClick="onClick"
-            android:layout_marginEnd="8dp"/>
+            android:padding="8dp"
+            android:text="切换模态"
+            android:textColor="@color/black" />
 
         <!-- 分屏按钮 -->
         <Button
             android:id="@+id/btn_split_screen"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="分屏"
-            android:padding="8dp"
-            android:textColor="@color/white"
+            android:layout_marginEnd="8dp"
             android:onClick="onClick"
-            android:layout_marginEnd="8dp"/>
+            android:padding="8dp"
+            android:text="分屏"
+            android:textColor="@color/black" />
 
         <!-- 变焦按钮 -->
         <Button
             android:id="@+id/btn_zoom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="变焦"
-            android:padding="8dp"
             android:onClick="onClick"
-            android:textColor="@color/white"/>
+            android:padding="8dp"
+            android:text="变焦"
+            android:textColor="@color/black" />
+
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="24dp"
+        android:gravity="right"
+        android:paddingRight="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <Button
+            android:id="@+id/button_gimbal_rotate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:onClick="onClick"
+            android:text="云台向下" />
+
+        <Button
+            android:id="@+id/button_gimbal_reset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:text="云台回正" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="51dp"
+        android:gravity="left"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <Button
+            android:id="@+id/button_ai"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="70dp"
+            android:layout_marginEnd="8dp"
+            android:onClick="onClick"
+            android:text="AI识别" />
+
+        <Button
+            android:id="@+id/button_quit_ai"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:onClick="onClick"
+            android:text="退出识别" />
+
+        <TextView
+            android:id="@+id/ai_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="20sp"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="50dp"
+        android:layout_height="400dp"
+        android:orientation="vertical"
+        android:layout_marginRight="50dp"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.gdu.demo.widget.focalGduSeekBar
+            android:id="@+id/zoomSeekBar"
+            android:layout_width="400dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:max="100"
+            android:progress="0"
+            android:splitTrack="false"
+            android:rotation="-90"
+            />
+
+    </LinearLayout>
+
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

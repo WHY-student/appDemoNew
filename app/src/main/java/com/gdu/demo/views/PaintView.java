@@ -166,9 +166,9 @@ public class PaintView extends AppCompatImageView {
 //            int maxX = (int)((detection.getLeftX() + detection.getWidth()) / 1.5);
 //            int maxY = (int)((detection.getLeftY() + detection.getHeight()) / 1.5 * 1152.0 / 1080.0);
             int x = (int)(detection.getLeftX());
-            int y = (int)(detection.getLeftY() * 1152.0 / 1080.0);
+            int y = (int)(detection.getLeftY() * 1200.0 / 1080.0);
             int maxX = (int)((detection.getLeftX() + detection.getWidth()));
-            int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1152.0 / 1080.0);
+            int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0);
             String label = null;
             if (label == null) {
                 int labelindex = detection.getFlawType();
@@ -180,7 +180,7 @@ public class PaintView extends AppCompatImageView {
                     label = class_label.get(labelindex);
                 }
             }
-            if (x >= 0 && y >= 0 && maxX < 1920 && maxY < 1152) {
+            if (x >= 0 && y >= 0 && maxX <= 1920 && maxY <= 1200) {
                 canvas.drawRect(new Rect(x, y, maxX, maxY), paint); // 绘制矩形
                 canvas.drawText(label, x, y - 5, paint2); // 绘制文本
             }
