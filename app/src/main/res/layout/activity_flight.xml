@@ -101,7 +101,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="120dp"
+        android:layout_marginTop="180dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -111,36 +111,25 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="一键起飞"
-            android:padding="8dp"
-            android:textColor="@color/white"
+            android:padding="16dp"
+            android:textColor="@color/black"
             android:onClick="onClick"
             android:layout_marginBottom="8dp"/>
 <!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
 
-        <!-- 一键起飞按钮 -->
+        <!-- 一键返航按钮 -->
         <Button
             android:id="@+id/btn_return_home"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="一键返航"
-            android:padding="8dp"
-            android:textColor="@color/white"
+            android:textColor="@color/btn_return_home_text_color"
+            android:background="@drawable/btn_return_home_background"
             android:onClick="onClick"
             android:layout_marginBottom="8dp"/>
-<!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
 
 
-        <!-- 一键降落按钮 -->
-        <Button
-            android:id="@+id/btn_land"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="一键降落"
-            android:padding="8dp"
-            android:textColor="@color/white"
-            android:onClick="onClick"
-            android:layout_marginBottom="8dp"/>
-<!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
+
 
     </LinearLayout>
     <LinearLayout
@@ -160,7 +149,7 @@
         android:layout_height="wrap_content"
         android:text="切换模态"
         android:padding="8dp"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:onClick="onClick"
         android:layout_marginEnd="8dp"/>
 
@@ -171,7 +160,7 @@
         android:layout_height="wrap_content"
         android:text="分屏"
         android:padding="8dp"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:onClick="onClick"
         android:layout_marginEnd="8dp"/>
 
@@ -183,7 +172,7 @@
         android:text="变焦"
         android:padding="8dp"
         android:onClick="onClick"
-        android:textColor="@color/white"/>
+        android:textColor="@color/black"/>
 </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
