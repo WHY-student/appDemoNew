@@ -10,6 +10,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
@@ -191,26 +192,35 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw));
             });
         }
-        new Thread(() -> {
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    while(true){
-                        if (!isPaused) {
-                            mHandler.postDelayed(this, 1000);
-
-                            int currentProgress = (int)((GlobalVariable.sCurrentCameraZoom-1.0f) / 159.0f * 100.0f);
-//                        int currentProgress = zoomSeekBar.getProgress();
-//                        if (currentProgress < zoomSeekBar.getMax()) {
-                            toast(String.valueOf(currentProgress));
-                            zoomSeekBar.setProgress(currentProgress);
-//                        }
-                        }
-
-                    }
+        HandlerThread backgroundThread = new HandlerThread("BackgroundThread");
+        backgroundThread.start();
+        Handler backgroundHandler = new Handler(backgroundThread.getLooper());
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                // 在后台线程中执行任务
+                try {
+                    Thread.sleep(1000); // 模拟耗时操作
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            });
-        }).start();
+
+                // 通过主线程的 Handler 调用 invalidate()
+                //long startTime = System.currentTimeMillis();
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(!isPaused){
+//                            toast(GlobalVariable.sCurrentCameraZoom+"");
+                            int currentProgress = (int)((GlobalVariable.sCurrentCameraZoom-1.0f)*10);
+                            zoomSeekBar.setProgress(currentProgress);
+                        }
+                    }
+
+                });
+                backgroundHandler.post(this);
+            }
+        });
 
     }
 
@@ -364,11 +374,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         final float minZoom = 1.0f;
         final float maxZoom = 160.0f;
 
+        String text = String.format("%.1fx", 1.0);
+
+        // 创建新的 Thumb 并设置
+        Drawable thumbDrawable = createThumbDrawable(FlightActivity.this, text);
+        zoomSeekBar.setThumb(thumbDrawable);
+
         zoomSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 // 计算当前倍数
-                float zoomFactor = minZoom + (progress / 100f) * (maxZoom - minZoom);
+                float zoomFactor = minZoom + (progress / 10f);
                 String text = String.format("%.1fx", zoomFactor);
 
                 // 创建新的 Thumb 并设置
@@ -384,8 +400,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                float zoomFactor = minZoom + (seekBar.getProgress() / 100f) * (maxZoom - minZoom);
-                int focal_length = (int) (zoomFactor * 10f);
+                int focal_length = 10+seekBar.getProgress();
                 isPaused = false;
 
                 mGduCommunication3.zoomCustomSizeRatio((short)focal_length, new SocketCallBack3() {
@@ -936,9 +951,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
         // 1. 先绘制蓝色圆形背景
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.BLUE);
+        paint.setColor(Color.argb(128, 0, 191, 255));
         float radius = size / 2f;
-        canvas.drawCircle(radius, radius, radius, paint);
+        canvas.drawRect(10, 0, size-10, size, paint);
 
         // 2. 绘制白色文字
         paint.setColor(Color.WHITE);
