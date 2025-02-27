@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:keepScreenOn="true"
@@ -22,7 +23,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
-        />
+        tools:layout_editor_absoluteX="1dp"
+        tools:layout_editor_absoluteY="0dp" />
 
     <com.gdu.demo.widget.CustomJiuGongGeView
         android:id="@+id/night_grid_view"
@@ -87,5 +89,13 @@
         app:radius_obstacle_point="3dp"
         app:state_text_size="8sp"
         app:top_text_size="12sp"/>
+
+    <Button
+        android:id="@+id/button_gimbal_rotate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="云台向下"
+        tools:layout_editor_absoluteX="787dp"
+        tools:layout_editor_absoluteY="476dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,12 +6,14 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.TextureView;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 
 import com.gdu.beans.WarnBean;
+import com.gdu.camera.SettingsDefinitions;
 import com.gdu.common.error.GDUError;
 import com.gdu.config.ConnStateEnum;
 import com.gdu.config.GlobalVariable;
@@ -35,6 +37,8 @@ import com.gdu.drone.LocationCoordinate2D;
 import com.gdu.drone.LocationCoordinate3D;
 import com.gdu.drone.TargetMode;
 import com.gdu.gimbal.GimbalState;
+import com.gdu.gimbal.Rotation;
+import com.gdu.gimbal.RotationMode;
 import com.gdu.radar.ObstaclePoint;
 import com.gdu.radar.PerceptionInformation;
 import com.gdu.sdk.camera.VideoFeeder;
@@ -65,11 +69,14 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private boolean showSuccess = false;
 
-    private PaintView paintView;
-
     private ourGDUVision gduVision;
-
+    private GDUGimbal mGDUGimbal;
+    private PaintView paintView;
     private Context mContext;
+
+    private boolean isDown = false;
+
+    private Button changeGimbalRotate;
 
 
     @Override
@@ -171,12 +178,16 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         showNineGridShow(show);
 
         paintView = findViewById(R.id.paint_view);
+//        设定云台角度，如果云台角度不为0，则置为回正，否则显示向下
+        changeGimbalRotate = findViewById(R.id.button_gimbal_rotate);
+
     }
 
 
     private void initData() {
         new MsgBoxManager(this, 1,this);
         VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(videoDataListener);
+        initGimbal();
         initGduvision();
     }
 
@@ -229,6 +240,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
     }
 
+    private void initGimbal() {
+        mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+        if (mGDUGimbal == null) {
+            toast("云台未识别，相关功能可能出现异常");
+            return;
+        }
+    }
 
     public void showNineGridShow(boolean show) {
         viewBinding.nightGridView.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -334,14 +352,50 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.iv_msgBoxLabel) {
-            if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
-                    || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
-                return;
-            }
-            showMsgBoxPopWindow(msgData);
-            viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
+        switch (v.getId()){
+            case R.id.iv_msgBoxLabel:
+                if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
+                        || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
+                    return;
+                }
+                showMsgBoxPopWindow(msgData);
+                viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
+
+            case R.id.button_gimbal_rotate:  //TODO 俯仰，方位会变
+                if(isDown){
+                    mGDUGimbal.reset(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(GDUError error) {
+                            if (error == null) {
+                                toast("云台回正");
+                            } else {
+                                toast("发送失败");
+                            }
+                        }
+                    });
+                    changeGimbalRotate.setText("云台向下");
+                }
+                else{
+                    Rotation rotation = new Rotation();
+                    rotation.setMode(RotationMode.ABSOLUTE_ANGLE);
+                    rotation.setPitch(-90);
+                    //                rotation.set
+                    mGDUGimbal.rotate(rotation, new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(GDUError error) {
+                            if (error == null) {
+                                toast("云台向下");
+                            } else {
+                                toast("发送失败");
+                            }
+                        }
+                    });
+                    changeGimbalRotate.setText("云台回正");
+
+                }
+                break;
         }
+
     }
 
     @Override

@@ -340,7 +340,7 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
                 });
                 break;
             case R.id.btn_set_digital_zoom:
-                mGDUCamera.setDigitalZoomFactor(1, new CommonCallbacks.CompletionCallback() {
+                mGDUCamera.setDigitalZoomFactor(3, new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(GDUError error) {
                         if (error == null) {
@@ -379,7 +379,7 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
             case R.id.btn_rotate:  //TODO 俯仰，方位会变
                 Rotation rotation = new Rotation();
                 rotation.setMode(RotationMode.ABSOLUTE_ANGLE);
-                rotation.setPitch(90);
+                rotation.setPitch(-90);
 //                rotation.set
                 mGDUGimbal.rotate(rotation, new CommonCallbacks.CompletionCallback() {
                     @Override
