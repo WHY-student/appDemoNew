@@ -90,8 +90,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private boolean showSuccess = false;
 
-    private PaintView paintView;
-
     private ourGDUVision gduVision;
     private GDUCamera mGDUCamera;
     private GDUFlightController mGDUFlightController;
