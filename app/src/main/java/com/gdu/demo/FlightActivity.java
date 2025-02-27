@@ -263,16 +263,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 flightState = flightControllerState.getFlightState();
                 if (flightState == FlightState.BACKING) {
                     flyState.setText("开始起飞");
-                } else if (flightState == FlightState.FLING) {
-                    flyState.setText("一键降落");
                 } else if (flightState == FlightState.LANDING) {
                     flyState.setText("取消降落");
-                }
-                if(flightState == FlightState.FLING||flightState == FlightState.BACKING){
-                    backState.setEnabled(true);
                 }else{
+                    flyState.setText("一键降落");
+                }
+                if(flightState == FlightState.GROUND){
                     backState.setEnabled(false);
                     backState.setAlpha(0.5f);
+                }
+                else{
+                    backState.setEnabled(true);
                 }
 
             });
@@ -609,7 +610,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 if (mGDUFlightController != null) {
                     mGDUFlightController.setStateCallback(flightControllerState -> {
                         flightState = flightControllerState.getFlightState();
-                        if (flightState == FlightState.FLING) {
+                        if (flightState != FlightState.GROUND||flightState!=FlightState.BACKING) {
                             mGDUFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
                                 @Override
                                 public void onResult(GDUError var1) {
@@ -621,7 +622,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                 }
                             });
                             backState.setText("取消返航");
-                        } else if (flightState == FlightState.LANDING) {
+                        } else if (flightState == FlightState.BACKING) {
                             mGDUFlightController.cancelGoHome(new CommonCallbacks.CompletionCallback() {
                                 @Override
                                 public void onResult(GDUError var1) {
