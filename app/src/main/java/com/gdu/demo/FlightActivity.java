@@ -59,6 +59,7 @@ import com.gdu.sdk.camera.GDUCamera;
 import com.gdu.sdk.camera.SystemState;
 import com.gdu.sdk.camera.VideoFeeder;
 import com.gdu.sdk.codec.GDUCodecManager;
+import com.gdu.sdk.flightcontroller.FlightState;
 import com.gdu.sdk.flightcontroller.GDUFlightController;
 import com.gdu.sdk.gimbal.GDUGimbal;
 //import com.gdu.sdk.products.GDUAircraft;
@@ -89,8 +90,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private boolean showSuccess = false;
 
+    private PaintView paintView;
+
     private ourGDUVision gduVision;
     private GDUCamera mGDUCamera;
+    private GDUFlightController mGDUFlightController;
 
     private GDUGimbal mGDUGimbal;
     private PaintView paintView;
@@ -98,8 +102,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private int chacktimes=1;
     private int chacktimes1=0;
+    private FlightState flightState;
     private Button changeMode;
     private Button changeFouse;
+    private Button flyState;
+    private Button backState;
 //    private Button changeGimbalRotate;
 
     private Button startAIRecognize;
@@ -241,6 +248,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         showNineGridShow(show);
         changeMode = findViewById(R.id.btn_mode_switch);
         changeFouse = findViewById(R.id.btn_zoom);
+        flyState=findViewById(R.id.btn_take_off);
+        backState=findViewById(R.id.btn_return_home);
 
         paintView = findViewById(R.id.paint_view);
 //        设定云台角度，如果云台角度不为0，则置为回正，否则显示向下
@@ -260,6 +269,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         zoomSeekBar = findViewById(R.id.zoomSeekBar);
 
 
+        backState.setEnabled(false);
     }
 
     private void initCamera() {
@@ -327,6 +337,27 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 toast("发送失败");
             }
         });
+        GDUFlightController mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
+        if (mGDUFlightController != null) {
+            mGDUFlightController.setStateCallback(flightControllerState -> {
+                flightState = flightControllerState.getFlightState();
+                if (flightState == FlightState.BACKING) {
+                    flyState.setText("开始起飞");
+                } else if (flightState == FlightState.LANDING) {
+                    flyState.setText("取消降落");
+                }else{
+                    flyState.setText("一键降落");
+                }
+                if(flightState == FlightState.GROUND){
+                    backState.setEnabled(false);
+                    backState.setAlpha(0.5f);
+                }
+                else{
+                    backState.setEnabled(true);
+                }
+
+            });
+        }
 
         mGduCommunication3 = GduSocketManager.getInstance().getGduCommunication();
 
@@ -564,7 +595,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                 }
                             }
                         });
-                        changeMode.setText("切换为可见光");
+                        changeMode.setText("可见光");
 
 
                     } else {
@@ -573,13 +604,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                             public void onResult(GDUError error) {
                                 if (error == null) {
 //                                    initData();
-                                    toast("设置成可见光");
+                                    toast("可见光");
                                 } else {
                                     toast("发送失败");
                                 }
                             }
                         });
-                        changeMode.setText("切换为红外");
+                        changeMode.setText("红外");
                     }
                 }
                 catch (Exception e){
@@ -639,6 +670,93 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 }
                 catch (Exception e){
                     Toast.makeText(mContext, "changeMode Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+                break;
+            case R.id.btn_take_off:
+                GDUFlightController mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
+                if (mGDUFlightController != null) {
+                    mGDUFlightController.setStateCallback(flightControllerState -> {
+                        flightState = flightControllerState.getFlightState();
+                        if (flightState == FlightState.GROUND) {
+                            //起飞高度设置成1.5米
+                            flyState.setText("开始起飞");
+                            mGDUFlightController.startTakeoff(150, new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(GDUError var1) {
+                                    if (var1 == null) {
+                                        toast("起飞成功");
+                                        flyState.setText("开始降落");
+                                    } else {
+                                        toast("起飞失败");
+                                        flyState.setText("开始起飞");
+                                    }
+                                }
+                            });
+                        } else if (flightState == FlightState.FLING||flightState==FlightState.HOVERING||flightState==FlightState.BACKING) {
+                            flyState.setText("开始降落");
+                            mGDUFlightController.startLanding(new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(GDUError var1) {
+                                    if (var1 == null) {
+                                        toast("开始降落成功");
+                                        flyState.setText("取消降落");
+                                    } else {
+                                        toast("开始降落失败");
+                                        flyState.setText("开始降落");
+                                    }
+                                }
+                            });
+                        } else if (flightState == FlightState.LANDING) {
+                            mGDUFlightController.cancelLanding(new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(GDUError var1) {
+                                    if (var1 == null) {
+                                        toast("取消降落成功");
+                                    } else {
+                                        toast("取消降落失败");
+                                    }
+                                }
+                            });
+                            flyState.setText("开始降落");
+
+
+                        }
+                    });
+                }
+                break;
+            case R.id.btn_return_home:
+                 mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
+                if (mGDUFlightController != null) {
+                    mGDUFlightController.setStateCallback(flightControllerState -> {
+                        flightState = flightControllerState.getFlightState();
+                        if (flightState != FlightState.GROUND||flightState!=FlightState.BACKING) {
+                            mGDUFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(GDUError var1) {
+                                    if (var1 == null) {
+                                        toast("开始返航成功");
+                                    } else {
+                                        toast("开始返航失败");
+                                    }
+                                }
+                            });
+                            backState.setText("取消返航");
+                        } else if (flightState == FlightState.BACKING) {
+                            mGDUFlightController.cancelGoHome(new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(GDUError var1) {
+                                    if (var1 == null) {
+                                        toast("取消返航成功");
+                                    } else {
+                                        toast("取消返航失败");
+                                    }
+                                }
+                            });
+                            backState.setText("一键返航");
+
+                        }
+
+                    });
                 }
                 break;
             case R.id.button_gimbal_rotate:  //TODO 俯仰，方位会变
