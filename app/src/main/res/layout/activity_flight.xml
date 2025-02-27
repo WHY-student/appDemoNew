@@ -45,7 +45,7 @@
         android:layout_width="@dimen/dp_22"
         android:layout_height="@dimen/dp_26"
         android:contentDescription="@string/app_name"
-        android:src="@drawable/selector_msg_box_btn_bg"
+        android:src="@drawable/ic_msg_box"
         android:layout_marginTop="54dp"
         android:layout_marginStart="12dp"
         app:layout_constraintLeft_toLeftOf="parent"

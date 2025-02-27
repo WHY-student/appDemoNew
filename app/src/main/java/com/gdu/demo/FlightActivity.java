@@ -190,6 +190,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         backState=findViewById(R.id.btn_return_home);
 
         paintView = findViewById(R.id.paint_view);
+        backState.setEnabled(false);
     }
 
     private void initCamera() {
@@ -469,7 +470,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                 }
                             }
                         });
-                        changeMode.setText("切换为可见光");
+                        changeMode.setText("可见光");
 
 
                     } else {
@@ -571,7 +572,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                     }
                                 }
                             });
-                        } else if (flightState == FlightState.FLING) {
+                        } else if (flightState == FlightState.FLING||flightState==FlightState.HOVERING||flightState==FlightState.BACKING) {
                             flyState.setText("开始降落");
                             mGDUFlightController.startLanding(new CommonCallbacks.CompletionCallback() {
                                 @Override
