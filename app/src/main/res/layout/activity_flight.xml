@@ -80,22 +80,23 @@
         android:layout_marginBottom="10dp"/>
 
     <!-- 雷达视图 -->
+
+    <!-- 左侧竖排按钮 -->
     <com.gdu.demo.widgetlist.radar.FPVRadarView
         android:id="@+id/fpv_rv"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="24dp"
         android:layout_width="260dp"
         android:layout_height="160dp"
+        android:layout_marginBottom="24dp"
         app:angle_text_size="8sp"
         app:color_return_point_border="@color/white"
         app:frv_return_text_size="6sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:radius_obstacle_point="3dp"
         app:state_text_size="8sp"
-        app:top_text_size="12sp"/>
+        app:top_text_size="12sp" />
 
-    <!-- 左侧竖排按钮 -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

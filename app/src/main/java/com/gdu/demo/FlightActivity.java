@@ -30,7 +30,6 @@ import com.gdu.camera.StorageState;
 import com.gdu.common.error.GDUError;
 import com.gdu.config.ConnStateEnum;
 import com.gdu.config.GlobalVariable;
-import com.gdu.config.UavStaticVar;
 import com.gdu.demo.databinding.ActivityFlightBinding;
 import com.gdu.demo.flight.msgbox.MsgBoxBean;
 import com.gdu.demo.flight.msgbox.MsgBoxManager;
@@ -39,13 +38,10 @@ import com.gdu.demo.flight.msgbox.MsgBoxViewCallBack;
 import com.gdu.demo.flight.setting.fragment.SettingDialogFragment;
 import com.gdu.demo.ourgdu.ourGDUAircraft;
 import com.gdu.demo.ourgdu.ourGDUVision;
-import com.gdu.demo.utils.CommonDialog;
 import com.gdu.demo.utils.GisUtil;
 import com.gdu.demo.utils.LoadingDialogUtils;
 import com.gdu.demo.utils.SettingDao;
-import com.gdu.demo.utils.ToolManager;
 import com.gdu.demo.views.PaintView;
-import com.gdu.demo.widget.GduSeekBar;
 import com.gdu.demo.widget.TopStateView;
 import com.gdu.demo.widget.focalGduSeekBar;
 import com.gdu.drone.LocationCoordinate2D;
@@ -71,17 +67,15 @@ import com.gdu.socket.GduCommunication3;
 import com.gdu.socket.GduFrame3;
 import com.gdu.socket.GduSocketManager;
 import com.gdu.socket.SocketCallBack3;
-import com.gdu.socketmodel.GduSocketConfig3;
 import com.gdu.util.CollectionUtils;
-import com.gdu.util.StatusBarUtils;
 import com.gdu.util.StringUtils;
 import com.gdu.util.ThreadHelper;
-import com.gdu.util.logger.MyLogUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class FlightActivity extends FragmentActivity implements TextureView.SurfaceTextureListener, MsgBoxViewCallBack, View.OnClickListener {
 
@@ -153,7 +147,12 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 double homeLat = homeLocation.getLatitude();
                 int distance = (int) GisUtil.calculateDistance(uavLon, uavLat, homeLon, homeLat);
                 runOnUiThread(()->{
-                    viewBinding.fpvRv.setHeadingAngle(yaw);
+                    if(yaw>=-180&&yaw<0){
+//                        yaw1=yaw + 360;
+                        viewBinding.fpvRv.setHeadingAngle(yaw+360);
+                    }else{
+                        viewBinding.fpvRv.setHeadingAngle(yaw);
+                    }
                     viewBinding.fpvRv.setHorizontalDipAngle(roll);
                     if (homeLon == 0 && homeLat == 0){
                         viewBinding.fpvRv.setReturnDistance(GlobalVariable.flyDistance +"m");

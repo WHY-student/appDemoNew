@@ -80,7 +80,7 @@ public class FPVRadarView extends View {
     //中心箭头的path
     final private Path arrowPath = new Path();
     //中心箭头顶角大小
-    final private float arrowTopAngle = 40f;
+    final private float arrowTopAngle = 30f;
     private int colorArrow = Color.parseColor("#00B5FF");
     //水平线
     final private Path horizonLine = new Path();
@@ -339,6 +339,8 @@ public class FPVRadarView extends View {
         pathPaint.setColor(colorGimbalArrow);
         pathPaint.setStyle(Paint.Style.FILL_AND_STROKE);
         canvas.save();
+//        float temp=253;
+//        canvas.rotate(temp, centerX, centerY);
         canvas.rotate(gimbalAngle, centerX, centerY);
         canvas.drawPath(gimbalDirection, pathPaint);
         canvas.restore();
@@ -631,7 +633,7 @@ public class FPVRadarView extends View {
         if (!enable) {
             return;
         }
-        if (angle < -180 || angle > 180) {
+        if (angle < 0 || angle > 180) {
             return;
         }
         if (angle == dipAngle) {
