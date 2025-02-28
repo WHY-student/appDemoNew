@@ -242,7 +242,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             @Override
             public void onReceive(byte[] bytes, int size) {
                 if (null != codecManager) {
-                    codecManager.sendDataToDecoder(bytes, size);
+                    mHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            // 延迟后执行的操作
+                            codecManager.sendDataToDecoder(bytes, size);
+                        }
+                    }, 550);
                 }
             }
         };
