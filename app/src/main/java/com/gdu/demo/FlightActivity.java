@@ -430,21 +430,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     //                    long startTime=System.currentTimeMillis();
                     @Override
                     public void onTargetDetecting(List<TargetMode> list) {
-                        if (list == null) {
-                            toast("没有检测物体");
-                        } else {
-                            if(!isAIStart){
-                                startAIRecognize.setEnabled(false);
-                                quitAIRecognize.setEnabled(true);
-                                isAIStart = true;
-                                show(aiState, "AI状态：未增量");
-                            }
-                            paintView.setRectParams(list);
-                            //long endTime=System.currentTimeMillis();
-                            //long ver= endTime -startTime;
-                            //Log.d("delaytime","延长时间"+ver);
-
-                        }
                     }
 
                     @Override
@@ -767,11 +752,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         if (list == null) {
                             toast("没有检测物体");
                         } else {
-                            if(!isAIStart){
-                                startAIRecognize.setEnabled(false);
-                                quitAIRecognize.setEnabled(true);
-                                isAIStart = true;
-                            }
+//                            if(!isAIStart){
+//                                startAIRecognize.setEnabled(false);
+//                                quitAIRecognize.setEnabled(true);
+//                                isAIStart = true;
+//                            }
 
                             paintView.setRectParams(list);
                         }
