@@ -142,6 +142,8 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
                 s.append(" isCalibrating ");
                 s.append(state.isCalibrating());
                 show(mGimbalStateTextView, s.toString());
+                float yaw = (float) state.getAttitudeInDegrees().yaw;
+                toast(String.format("%.2f", yaw));
             }
         });
     }

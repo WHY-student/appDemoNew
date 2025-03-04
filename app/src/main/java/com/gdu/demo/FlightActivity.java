@@ -136,7 +136,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     }
 
     private void initListener() {
-//        GDUFlightController mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
+        mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
         if (mGDUFlightController != null){
             mGDUFlightController.setStateCallback(flightControllerState -> {
                 //航向
@@ -157,6 +157,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     }else{
                         viewBinding.fpvRv.setHeadingAngle(yaw);
                     }
+//                    runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw));
+//                    toast(String.format("%.2f", yaw));
                     viewBinding.fpvRv.setHorizontalDipAngle(roll);
                     if (homeLon == 0 && homeLat == 0){
                         viewBinding.fpvRv.setReturnDistance(GlobalVariable.flyDistance +"m");
@@ -192,7 +194,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         if (gimbal != null){
             gimbal.setStateCallback(state -> {
                 float yaw = (float) state.getAttitudeInDegrees().yaw;
-                runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw));
+                Log.d("gimbalangle","航向角为"+yaw);
+                toast(String.format("%.2f", yaw));
+                float yaw1;
+                yaw1=(yaw%180)/10.0f;
+//                yaw1=yaw1/10.0f;
+                toast(String.format("%.2f", yaw1));
+                runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw1));
             });
         }
         HandlerThread backgroundThread = new HandlerThread("BackgroundThread");
@@ -360,7 +368,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 toast("发送失败");
             }
         });
-        mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
         if (mGDUFlightController != null) {
 //            mGDUFlightController.setStateCallback(flightControllerState -> {
 //                flightState = flightControllerState.getFlightState();
