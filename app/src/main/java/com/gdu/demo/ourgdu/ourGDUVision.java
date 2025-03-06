@@ -104,6 +104,7 @@ public class ourGDUVision {
         byte var4 = var1[8];
 
         byte id = var1[9];
+        int var5 =ByteUtilsLowBefore.byte2Int(var1,10);
         //byte var4 = var10008[8];
         //byte var5 = (byte)(var10007[9] & 1 & 255);
         var10000.setHeight(var3);
@@ -112,7 +113,7 @@ public class ourGDUVision {
         var10000.setLeftY(var8);
         var10000.setTargetConfidence((short)var4);
         var10000.setFlawType(id);
-//        var10000.setId(id);
+        var10000.setId(var5);
         return var10000;
     }
 

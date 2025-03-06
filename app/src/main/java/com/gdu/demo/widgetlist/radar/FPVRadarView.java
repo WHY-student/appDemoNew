@@ -731,8 +731,7 @@ public class FPVRadarView extends View {
     private float targetGimbalAngle; // 目标角度
     private float currentGimbalAngle; // 当前角度
     private final long delayMillis = 20; // 延迟时间（毫秒）
-    private final float angleStep = 5f; // 每次更新的角度步长
-    private float angleStep1 ;
+    private final float angleStep = 3f; // 每次更新的角度步长//
 
     public void setGimbalAngle(float angle) {
         if (!enable) {

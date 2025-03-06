@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.AttributeSet;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
@@ -21,6 +22,7 @@ import java.util.List;
 
 
 public class PaintView extends AppCompatImageView {
+    private  int aiState=0;
 
     List<TargetMode> detectionBox = new ArrayList<>();
     List<String> class_label = new ArrayList<>();
@@ -169,6 +171,7 @@ public class PaintView extends AppCompatImageView {
             int y = (int)(detection.getLeftY() * 1200.0 / 1080.0);
             int maxX = (int)((detection.getLeftX() + detection.getWidth()));
             int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0);
+            aiState =detection.getId();
             String label = null;
             if (label == null) {
                 int labelindex = detection.getFlawType();
@@ -184,6 +187,7 @@ public class PaintView extends AppCompatImageView {
                 canvas.drawRect(new Rect(x, y, maxX, maxY), paint); // 绘制矩形
                 canvas.drawText(label, x, y - 5, paint2); // 绘制文本
             }
+            Log.d("detection id", "检测框id " + aiState + " ms");
         }
 
         // 清空检测框数据
@@ -194,7 +198,7 @@ public class PaintView extends AppCompatImageView {
 //
 //        // 计算并输出 onDraw 执行时间
 //        long drawDuration = endTime - startTime;
-//        Log.d("PaintViewTime", "onDraw executed in: " + drawDuration + " ms");
+//        Log.d("detection id", "检测框id " + id + " ms");
     }
 
     public void setRectParams(List<TargetMode> detectionBox) {
@@ -207,6 +211,9 @@ public class PaintView extends AppCompatImageView {
         //long receiveTime = System.currentTimeMillis();
         //Log.d("PaintView", "Data received at: " + receiveTime);
 //        invalidate();
+    }
+    public int getModelID(){
+        return this.aiState;
     }
 }
 
