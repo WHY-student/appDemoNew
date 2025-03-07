@@ -97,6 +97,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private int chacktimes1=0;
     private int chacktimes2=0;
     private int modelID=0;
+    private int latestModelID;
     private FlightState flightState;
     private Button changeMode;
     private Button changeFouse;
@@ -117,6 +118,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private GduCommunication3 mGduCommunication3;
     private Handler handler = new Handler();
+    private Runnable resetStateTask; // 用于重置状态的任务
+    private Runnable completeTask;
+    private int currentState = 0;
+    private int currentState1=0;
+    private boolean isProcessRunning = false;
 
     // 定义一个 Runnable 任务，用于更新 AI 状态
 
@@ -136,15 +142,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         initView();
         initData();
         initListener();
+        initBackgroundThread();
         mContext = this;
     }
 
-    private Runnable updateAiStateTask = new Runnable() {
-        @Override
-        public void run() {
-            show(aiState, "AI状态：增量完成");
-        }
-    };
 
     private void initListener() {
         mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
@@ -301,6 +302,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         aiState = findViewById(R.id.ai_state);
 
         isAIStart = false;
+        startAIRecognize.setEnabled(true);
+        quitAIRecognize.setEnabled(true);
 
 
         zoomSeekBar = findViewById(R.id.zoomSeekBar);
@@ -357,9 +360,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             @Override
             public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
                 if(displayMode == SettingsDefinitions.DisplayMode.THERMAL_ONLY){
-                    changeMode.setText("切换为可见光");
+                    changeMode.setText("可见光");
                 }else{
-                    changeMode.setText("切换为红外");
+                    changeMode.setText("红外");
                 }
                 if(displayMode==SettingsDefinitions.DisplayMode.ZL){
                     changeFouse.setText("变焦");
@@ -469,6 +472,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                 startAIRecognize.setEnabled(false);
                                 quitAIRecognize.setEnabled(true);
                                 isAIStart = true;
+//                                modelID=paintView.getModelID();
+//                                toast(String.format("%d", modelID));
+//                                updateModel(modelID);
                                 show(aiState, "AI状态：未增量");
                             }
                             paintView.setRectParams(list);
@@ -572,6 +578,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         if (codecManager != null) {
             codecManager.onDestroy();
         }
+        stopBackgroundThread();
     }
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
@@ -613,6 +620,70 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     Gravity.BOTTOM);
         }
     }
+
+    private HandlerThread backgroundThread;
+    private Handler backgroundHandler;
+
+    private void initBackgroundThread() {
+        backgroundThread = new HandlerThread("ModelUpdateThread");
+        backgroundThread.start();
+        backgroundHandler = new Handler(backgroundThread.getLooper());
+    }
+
+    private void stopBackgroundThread() {
+        if (backgroundThread != null) {
+            backgroundThread.quitSafely();
+            backgroundThread = null;
+            backgroundHandler = null;
+        }
+    }
+
+    private void updateModel(int modelID) {
+        if (resetStateTask != null) {
+            backgroundHandler.removeCallbacks(resetStateTask);
+        }
+        if (completeTask != null) {
+            backgroundHandler.removeCallbacks(completeTask);
+        }
+
+        // 记录最新的 modelID
+        latestModelID = modelID;
+
+        if (modelID == 1077 && isProcessRunning) {
+            // 显示“增量中”
+            show(aiState, "AI状态：增量中");
+
+            // 1 秒后显示“增量完成”
+            resetStateTask = new Runnable() {
+                @Override
+                public void run() {
+                    if (!isProcessRunning) {
+                        return; // 如果进程被停止，则不再执行
+                    }
+                    show(aiState, "AI状态：增量完成");
+
+                    // 0.5 秒后重新判断状态
+                    completeTask = new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!isProcessRunning) {
+                                return; // 如果进程被停止，则不再执行
+                            }
+                            // 根据最新的 modelID 更新状态
+                            updateModel(latestModelID);
+                        }
+                    };
+                    backgroundHandler.postDelayed(completeTask, 500); // 延迟 0.5 秒
+                }
+            };
+            backgroundHandler.postDelayed(resetStateTask, 1000); // 延迟 1 秒
+        } else {
+            // 如果 modelID 不是 1077，或者进程被停止，直接显示“未增量”
+            show(aiState, "AI状态：未增量");
+        }
+    }
+
+
 
     @Override
     public void onClick(View v) {
@@ -830,6 +901,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
             case R.id.button_ai:
 //                toast(String.format("%d", modelID));
+//                show(aiState, "AI状态：未增量");
+                isProcessRunning=true;
                 gduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
                     @Override
                     public void onTargetDetecting(List<TargetMode> list) {
@@ -837,29 +910,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                             toast("没有检测物体");
                         } else {
                             if(!isAIStart){
-                                modelID=paintView.getModelID();
+//                                modelID=paintView.getModelID();
                                 startAIRecognize.setEnabled(false);
                                 quitAIRecognize.setEnabled(true);
 
-                                toast(String.format("%d", modelID));
-                                if (modelID == 1066) {
-                                    show(aiState, "AI状态：未增量");
-                                } else if (modelID == 1077) {
-                                    // 显示“增量中”
-                                    show(aiState, "AI状态：增量中");
-
-                                    // 移除之前可能存在的未执行的更新任务
-                                    handler.removeCallbacks(updateAiStateTask);
-                                } else if (modelID == 1088) {
-                                    // 移除之前可能存在的未执行的更新任务
-                                    handler.removeCallbacks(updateAiStateTask);
-
-                                    // 延迟 2 秒后更新为“增量完成”
-                                    handler.postDelayed(updateAiStateTask, 1000); // 2000 毫秒 = 2 秒
-                                }
+//                                toast(String.format("%d", modelID));
+//                                updateModel(modelID);
                                 }
                             }
-
+                            modelID=paintView.getModelID();
+                            toast(String.format("%d", modelID));
+                            updateModel(modelID);
                             paintView.setRectParams(list);
                         }
 
@@ -883,9 +944,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 });
                 startAIRecognize.setEnabled(false);
                 quitAIRecognize.setEnabled(true);
-//                show(aiState, "AI状态：未增量");
+                show(aiState, "AI状态：未增量");
                 break;
             case R.id.button_quit_ai:
+                show(aiState, "");
+                isProcessRunning=false;
                 gduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
                     //                    long startTime=System.currentTimeMillis();
                     @Override
@@ -906,6 +969,15 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 });
                 startAIRecognize.setEnabled(true);
                 quitAIRecognize.setEnabled(false);
+                isProcessRunning = false;
+                // 移除所有未执行的任务
+                if (resetStateTask != null) {
+                    backgroundHandler.removeCallbacks(resetStateTask);
+                }
+                if (completeTask != null) {
+                    backgroundHandler.removeCallbacks(completeTask);
+                }
+                // 显示“未增量”
                 show(aiState, "");
                 isAIStart = false;
                 break;
@@ -972,15 +1044,31 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         });
     }
 
+    private Handler handler1 = new Handler(Looper.getMainLooper());
+
     public void show(TextView textView, final String toast) {
-        runOnUiThread(new Runnable() {
+        if (toast == null) {
+            return; // 如果 toast 为空，直接返回
+        }
+        handler1.post(new Runnable() {
             @Override
             public void run() {
-                textView.setText(toast);
-//                Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
+                if (textView != null) {
+                    textView.setText(toast);
+                }
             }
         });
     }
+
+//    public void show(TextView textView, final String toast) {
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                textView.setText(toast);
+////                Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
 
     //    添加滑动按钮，设置滑动变焦功能
     private Drawable createThumbDrawable(Context context, String text) {
