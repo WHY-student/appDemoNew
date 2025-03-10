@@ -97,7 +97,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private int chacktimes1=0;
     private int chacktimes2=0;
     private int modelID=0;
-    private int latestModelID;
+    private int latestModelID=1066;
     private FlightState flightState;
     private Button changeMode;
     private Button changeFouse;
@@ -120,7 +120,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private Handler handler = new Handler();
     private Runnable resetStateTask; // 用于重置状态的任务
     private Runnable completeTask;
-    private int currentState = 0;
+    private int incState = 0;
     private int currentState1=0;
     private boolean isProcessRunning = false;
 
@@ -638,49 +638,66 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
     }
 
+    private boolean isTaskRunning = false; // 标记是否有延迟任务正在运行
+
     private void updateModel(int modelID) {
-        if (resetStateTask != null) {
-            backgroundHandler.removeCallbacks(resetStateTask);
+        // 如果当前有任务正在运行，直接按照 1077 处理
+        if (isTaskRunning) {
+            Log.d("TaskDebug", "Task is running, treating modelID as 1077: " + modelID);
+            show(aiState, "AI状态：增量" + incState + "中"); // 按照 1077 处理
+            return;
         }
-        if (completeTask != null) {
-            backgroundHandler.removeCallbacks(completeTask);
+
+        // 如果 modelID 没有变化，直接返回
+        if (modelID == latestModelID) {
+            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
+            return;
+        }
+
+        // 确保 backgroundHandler 已初始化
+        if (backgroundHandler == null) {
+            initBackgroundThread();
         }
 
         // 记录最新的 modelID
         latestModelID = modelID;
+        Log.d("TaskDebug", "Latest modelID: " + latestModelID);
 
         if (modelID == 1077 && isProcessRunning) {
+            // 标记任务开始运行
+            isTaskRunning = true;
+
+            incState = incState + 1;
             // 显示“增量中”
-            show(aiState, "AI状态：增量中");
+            show(aiState, "AI状态：增量" + incState + "中");
 
             // 1 秒后显示“增量完成”
-            resetStateTask = new Runnable() {
-                @Override
-                public void run() {
-                    if (!isProcessRunning) {
-                        return; // 如果进程被停止，则不再执行
-                    }
-                    show(aiState, "AI状态：增量完成");
-
-                    // 0.5 秒后重新判断状态
-                    completeTask = new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!isProcessRunning) {
-                                return; // 如果进程被停止，则不再执行
-                            }
-                            // 根据最新的 modelID 更新状态
-                            updateModel(latestModelID);
-                        }
-                    };
-                    backgroundHandler.postDelayed(completeTask, 500); // 延迟 0.5 秒
+            backgroundHandler.postDelayed(() -> {
+                if (!isProcessRunning) {
+                    Log.d("TaskDebug", "Process is not running, skipping resetStateTask");
+                    completeTask();
+                    return; // 如果进程被停止，则不再执行
                 }
-            };
-            backgroundHandler.postDelayed(resetStateTask, 1000); // 延迟 1 秒
+                show(aiState, "AI状态：增量" + incState + "完成");
+
+                // 0.5 秒后重新判断状态
+                backgroundHandler.postDelayed(() -> {
+                    completeTask();
+                }, 500); // 延迟 0.5 秒
+            }, 1000); // 延迟 1 秒
         } else {
             // 如果 modelID 不是 1077，或者进程被停止，直接显示“未增量”
             show(aiState, "AI状态：未增量");
         }
+    }
+
+    // 完成任务并重置状态
+    private void completeTask() {
+        isTaskRunning = false; // 标记任务完成
+        Log.d("TaskDebug", "Task completed, latest modelID: " + latestModelID);
+
+        // 根据最新的 modelID 更新状态
+        updateModel(latestModelID);
     }
 
 
