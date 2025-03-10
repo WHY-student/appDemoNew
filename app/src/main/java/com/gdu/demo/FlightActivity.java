@@ -303,7 +303,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
         isAIStart = false;
         startAIRecognize.setEnabled(true);
-        quitAIRecognize.setEnabled(true);
+        quitAIRecognize.setEnabled(false);
 
 
         zoomSeekBar = findViewById(R.id.zoomSeekBar);
@@ -465,24 +465,24 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     //                    long startTime=System.currentTimeMillis();
                     @Override
                     public void onTargetDetecting(List<TargetMode> list) {
-                        if (list == null) {
-                            toast("没有检测物体");
-                        } else {
-                            if(!isAIStart){
-                                startAIRecognize.setEnabled(false);
-                                quitAIRecognize.setEnabled(true);
-                                isAIStart = true;
-//                                modelID=paintView.getModelID();
-//                                toast(String.format("%d", modelID));
-//                                updateModel(modelID);
-                                show(aiState, "AI状态：未增量");
-                            }
-                            paintView.setRectParams(list);
-                            //long endTime=System.currentTimeMillis();
-                            //long ver= endTime -startTime;
-                            //Log.d("delaytime","延长时间"+ver);
-
-                        }
+//                        if (list == null) {
+//                            toast("没有检测物体");
+//                        } else {
+//                            if(!isAIStart){
+//                                startAIRecognize.setEnabled(false);
+//                                quitAIRecognize.setEnabled(true);
+//                                isAIStart = true;
+////                                modelID=paintView.getModelID();
+////                                toast(String.format("%d", modelID));
+////                                updateModel(modelID);
+//                                show(aiState, "AI状态：未增量");
+//                            }
+//                            paintView.setRectParams(list);
+//                            //long endTime=System.currentTimeMillis();
+//                            //long ver= endTime -startTime;
+//                            //Log.d("delaytime","延长时间"+ver);
+//
+//                        }
                     }
 
                     @Override
@@ -644,7 +644,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         // 如果当前有任务正在运行，直接按照 1077 处理
         if (isTaskRunning) {
             Log.d("TaskDebug", "Task is running, treating modelID as 1077: " + modelID);
-            show(aiState, "AI状态：增量" + incState + "中"); // 按照 1077 处理
+//            show(aiState, "AI状态：增量" + incState + "中"); // 按照 1077 处理
             return;
         }
 
@@ -685,9 +685,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     completeTask();
                 }, 500); // 延迟 0.5 秒
             }, 1000); // 延迟 1 秒
-        } else {
+        } else if(modelID == 1088 && isProcessRunning) {
             // 如果 modelID 不是 1077，或者进程被停止，直接显示“未增量”
-            show(aiState, "AI状态：未增量");
+//            show(aiState, "AI状态：增量" + incState + "完成");
+        }else{
+//            show(aiState, "AI状态：未增量");
         }
     }
 
@@ -697,7 +699,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         Log.d("TaskDebug", "Task completed, latest modelID: " + latestModelID);
 
         // 根据最新的 modelID 更新状态
-        updateModel(latestModelID);
+//        updateModel(latestModelID);
     }
 
 
@@ -936,7 +938,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                 }
                             }
                             modelID=paintView.getModelID();
-                            toast(String.format("%d", modelID));
+//                            toast(String.format("%d", modelID));
                             updateModel(modelID);
                             paintView.setRectParams(list);
                         }
