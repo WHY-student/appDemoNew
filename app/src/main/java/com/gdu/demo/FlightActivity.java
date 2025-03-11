@@ -731,6 +731,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             incState = firstNum-1;
             // 显示“增量中”
             show(aiState, "AI状态：增量" + incState + "中");
+            toast("开始增量");
 
             // 1 秒后显示“增量完成”
             backgroundHandler.postDelayed(() -> {
