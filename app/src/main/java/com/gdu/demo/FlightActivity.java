@@ -293,7 +293,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         backState=findViewById(R.id.btn_return_home);
 
         paintView = findViewById(R.id.paint_view);
-        unKnownum = findViewById(R.id.unkown_num);
+        unKnownum = findViewById(R.id.unknown_num);
 //        设定云台角度，如果云台角度不为0，则置为回正，否则显示向下
 //        changeGimbalRotate = findViewById(R.id.button_gimbal_rotate);
 
