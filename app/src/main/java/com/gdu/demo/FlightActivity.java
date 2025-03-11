@@ -97,7 +97,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private int chacktimes1=0;
     private int chacktimes2=0;
     private int modelID=0;
-    private int latestModelID=1066;
+    private int latestModelID=1;
     private FlightState flightState;
     private Button changeMode;
     private Button changeFouse;
@@ -111,6 +111,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private Button quitAIRecognize;
 
     private TextView aiState;
+    private TextView unKnownum;
 
     private Boolean isAIStart;
 
@@ -120,7 +121,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private Handler handler = new Handler();
     private Runnable resetStateTask; // 用于重置状态的任务
     private Runnable completeTask;
+    private Runnable updateTask;
     private int incState = 0;
+    private int unkonwNum=0;
     private int currentState1=0;
     private boolean isProcessRunning = false;
 
@@ -290,6 +293,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         backState=findViewById(R.id.btn_return_home);
 
         paintView = findViewById(R.id.paint_view);
+        unKnownum = findViewById(R.id.unkown_num);
 //        设定云台角度，如果云台角度不为0，则置为回正，否则显示向下
 //        changeGimbalRotate = findViewById(R.id.button_gimbal_rotate);
 
@@ -636,11 +640,68 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             backgroundThread = null;
             backgroundHandler = null;
         }
+//        if (handlerThread != null) {
+//            handlerThread.quit();
+//        }
     }
+
+    private void updateKnowNum(int modelID) {
+        int num = modelID % 100;
+        if (num == unkonwNum) {
+            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
+            return;
+        }
+        if(num != unkonwNum) {
+            show(unKnownum, "  " + "未知类数目 " + num);
+            unkonwNum=num;
+        }
+    }
+//    private void updateKnowNum(int modelID) {
+//        initBackgroundThread(); // 确保线程初始化
+//
+//        // 取消之前的任务，防止重复执行
+//        if (updateTask != null) {
+//            backgroundHandler.removeCallbacks(updateTask);
+//        }
+//
+//        int num = modelID % 100;
+//        if (num == unkonwNum) {
+//            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
+//            return;
+//        }
+//        if (backgroundHandler == null) {
+//            initBackgroundThread();
+//        }
+//        if(num != unkonwNum) {
+//            updateTask = new Runnable() {
+//                @Override
+//                public void run() {
+//                    runOnUiThread(() -> show(unKnownum,  "未知类数目：" + num));
+//
+//                    // 30ms 后再次执行
+//                    backgroundHandler.postDelayed(this, 30);
+//                }
+//            };
+//
+//            // 启动定时任务
+//            backgroundHandler.post(updateTask);
+//            unkonwNum=num;
+//        }
+//    }
+//
+//    // 停止任务
+//    private void stopUpdateKnowNum() {
+//        if (backgroundHandler != null && updateTask != null) {
+//            backgroundHandler.removeCallbacks(updateTask);
+//        }
+//    }
 
     private boolean isTaskRunning = false; // 标记是否有延迟任务正在运行
 
     private void updateModel(int modelID) {
+        int firstNum = modelID / 1000;
+        int secondNum = (modelID / 100) % 10;
+        int temp=modelID / 100;
         // 如果当前有任务正在运行，直接按照 1077 处理
         if (isTaskRunning) {
             Log.d("TaskDebug", "Task is running, treating modelID as 1077: " + modelID);
@@ -649,7 +710,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
 
         // 如果 modelID 没有变化，直接返回
-        if (modelID == latestModelID) {
+        if (temp == 10 ) {
             Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
             return;
         }
@@ -660,16 +721,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
 
         // 记录最新的 modelID
-        latestModelID = modelID;
+        latestModelID = firstNum;
         Log.d("TaskDebug", "Latest modelID: " + latestModelID);
 
-        if (modelID == 1077 && isProcessRunning) {
+        if (temp == 20 && isProcessRunning) {
             // 标记任务开始运行
             isTaskRunning = true;
 
-            incState = incState + 1;
+            incState = firstNum-1;
             // 显示“增量中”
             show(aiState, "AI状态：增量" + incState + "中");
+            toast("开始增量");
 
             // 1 秒后显示“增量完成”
             backgroundHandler.postDelayed(() -> {
@@ -685,7 +747,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     completeTask();
                 }, 500); // 延迟 0.5 秒
             }, 1000); // 延迟 1 秒
-        } else if(modelID == 1088 && isProcessRunning) {
+        } else if(modelID == 1 && isProcessRunning) {
             // 如果 modelID 不是 1077，或者进程被停止，直接显示“未增量”
 //            show(aiState, "AI状态：增量" + incState + "完成");
         }else{
@@ -701,7 +763,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         // 根据最新的 modelID 更新状态
 //        updateModel(latestModelID);
     }
-
 
 
     @Override
@@ -940,6 +1001,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                             modelID=paintView.getModelID();
 //                            toast(String.format("%d", modelID));
                             updateModel(modelID);
+                            updateKnowNum(modelID);
                             paintView.setRectParams(list);
                         }
 
@@ -964,6 +1026,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 startAIRecognize.setEnabled(false);
                 quitAIRecognize.setEnabled(true);
                 show(aiState, "AI状态：未增量");
+                show(unKnownum,"未知类数目：0");
                 break;
             case R.id.button_quit_ai:
                 show(aiState, "");
@@ -998,6 +1061,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 }
                 // 显示“未增量”
                 show(aiState, "");
+                show(unKnownum,"");
                 isAIStart = false;
                 break;
         }
