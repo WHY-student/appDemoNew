@@ -241,11 +241,12 @@
 
         <TextView
             android:id="@+id/unkown_num"
+            android:layout_marginStart="16dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=""
-            android:textSize="20sp"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"
+            android:textSize="20sp" />
 
     </LinearLayout>
 
