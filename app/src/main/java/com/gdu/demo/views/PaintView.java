@@ -25,17 +25,27 @@ public class PaintView extends AppCompatImageView {
     private  int aiState=0;
 
     List<TargetMode> detectionBox = new ArrayList<>();
+//    List<String> class_label = new ArrayList<>();
+//    {
+//        class_label.add("bus");
+//        class_label.add("car");
+//        class_label.add("SUV");
+//        class_label.add("van");
+//        class_label.add("small_freight_car");
+//        class_label.add("small_truck");
+//        class_label.add("new1");
+//        class_label.add("new2");
+//        class_label.add("new3");
+//        class_label.add("unknown");
+//    }
     List<String> class_label = new ArrayList<>();
     {
         class_label.add("bus");
         class_label.add("car");
         class_label.add("SUV");
-        class_label.add("van");
-        class_label.add("small_freight_car");
-        class_label.add("small_truck");
+        class_label.add("pickup");
         class_label.add("new1");
         class_label.add("new2");
-        class_label.add("new3");
         class_label.add("unknown");
     }
 //    private String text = "Sample Text";

@@ -741,17 +741,18 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     return; // 如果进程被停止，则不再执行
                 }
                 show(aiState, "AI状态：增量" + incState + "完成");
+                toast("增量完成");
 
                 // 0.5 秒后重新判断状态
                 backgroundHandler.postDelayed(() -> {
                     completeTask();
                 }, 500); // 延迟 0.5 秒
             }, 1000); // 延迟 1 秒
-        } else if(modelID == 1 && isProcessRunning) {
+        } else if(temp ==21 && isProcessRunning) {
             // 如果 modelID 不是 1077，或者进程被停止，直接显示“未增量”
-//            show(aiState, "AI状态：增量" + incState + "完成");
-        }else{
-//            show(aiState, "AI状态：未增量");
+            show(aiState, "AI状态：增量" + incState + "完成");
+        }else if(temp ==10 && isProcessRunning){
+            show(aiState, "AI状态：未增量");
         }
     }
 
