@@ -1003,8 +1003,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //                            toast(String.format("%d", modelID));
                             updateModel(modelID);
                             updateKnowNum(modelID);
-                            paintView.setRectParams(list);
-                        }
+                            if(list==null){
+                                paintView.setRectParams(new ArrayList<>());
+                            }else{
+                                paintView.setRectParams(list);
+                            }
+//                        paintView.setRectParams(new ArrayList<>());
+                    }
 
                     @Override
                     public void onTargetDetectFailed(int i) {
@@ -1063,6 +1068,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 // 显示“未增量”
                 show(aiState, "");
                 show(unKnownum,"");
+                stopBackgroundThread();
+//                paintView.setRectParams(new ArrayList<>());
                 isAIStart = false;
                 break;
         }
