@@ -2,6 +2,8 @@ package com.gdu.demo;
 
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.TextureView;
 import android.view.View;
@@ -16,27 +18,21 @@ import com.gdu.beans.WarnBean;
 import com.gdu.common.error.GDUError;
 import com.gdu.config.ConnStateEnum;
 import com.gdu.config.GlobalVariable;
-import com.gdu.config.UavStaticVar;
 import com.gdu.demo.databinding.ActivityFlightBinding;
 import com.gdu.demo.flight.aibox.helper.TargetDetectHelper;
 import com.gdu.demo.flight.msgbox.MsgBoxBean;
 import com.gdu.demo.flight.msgbox.MsgBoxManager;
 import com.gdu.demo.flight.msgbox.MsgBoxPopView;
 import com.gdu.demo.flight.msgbox.MsgBoxViewCallBack;
-import com.gdu.demo.flight.pre.viewmodel.PreFlightInspectionViewModel;
 import com.gdu.demo.flight.setting.fragment.SettingDialogFragment;
-import com.gdu.demo.utils.CommonDialog;
 import com.gdu.demo.utils.GisUtil;
 import com.gdu.demo.utils.LoadingDialogUtils;
 import com.gdu.demo.utils.SettingDao;
-import com.gdu.demo.utils.ToolManager;
 import com.gdu.demo.viewmodel.FlightViewModel;
 import com.gdu.demo.widget.TopStateView;
 import com.gdu.demo.widget.zoomView.S220CustomSizeFocusHelper;
-import com.gdu.drone.GimbalType;
 import com.gdu.drone.LocationCoordinate2D;
 import com.gdu.drone.LocationCoordinate3D;
-import com.gdu.drone.ScreenContentType;
 import com.gdu.drone.TargetMode;
 import com.gdu.gimbal.GimbalState;
 import com.gdu.radar.ObstaclePoint;
@@ -48,28 +44,17 @@ import com.gdu.sdk.gimbal.GDUGimbal;
 import com.gdu.sdk.products.GDUAircraft;
 import com.gdu.sdk.radar.GDURadar;
 import com.gdu.sdk.util.CommonCallbacks;
-import com.gdu.socketmodel.GduSocketConfig3;
 import com.gdu.util.CollectionUtils;
-import com.gdu.util.ConnectUtil;
-import com.gdu.util.StatusBarUtils;
 import com.gdu.util.StringUtils;
 import com.gdu.util.ThreadHelper;
 import com.gdu.util.ViewUtils;
 import com.gdu.util.logger.MyLogUtils;
-import com.gdu.util.logs.AppLog;
-import com.rxjava.rxlife.RxLife;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
+import java.util.Objects;
 
 public class FlightActivity extends FragmentActivity implements TextureView.SurfaceTextureListener, MsgBoxViewCallBack, View.OnClickListener {
 
@@ -84,6 +69,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
      */
     private TargetDetectHelper mTargetDetectHelper;
 
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -97,7 +84,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     }
 
     private void initListener() {
-        GDUFlightController mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
+        GDUFlightController mGDUFlightController = Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getFlightController();
         if (mGDUFlightController != null){
             mGDUFlightController.setStateCallback(flightControllerState -> {
                 //航向
@@ -176,7 +163,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             @Override
             public void onReceive(byte[] bytes, int size) {
                 if (null != codecManager) {
-                    codecManager.sendDataToDecoder(bytes, size);
+                    mHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            // 延迟后执行的操作
+                            codecManager.sendDataToDecoder(bytes, size);
+                        }
+                    }, 550);
                 }
             }
         };
@@ -200,13 +193,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 LoadingDialogUtils.cancelLoadingDialog();
                 //视频是主界面时，在视频上画框
                 if (isSuccess && targetModes != null && !targetModes.isEmpty()) {
-//                    AppLog.e("TargetDetect", "onTargetDetect targetModes size = " + targetModes.size());
                     GlobalVariable.isTargetDetectMode = true;
                     mTargetDetectHelper.startShowTarget();
+                    viewBinding.aiPaintView.setRectParams(targetModes);
                     GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
-                    ThreadHelper.runOnUiThread(() -> Toast.makeText(FlightActivity.this, "识别到"+targetModes.size()+"个", Toast.LENGTH_SHORT).show());
-                } else if (targetModes == null) {
-//                    AppLog.e("TargetDetect", "onTargetDetect targetModes size = 0");
                 }
             }
 
@@ -225,10 +215,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             @Override
             public void onTargetLocateSend(boolean isSuccess) {
                 MyLogUtils.d("mTargetDetectHelper onTargetLocateSend() isSuccess = " + isSuccess);
-                if (isSuccess) {
-//                    DialogUtils.createLoadDialog(ZorroRealControlActivity.this);
-                } else {
-                }
             }
 
             @Override

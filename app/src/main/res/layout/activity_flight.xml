@@ -18,6 +18,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <com.gdu.demo.views.PaintView
+        android:id="@+id/ai_paint_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <!--九宫格-->
     <com.gdu.demo.widget.CustomJiuGongGeView
         android:id="@+id/night_grid_view"
