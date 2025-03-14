@@ -25,17 +25,27 @@ public class PaintView extends AppCompatImageView {
     private  int aiState=0;
 
     List<TargetMode> detectionBox = new ArrayList<>();
+//    List<String> class_label = new ArrayList<>();
+//    {
+//        class_label.add("bus");
+//        class_label.add("car");
+//        class_label.add("SUV");
+//        class_label.add("van");
+//        class_label.add("small_freight_car");
+//        class_label.add("small_truck");
+//        class_label.add("new1");
+//        class_label.add("new2");
+//        class_label.add("new3");
+//        class_label.add("unknown");
+//    }
     List<String> class_label = new ArrayList<>();
     {
         class_label.add("bus");
         class_label.add("car");
         class_label.add("SUV");
-        class_label.add("van");
-        class_label.add("small_freight_car");
-        class_label.add("small_truck");
+        class_label.add("pickup");
         class_label.add("new1");
         class_label.add("new2");
-        class_label.add("new3");
         class_label.add("unknown");
     }
 //    private String text = "Sample Text";
@@ -92,7 +102,7 @@ public class PaintView extends AppCompatImageView {
             public void run() {
                 // 在后台线程中执行任务
                 try {
-                    Thread.sleep(60); // 模拟耗时操作
+                    Thread.sleep(57); // 模拟耗时操作
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -188,10 +198,11 @@ public class PaintView extends AppCompatImageView {
                 canvas.drawText(label, x, y - 5, paint2); // 绘制文本
             }
             Log.d("detection id", "检测框id " + aiState + " ms");
+            Log.d("detectionifo", "长宽 " + x+y+ " ms");
         }
 
         // 清空检测框数据
-        this.detectionBox = new ArrayList<>();
+//        this.detectionBox = new ArrayList<>();
 
         // 记录结束时间
 //        long endTime = System.currentTimeMillis();
@@ -202,7 +213,15 @@ public class PaintView extends AppCompatImageView {
     }
 
     public void setRectParams(List<TargetMode> detectionBox) {
-        this.detectionBox = detectionBox;
+        if (detectionBox == null || detectionBox.isEmpty()) {
+            // 如果没有目标，清空 detectionBox
+            this.detectionBox = new ArrayList<>();
+        } else {
+            // 如果有目标，更新 detectionBox
+            this.detectionBox = new ArrayList<>();
+            this.detectionBox = new ArrayList<>(detectionBox);
+        }
+//        this.detectionBox = detectionBox;
 //        long drawTime = System.currentTimeMillis();
 //        if(drawTime - this.timestamp > 100){
 //            this.timestamp = drawTime;
