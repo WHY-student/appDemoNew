@@ -1,6 +1,7 @@
 package com.gdu.demo;
 
 import android.graphics.SurfaceTexture;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -60,7 +61,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private ActivityFlightBinding viewBinding;
     private GDUCodecManager codecManager;
+    private Context mContext;
     private VideoFeeder.VideoDataListener videoDataListener ;
+    private GDUFlightController mGDUFlightController;
 
     private boolean showSuccess = false;
     private S220CustomSizeFocusHelper mCustomSizeFocusHelper;
@@ -84,7 +87,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     }
 
     private void initListener() {
-        GDUFlightController mGDUFlightController = Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getFlightController();
+        mGDUFlightController = Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getFlightController();
         if (mGDUFlightController != null){
             mGDUFlightController.setStateCallback(flightControllerState -> {
                 //航向
@@ -98,7 +101,12 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 double homeLat = homeLocation.getLatitude();
                 int distance = (int) GisUtil.calculateDistance(uavLon, uavLat, homeLon, homeLat);
                 runOnUiThread(()->{
-                    viewBinding.fpvRv.setHeadingAngle(yaw);
+                    if(yaw>=-180&&yaw<0){
+//                        yaw1=yaw + 360;
+                        viewBinding.fpvRv.setHeadingAngle(yaw+360);
+                    }else{
+                        viewBinding.fpvRv.setHeadingAngle(yaw);
+                    }
                     viewBinding.fpvRv.setHorizontalDipAngle(roll);
                     if (homeLon == 0 && homeLat == 0){
                         viewBinding.fpvRv.setReturnDistance(GlobalVariable.flyDistance +"m");
@@ -134,7 +142,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         if (gimbal != null){
             gimbal.setStateCallback(state -> {
                 float yaw = (float) state.getAttitudeInDegrees().yaw;
-                runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw));
+                float yaw1;
+                yaw1=(yaw%180)/10.0f;
+                runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw1));
             });
         }
 
@@ -344,16 +354,53 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.iv_msgBoxLabel) {
-            if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
-                    || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
-                return;
-            }
-            showMsgBoxPopWindow(msgData);
-            viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
-        }else if (v.getId() == R.id.ai_recognize_imageview){
-            viewModel.switchAIRecognize();
+        switch (v.getId()){
+            case R.id.iv_msgBoxLabel:
+                if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
+                        || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
+                    return;
+                }
+                showMsgBoxPopWindow(msgData);
+                viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
+                break;
+            case R.id.ai_recognize_imageview:
+                viewModel.switchAIRecognize();
+                break;
+            case R.id.btn_take_off:
+                mGDUFlightController.startLanding(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(GDUError var1) {
+                        if (var1 == null) {
+                            toast("开始降落");
+                        } else {
+                            toast("开始降落失败");
+                        }
+                    }
+                });
+                break;
+            case R.id.btn_return_home:
+                mGDUFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(GDUError var1) {
+                        if (var1 == null) {
+                            toast("开始返航");
+                        } else {
+                            toast("开始返航失败");
+                        }
+                    }
+                });
+                break;
         }
+//        if (v.getId() == R.id.iv_msgBoxLabel) {
+//            if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
+//                    || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
+//                return;
+//            }
+//            showMsgBoxPopWindow(msgData);
+//            viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
+//        }else if (v.getId() == R.id.ai_recognize_imageview){
+//            viewModel.switchAIRecognize();
+//        }
     }
 
     @Override
@@ -403,6 +450,14 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 viewBinding.tvMsgBoxNum.setText("0");
                 viewBinding.tvMsgBoxNum.setVisibility(View.GONE);
 
+            }
+        });
+    }
+    public void toast(final String toast) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
             }
         });
     }
