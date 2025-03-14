@@ -3,12 +3,9 @@ package com.gdu.demo;
 import android.app.Application;
 
 import com.gdu.config.GduAppEnv;
-import com.gdu.demo.ourgdu.ourGDUAircraft;
-import com.gdu.demo.ourgdu.ourGDUSDKManager;
 import com.gdu.sdk.base.BaseProduct;
-//import com.gdu.sdk.manager.GDUSDKManager;
-//import com.gdu.sdk.products.GDUAircraft;
-
+import com.gdu.sdk.manager.GDUSDKManager;
+import com.gdu.sdk.products.GDUAircraft;
 import com.yolanda.nohttp.NoHttp;
 
 
@@ -29,19 +26,19 @@ public class SdkDemoApplication extends Application {
 
 
     public static synchronized BaseProduct getProductInstance() {
-        product = ourGDUSDKManager.getInstance().getProduct();
+        product = GDUSDKManager.getInstance().getProduct();
         return product;
     }
 
-    public static synchronized ourGDUAircraft getAircraftInstance() {
+    public static synchronized GDUAircraft getAircraftInstance() {
         if (!isAircraftConnected()) {
             return null;
         }
-        return (ourGDUAircraft) getProductInstance();
+        return (GDUAircraft) getProductInstance();
     }
 
     public static boolean isAircraftConnected() {
-        return getProductInstance() != null && getProductInstance() instanceof ourGDUAircraft;
+        return getProductInstance() != null && getProductInstance() instanceof GDUAircraft;
     }
     
     public static SdkDemoApplication getSingleApp() {

@@ -5,34 +5,27 @@
     android:keepScreenOn="true"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- 背景图片 -->
+
     <androidx.appcompat.widget.AppCompatImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="fitXY"
         android:src="@drawable/bg_mutipod_shape" />
 
-    <!-- TextureView -->
+    <!--实时画面-->
     <TextureView
         android:id="@+id/texture_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.gdu.demo.views.PaintView
-        android:id="@+id/paint_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/transparent"
-        />
-
-    <!-- 九宫格视图 -->
+    <!--九宫格-->
     <com.gdu.demo.widget.CustomJiuGongGeView
         android:id="@+id/night_grid_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"/>
 
-    <!-- 顶部状态栏 -->
+    <!--顶部状态-->
     <com.gdu.demo.widget.TopStateView
         android:id="@+id/top_state_view"
         android:layout_width="match_parent"
@@ -45,13 +38,23 @@
         android:layout_width="@dimen/dp_22"
         android:layout_height="@dimen/dp_26"
         android:contentDescription="@string/app_name"
-        android:src="@drawable/ic_msg_box"
+        android:src="@drawable/selector_msg_box_btn_bg"
         android:layout_marginTop="54dp"
         android:layout_marginStart="12dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 消息数量 -->
+    <!--  AI识别  -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/ai_recognize_imageview"
+        android:layout_width="@dimen/dp_26"
+        android:layout_height="@dimen/dp_26"
+        android:layout_marginStart="@dimen/dp_12"
+        android:src="@drawable/selector_ai_recognize"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/iv_msgBoxLabel"
+        app:layout_constraintLeft_toRightOf="@id/iv_msgBoxLabel"/>
+
     <com.noober.background.view.BLTextView
         android:id="@+id/tv_msgBoxNum"
         android:layout_width="@dimen/dp_10"
@@ -69,7 +72,20 @@
         app:layout_constraintRight_toRightOf="@id/iv_msgBoxLabel"
         app:layout_constraintTop_toTopOf="@id/iv_msgBoxLabel"/>
 
-    <!-- 飞行状态视图 -->
+
+    <!--相机参数-->
+    <com.gdu.demo.widgetlist.camerapara.CameraParaView
+        android:id="@+id/camera_para_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_state_view"
+        android:layout_marginRight="@dimen/dp_20"
+        android:layout_marginTop="@dimen/dp_10"
+        />
+
+
+    <!--飞行信息-->
     <com.gdu.demo.widgetlist.flyState.FlyStateView
         android:id="@+id/fly_state"
         android:layout_width="wrap_content"
@@ -79,199 +95,81 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginBottom="10dp"/>
 
-    <!-- 雷达视图 -->
-
-    <!-- 左侧竖排按钮 -->
+    <!--雷达-->
     <com.gdu.demo.widgetlist.radar.FPVRadarView
         android:id="@+id/fpv_rv"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="24dp"
         android:layout_width="260dp"
         android:layout_height="160dp"
-        android:layout_marginBottom="24dp"
         app:angle_text_size="8sp"
         app:color_return_point_border="@color/white"
         app:frv_return_text_size="6sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:radius_obstacle_point="3dp"
         app:state_text_size="8sp"
-        app:top_text_size="12sp" />
+        app:top_text_size="12sp"/>
 
-    <LinearLayout
+
+    <!--画面类型-->
+    <com.gdu.demo.widgetlist.lighttype.LightSelectedView
+        android:id="@+id/light_select"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="180dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <!-- 一键返航按钮 -->
-        <Button
-            android:id="@+id/btn_take_off"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="一键降落"
-            android:padding="16dp"
-            android:textColor="@color/black"
-            android:onClick="onClick"
-            android:layout_marginBottom="8dp"/>
-<!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
-
-        <!-- 一键返航按钮 -->
-        <Button
-            android:id="@+id/btn_return_home"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="一键返航"
-            android:padding="16dp"
-            android:textColor="@color/btn_return_home_text_color"
-            android:onClick="onClick"
-            android:layout_marginBottom="8dp"/>
-
-
-
-
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="24dp"
-        android:gravity="left"
+        android:layout_height="@dimen/dp_20"
+        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:layout_marginBottom="@dimen/dp_120"
+        android:layout_marginLeft="@dimen/dp_10" />
 
-    <!-- 切换模态按钮 -->
-    <Button
-        android:id="@+id/btn_mode_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="切换模态"
-        android:padding="8dp"
-        android:textColor="@color/black"
-        android:onClick="onClick"
-        android:layout_marginEnd="8dp"/>
 
-    <!-- 分屏按钮 -->
-    <Button
-        android:id="@+id/btn_split_screen"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="分屏"
-        android:padding="8dp"
-        android:textColor="@color/black"
-        android:onClick="onClick"
-        android:layout_marginEnd="8dp"/>
+    <!--拍照录像-->
+    <com.gdu.demo.widgetlist.takephoto.TakePhotoView
+        android:id="@+id/take_photo_view"
+        android:layout_width="@dimen/dp_54"
+        android:layout_height="@dimen/dp_180"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_state_view"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
-    <!-- 变焦按钮 -->
-    <Button
-        android:id="@+id/btn_zoom"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="变焦"
-        android:padding="8dp"
-        android:onClick="onClick"
-        android:textColor="@color/black"/>
-    </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="24dp"
-        android:gravity="right"
-        android:paddingRight="20dp"
+    <!--云台俯仰角-->
+   <com.gdu.demo.widgetlist.gimbalangle.GimbalAngleView
+        android:id="@+id/gimbal_angle_view"
+        android:layout_width="@dimen/dp_22"
+        android:layout_height="@dimen/dp_150"
+        app:layout_constraintTop_toBottomOf="@id/top_state_view"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <Button
-            android:id="@+id/button_gimbal_rotate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:onClick="onClick"
-            android:text="云台向下" />
-
-        <Button
-            android:id="@+id/button_gimbal_reset"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onClick"
-            android:text="云台回正" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="51dp"
-        android:gravity="left"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <Button
-            android:id="@+id/button_ai"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="70dp"
-            android:layout_marginEnd="8dp"
-            android:onClick="onClick"
-            android:text="AI识别" />
-
-        <Button
-            android:id="@+id/button_quit_ai"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:onClick="onClick"
-            android:text="退出识别" />
-
-        <TextView
-            android:id="@+id/ai_state"
-            android:layout_width="180dp"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="20sp"
-            android:textColor="@color/white" />
-
-        <TextView
-            android:id="@+id/unknown_num"
-            android:layout_marginStart="16dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="20sp"
-            android:textColor="@color/white" />
-
-    </LinearLayout>
+        app:layout_constraintRight_toLeftOf="@id/take_photo_view"
+        android:layout_marginRight="@dimen/dp_2"/>
 
 
-    <LinearLayout
-        android:layout_width="50dp"
-        android:layout_height="400dp"
-        android:orientation="vertical"
-        android:layout_marginRight="50dp"
-
-        app:layout_constraintTop_toTopOf="parent"
+    <!--变焦控件-->
+    <com.gdu.demo.widget.zoomView.CustomVerticalRangeSeekBar
+        android:id="@+id/zoom_seek_bar"
+        android:layout_width="@dimen/dp_38"
+        android:layout_height="@dimen/dp_160"
+        android:background="@android:color/transparent"
+        app:layout_constraintRight_toLeftOf="@id/gimbal_angle_view"
+        app:layout_constraintTop_toBottomOf="@id/top_state_view"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <com.gdu.demo.widget.focalGduSeekBar
-            android:id="@+id/zoomSeekBar"
-            android:layout_width="400dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:max="1590"
-            android:progress="0"
-            android:splitTrack="false"
-            android:rotation="-90"
-            />
-
-    </LinearLayout>
+        android:layout_marginRight="@dimen/dp_1"
+        app:rsb_gravity="center"
+        app:rsb_indicator_show_mode="alwaysHide"
+        app:rsb_mode="single"
+        app:rsb_progress_color="@android:color/transparent"
+        app:rsb_progress_default_color="@android:color/transparent"
+        app:rsb_step_auto_bonding="true"
+        app:rsb_step_color="@color/color_b3ffffff"
+        app:rsb_step_height="15dp"
+        app:rsb_step_width="1dp"
+        app:rsb_steps="20"
+        app:rsb_thumb_height="@dimen/dp_36"
+        app:rsb_thumb_width="@dimen/dp_15"
+        app:rsb_tick_mark_gravity="center"
+        app:rsb_tick_mark_layout_gravity="bottom"
+        app:rsb_tick_mark_mode="other"
+        app:rsb_tick_mark_text_color="@android:color/white"
+        app:rsb_tick_mark_text_size="@dimen/sp_10" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

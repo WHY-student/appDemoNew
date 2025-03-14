@@ -8,7 +8,6 @@ import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.ImageView;
@@ -18,14 +17,10 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 
 import com.gdu.camera.Capabilities;
-import com.gdu.camera.LightType;
 import com.gdu.camera.SettingsDefinitions;
 import com.gdu.camera.StorageState;
 import com.gdu.common.error.GDUError;
 import com.gdu.config.GduConfig;
-import com.gdu.config.GlobalVariable;
-import com.gdu.demo.ourgdu.ourGDUAircraft;
-import com.gdu.drone.GimbalType;
 import com.gdu.gimbal.GimbalState;
 import com.gdu.gimbal.Rotation;
 import com.gdu.gimbal.RotationMode;
@@ -36,17 +31,12 @@ import com.gdu.sdk.camera.VideoFeeder;
 import com.gdu.sdk.codec.GDUCodecManager;
 import com.gdu.sdk.codec.ImageProcessingManager;
 import com.gdu.sdk.gimbal.GDUGimbal;
-//import com.gdu.sdk.products.GDUAircraft;
+import com.gdu.sdk.products.GDUAircraft;
 import com.gdu.sdk.util.CommonCallbacks;
-import com.gdu.socket.GduCommunication3;
-import com.gdu.socket.GduFrame3;
-import com.gdu.socket.GduSocketManager;
-import com.gdu.socket.SocketCallBack3;
 import com.gdu.util.logs.RonLog;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -76,9 +66,6 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
     private ImageView mYUVImageView;
 
     private TextView tv_support_mode;
-
-    private GduCommunication3 mGduCommunication3;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,16 +90,15 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
         initCamera();
         initGimbal();
         mImageProcessingManager = new ImageProcessingManager(mContext);
-        mGduCommunication3 = GduSocketManager.getInstance().getGduCommunication();
     }
 
     private void initGimbal() {
-        mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+        mGDUGimbal = (GDUGimbal) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
         if (mGDUGimbal == null) {
             toast("云台未识别，相关功能可能出现异常");
             return;
         }
-        List<SettingsDefinitions.DisplayMode> list = new ArrayList<>();
+        List<SettingsDefinitions.DisplayMode> list = mGDUGimbal.getSupportDisplayMode();
         String supportMode = "";
         for (int i = 0; i < list.size(); i++) {
             SettingsDefinitions.DisplayMode mode = list.get(i);
@@ -142,14 +128,12 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
                 s.append(" isCalibrating ");
                 s.append(state.isCalibrating());
                 show(mGimbalStateTextView, s.toString());
-                float yaw = (float) state.getAttitudeInDegrees().yaw;
-                toast(String.format("%.2f", yaw));
             }
         });
     }
 
     private void initCamera() {
-        mGDUCamera = (GDUCamera) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getCamera();
+        mGDUCamera = (GDUCamera) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getCamera();
         if (mGDUCamera != null) {
             mGDUCamera.setSystemStateCallback(new SystemState.Callback() {
                 @Override
@@ -293,80 +277,19 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
                 });
                 break;
             case R.id.btn_get_focal_length:
-//                toast(String.valueOf(GlobalVariable.sCurrentCameraAccurateFocus)+" "+String.valueOf(GlobalVariable.sCurrentCameraFocus));
-//                mGduCommunication3.zoomCustomRatio((byte)1, (code, bean) -> {
-////                    String version = this.parseCameraVersion(code, bean, LightType.VISIBLE_LIGHT);
-////                    if (callback != null && version != null) {
-////                        callback.onSuccess(version);
-//                        Log.d("focal", Arrays.toString(bean.frameContent));
-//                    });
-                toast(String.valueOf(GlobalVariable.sCurrentCameraZoom));
-
-//                GlobalVariable.gimbalType = GimbalType.GIMBAL_FOUR_LIGHT;
-
-//                mGDUCamera.getOpticalZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
-//                    @Override
-//                    public void onSuccess(Integer focalLength) {
-//                        toast("获取焦距发送成功 " + focalLength);
-//                    }
-//
-//                    @Override
-//                    public void onFailure(GDUError var1) {
-//                        toast("获取焦距发送失败");
-//                    }
-//                });
-                break;
-            case R.id.btn_set_focal_length:
-                GlobalVariable.gimbalType = GimbalType.GIMBAL_FOUR_LIGHT;
-                mGduCommunication3.zoomCustomSizeRatio((short)10, new SocketCallBack3() {
-                    public void callBack(int code, GduFrame3 bean) {
-                        if(code==0){
-                            toast("设定成功"+"30");
-                        }
-                        else {
-                            toast("设定失败");
-                        }
-                    }
-                });
-//                GlobalVariable.gimbalType = GimbalType.GIMBAL_FOUR_LIGHT;
-//                mGDUCamera.setOpticalZoomFocalLength(1, new CommonCallbacks.CompletionCallback() {
-//                    @Override
-//                    public void onResult(GDUError error) {
-//                        if (error == null) {
-//                            toast("发送成功");
-//                        } else {
-//                            Log.d("GlobalVariable.gimbalType", String.valueOf(GlobalVariable.gimbalType));
-//                            Log.d("GimbalType.GIMBAL_FOUR_LIGHT", String.valueOf(GimbalType.GIMBAL_FOUR_LIGHT));
-//                            Log.d("GlobalVariable.sCameraLightType", String.valueOf(GlobalVariable.sCameraLightType));
-//                            toast("发送失败");
-//                        }
-//                    }
-//                });
-                break;
-            case R.id.btn_start_continuous_optical_zoom:
-                mGDUCamera.startContinuousOpticalZoom(SettingsDefinitions.ZoomDirection.ZOOM_IN, SettingsDefinitions.ZoomSpeed.SLOWEST, new CommonCallbacks.CompletionCallback() {
+                mGDUCamera.getOpticalZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
                     @Override
-                    public void onResult(GDUError error) {
-                        if (error == null) {
-                            toast("发送成功");
-                        } else {
-                            toast("发送失败");
-                        }
+                    public void onSuccess(Integer focalLength) {
+                        toast("获取焦距发送成功 " + focalLength);
                     }
-                });
-                break;
-            case R.id.btn_stop_continuous_optical_zoom:
-                mGDUCamera.stopContinuousOpticalZoom(new CommonCallbacks.CompletionCallback() {
+
                     @Override
-                    public void onResult(GDUError error) {
-                        if (error == null) {
-                            toast("发送成功");
-                        } else {
-                            toast("发送失败");
-                        }
+                    public void onFailure(GDUError var1) {
+                        toast("获取焦距发送失败");
                     }
                 });
                 break;
+
             case R.id.btn_set_display_mode:
                 mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.VISUAL_ONLY, new CommonCallbacks.CompletionCallback() {
                     @Override
@@ -393,7 +316,7 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
                 });
                 break;
             case R.id.btn_set_digital_zoom:
-                mGDUCamera.setDigitalZoomFactor(3, new CommonCallbacks.CompletionCallback() {
+                mGDUCamera.setZoom(10, new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(GDUError error) {
                         if (error == null) {
@@ -405,17 +328,7 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
                 });
                 break;
             case R.id.btn_get_digital_zoom:
-                mGDUCamera.getDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<Float>() {
-                    @Override
-                    public void onSuccess(Float var1) {
-                        toast("发送成功 " + var1);
-                    }
-
-                    @Override
-                    public void onFailure(GDUError var1) {
-                        toast("发送失败 ");
-                    }
-                });
+               float zoom =  mGDUCamera.getCurrentZoom();
                 break;
             case R.id.btn_reset:
                 mGDUGimbal.reset(new CommonCallbacks.CompletionCallback() {
@@ -432,7 +345,7 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
             case R.id.btn_rotate:  //TODO 俯仰，方位会变
                 Rotation rotation = new Rotation();
                 rotation.setMode(RotationMode.ABSOLUTE_ANGLE);
-                rotation.setPitch(-90);
+                rotation.setPitch(90);
 //                rotation.set
                 mGDUGimbal.rotate(rotation, new CommonCallbacks.CompletionCallback() {
                     @Override
@@ -644,7 +557,7 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         if (codecManager == null) {
-            codecManager = new GDUCodecManager(mContext, surface, width, height);
+            codecManager = new GDUCodecManager(mContext, mGduPlayView, width, height);
         }
     }
 

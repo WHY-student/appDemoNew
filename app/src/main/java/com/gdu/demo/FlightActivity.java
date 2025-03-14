@@ -1,81 +1,75 @@
 package com.gdu.demo;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.SurfaceTexture;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.TextureView;
 import android.view.View;
-import android.widget.Button;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.ViewModelProvider;
 
+import com.gdu.AlgorithmMark;
 import com.gdu.beans.WarnBean;
-import com.gdu.camera.SettingsDefinitions;
-import com.gdu.camera.StorageState;
 import com.gdu.common.error.GDUError;
 import com.gdu.config.ConnStateEnum;
 import com.gdu.config.GlobalVariable;
+import com.gdu.config.UavStaticVar;
 import com.gdu.demo.databinding.ActivityFlightBinding;
+import com.gdu.demo.flight.aibox.helper.TargetDetectHelper;
 import com.gdu.demo.flight.msgbox.MsgBoxBean;
 import com.gdu.demo.flight.msgbox.MsgBoxManager;
 import com.gdu.demo.flight.msgbox.MsgBoxPopView;
 import com.gdu.demo.flight.msgbox.MsgBoxViewCallBack;
+import com.gdu.demo.flight.pre.viewmodel.PreFlightInspectionViewModel;
 import com.gdu.demo.flight.setting.fragment.SettingDialogFragment;
-import com.gdu.demo.ourgdu.ourGDUAircraft;
-import com.gdu.demo.ourgdu.ourGDUVision;
+import com.gdu.demo.utils.CommonDialog;
 import com.gdu.demo.utils.GisUtil;
 import com.gdu.demo.utils.LoadingDialogUtils;
 import com.gdu.demo.utils.SettingDao;
-import com.gdu.demo.views.PaintView;
+import com.gdu.demo.utils.ToolManager;
+import com.gdu.demo.viewmodel.FlightViewModel;
 import com.gdu.demo.widget.TopStateView;
-import com.gdu.demo.widget.focalGduSeekBar;
+import com.gdu.demo.widget.zoomView.S220CustomSizeFocusHelper;
+import com.gdu.drone.GimbalType;
 import com.gdu.drone.LocationCoordinate2D;
 import com.gdu.drone.LocationCoordinate3D;
+import com.gdu.drone.ScreenContentType;
 import com.gdu.drone.TargetMode;
 import com.gdu.gimbal.GimbalState;
-import com.gdu.gimbal.Rotation;
-import com.gdu.gimbal.RotationMode;
 import com.gdu.radar.ObstaclePoint;
 import com.gdu.radar.PerceptionInformation;
-import com.gdu.sdk.camera.GDUCamera;
-import com.gdu.sdk.camera.SystemState;
 import com.gdu.sdk.camera.VideoFeeder;
 import com.gdu.sdk.codec.GDUCodecManager;
-import com.gdu.sdk.flightcontroller.FlightState;
 import com.gdu.sdk.flightcontroller.GDUFlightController;
 import com.gdu.sdk.gimbal.GDUGimbal;
-//import com.gdu.sdk.products.GDUAircraft;
+import com.gdu.sdk.products.GDUAircraft;
 import com.gdu.sdk.radar.GDURadar;
 import com.gdu.sdk.util.CommonCallbacks;
-import com.gdu.sdk.vision.OnTargetDetectListener;
-import com.gdu.socket.GduCommunication3;
-import com.gdu.socket.GduFrame3;
-import com.gdu.socket.GduSocketManager;
-import com.gdu.socket.SocketCallBack3;
+import com.gdu.socketmodel.GduSocketConfig3;
 import com.gdu.util.CollectionUtils;
+import com.gdu.util.ConnectUtil;
+import com.gdu.util.StatusBarUtils;
 import com.gdu.util.StringUtils;
 import com.gdu.util.ThreadHelper;
+import com.gdu.util.ViewUtils;
+import com.gdu.util.logger.MyLogUtils;
+import com.gdu.util.logs.AppLog;
+import com.rxjava.rxlife.RxLife;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class FlightActivity extends FragmentActivity implements TextureView.SurfaceTextureListener, MsgBoxViewCallBack, View.OnClickListener {
 
@@ -84,57 +78,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private VideoFeeder.VideoDataListener videoDataListener ;
 
     private boolean showSuccess = false;
-
-    private ourGDUVision gduVision;
-    private GDUCamera mGDUCamera;
-    private GDUFlightController mGDUFlightController;
-
-    private GDUGimbal mGDUGimbal;
-    private PaintView paintView;
-    private Context mContext;
-
-    private int chacktimes=1;
-    private int chacktimes1=0;
-    private int chacktimes2=0;
-    private int modelID=0;
-    private int latestModelID=1;
-    private FlightState flightState;
-    private Button changeMode;
-    private Button changeFouse;
-    private Button pipScreen;
-    private Button flyState;
-    private Button backState;
-//    private Button changeGimbalRotate;
-
-    private Button startAIRecognize;
-
-    private Button quitAIRecognize;
-
-    private TextView aiState;
-    private TextView unKnownum;
-
-    private Boolean isAIStart;
-
-    private focalGduSeekBar zoomSeekBar;
-
-    private GduCommunication3 mGduCommunication3;
-    private Handler handler = new Handler();
-    private Runnable resetStateTask; // 用于重置状态的任务
-    private Runnable completeTask;
-    private Runnable updateTask;
-    private int incState = 0;
-    private int unkonwNum=0;
-    private int currentState1=0;
-    private boolean isProcessRunning = false;
-
-    // 定义一个 Runnable 任务，用于更新 AI 状态
-
-
-    private Handler mHandler = new Handler(Looper.getMainLooper());
-
-    private Boolean isPaused = false;
-
-
+    private S220CustomSizeFocusHelper mCustomSizeFocusHelper;
+    private FlightViewModel viewModel;/**
+     * 目标检测类
+     */
+    private TargetDetectHelper mTargetDetectHelper;
 
 
     @Override
@@ -142,20 +90,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         super.onCreate(savedInstanceState);
         viewBinding = ActivityFlightBinding.inflate(getLayoutInflater());
         setContentView(viewBinding.getRoot());
+        viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
         initView();
         initData();
         initListener();
-        initBackgroundThread();
-        mContext = this;
     }
 
-
     private void initListener() {
-        mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
+        GDUFlightController mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
         if (mGDUFlightController != null){
             mGDUFlightController.setStateCallback(flightControllerState -> {
                 //航向
-                flightState = flightControllerState.getFlightState();
                 float yaw = (float) flightControllerState.getAttitude().yaw;
                 float roll = (float) flightControllerState.getAttitude().roll;
                 LocationCoordinate3D aircraftLocation = flightControllerState.getAircraftLocation();
@@ -166,14 +111,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 double homeLat = homeLocation.getLatitude();
                 int distance = (int) GisUtil.calculateDistance(uavLon, uavLat, homeLon, homeLat);
                 runOnUiThread(()->{
-                    if(yaw>=-180&&yaw<0){
-//                        yaw1=yaw + 360;
-                        viewBinding.fpvRv.setHeadingAngle(yaw+360);
-                    }else{
-                        viewBinding.fpvRv.setHeadingAngle(yaw);
-                    }
-//                    runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw));
-//                    toast(String.format("%.2f", yaw));
+                    viewBinding.fpvRv.setHeadingAngle(yaw);
                     viewBinding.fpvRv.setHorizontalDipAngle(roll);
                     if (homeLon == 0 && homeLat == 0){
                         viewBinding.fpvRv.setReturnDistance(GlobalVariable.flyDistance +"m");
@@ -209,45 +147,15 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         if (gimbal != null){
             gimbal.setStateCallback(state -> {
                 float yaw = (float) state.getAttitudeInDegrees().yaw;
-                Log.d("gimbalangle","航向角为"+yaw);
-//                toast(String.format("%.2f", yaw));
-                float yaw1;
-                yaw1=(yaw%180)/10.0f;
-//                yaw1=yaw1/10.0f;
-//                toast(String.format("%.2f", yaw1));
-                runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw1));
+                runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw));
             });
         }
-        HandlerThread backgroundThread = new HandlerThread("BackgroundThread");
-        backgroundThread.start();
-        Handler backgroundHandler = new Handler(backgroundThread.getLooper());
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                // 在后台线程中执行任务
-                try {
-                    Thread.sleep(1000); // 模拟耗时操作
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
 
-                // 通过主线程的 Handler 调用 invalidate()
-                //long startTime = System.currentTimeMillis();
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(!isPaused){
-//                            toast(GlobalVariable.sCurrentCameraZoom+"");
-                            int currentProgress = (int)((GlobalVariable.sCurrentCameraZoom-1.0f)*10);
-                            zoomSeekBar.setProgress(currentProgress);
-                        }
-                    }
-
-                });
-                backgroundHandler.post(this);
+        viewModel.getToastLiveData().observe(this, data -> {
+            if (data != 0){
+                showToast(getResources().getString(data));
             }
         });
-
     }
 
 
@@ -263,264 +171,85 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 SettingDialogFragment.show(getSupportFragmentManager());
             }
         });
-
         viewBinding.textureView.setSurfaceTextureListener(this);
         videoDataListener = new VideoFeeder.VideoDataListener() {
             @Override
             public void onReceive(byte[] bytes, int size) {
                 if (null != codecManager) {
-                    mHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            // 延迟后执行的操作
-                            codecManager.sendDataToDecoder(bytes, size);
-                        }
-                    }, 550);
+                    codecManager.sendDataToDecoder(bytes, size);
                 }
             }
         };
         viewBinding.fpvRv.setShowObstacleOFF(!GlobalVariable.obstacleIsOpen);
         viewBinding.fpvRv.setObstacleMax(40);
         viewBinding.ivMsgBoxLabel.setOnClickListener(this);
+        viewBinding.aiRecognizeImageview.setOnClickListener(this);
+        ViewUtils.setViewShowOrHide(viewBinding.aiRecognizeImageview, viewModel.isShowAiBox());
 
         SettingDao settingDao = SettingDao.getSingle();
         boolean show = settingDao.getBooleanValue(settingDao.ZORRORLabel_Grid, false);
         showNineGridShow(show);
-        changeMode = findViewById(R.id.btn_mode_switch);
-        changeFouse = findViewById(R.id.btn_zoom);
-        pipScreen =findViewById(R.id.btn_split_screen);
-        flyState=findViewById(R.id.btn_take_off);
-        backState=findViewById(R.id.btn_return_home);
 
-        paintView = findViewById(R.id.paint_view);
-        unKnownum = findViewById(R.id.unknown_num);
-//        设定云台角度，如果云台角度不为0，则置为回正，否则显示向下
-//        changeGimbalRotate = findViewById(R.id.button_gimbal_rotate);
+        mCustomSizeFocusHelper = new S220CustomSizeFocusHelper(viewBinding.zoomSeekBar);
 
-        startAIRecognize = findViewById(R.id.button_ai);
+        mTargetDetectHelper = TargetDetectHelper.getInstance();
+        mTargetDetectHelper.init(this);
+        mTargetDetectHelper.setOnTargetDetectListener(new TargetDetectHelper.OnTargetDetectListener() {
+            @Override
+            public void onTargetDetect(boolean isSuccess, List<TargetMode> targetModes) {
+                LoadingDialogUtils.cancelLoadingDialog();
+                //视频是主界面时，在视频上画框
+                if (isSuccess && targetModes != null && !targetModes.isEmpty()) {
+//                    AppLog.e("TargetDetect", "onTargetDetect targetModes size = " + targetModes.size());
+                    GlobalVariable.isTargetDetectMode = true;
+                    mTargetDetectHelper.startShowTarget();
+                    GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
+                    ThreadHelper.runOnUiThread(() -> Toast.makeText(FlightActivity.this, "识别到"+targetModes.size()+"个", Toast.LENGTH_SHORT).show());
+                } else if (targetModes == null) {
+//                    AppLog.e("TargetDetect", "onTargetDetect targetModes size = 0");
+                }
+            }
 
+            @Override
+            public void onTargetDetectSend(boolean isSuccess) {
+                MyLogUtils.d("mTargetDetectHelper onTargetDetectSend() isSuccess = " + isSuccess);
+                if (isSuccess) {
+                    GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
+                    GlobalVariable.discernIsOpen = true;
+                    GlobalVariable.isTargetDetectMode = true;
+                } else {
+                    GlobalVariable.isTargetDetectMode = false;
+                }
+            }
 
-        quitAIRecognize = findViewById(R.id.button_quit_ai);
-        quitAIRecognize.setEnabled(false);
+            @Override
+            public void onTargetLocateSend(boolean isSuccess) {
+                MyLogUtils.d("mTargetDetectHelper onTargetLocateSend() isSuccess = " + isSuccess);
+                if (isSuccess) {
+//                    DialogUtils.createLoadDialog(ZorroRealControlActivity.this);
+                } else {
+                }
+            }
 
-        aiState = findViewById(R.id.ai_state);
+            @Override
+            public void onTargetLocate(boolean isSuccess, TargetMode targetMode) {
+                MyLogUtils.d("mTargetDetectHelper onTargetLocate() isSuccess = " + isSuccess);
+//                DialogUtils.cancelLoadDialog();
+            }
 
-        isAIStart = false;
-        startAIRecognize.setEnabled(true);
-        quitAIRecognize.setEnabled(false);
-
-
-        zoomSeekBar = findViewById(R.id.zoomSeekBar);
-
-
-//        backState.setEnabled(false);
+            @Override
+            public void onDetectClosed() {
+                //收到关闭目标识别成功回调后再次重置状态，防止部分极端场景本地重置状态到发送关闭中间时间段又收到周期回调，将状态还原导致无法退出的问题
+            }
+        });
     }
 
-    private void initCamera() {
-        mGDUCamera = (GDUCamera) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getCamera();
-        if (mGDUCamera != null) {
-            mGDUCamera.setSystemStateCallback(new SystemState.Callback() {
-                @Override
-                public void onUpdate(SystemState systemState) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(" isPhotoStored ");
-                    sb.append(systemState.isPhotoStored());
-                    sb.append(" hasError ");
-                    sb.append(systemState.isHasError());
-                    sb.append(" isRecording ");
-                    sb.append(systemState.isRecording());
-                    sb.append(" mode ");
-                    sb.append(systemState.getMode());
-                    sb.append(" time ");
-                    sb.append(systemState.getCurrentVideoRecordingTimeInSeconds());
-                    //show(mInfoTextView, sb.toString());
-                }
-            });
-            mGDUCamera.setStorageStateCallBack(new StorageState.Callback() {
-                @Override
-                public void onUpdate(StorageState state) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(" isFormatting ");
-                    sb.append(state.isFormatting());
-                    sb.append(" isFormatted ");
-                    sb.append(state.isFormatted());
-                    sb.append(" TotalSpace ");
-                    sb.append(state.getTotalSpace());
-                    sb.append(" RemainingSpace ");
-                    sb.append(state.getRemainingSpace());
-                    //show(mStorageInfoTextView, sb.toString());
-                }
-            });
-        }
-    }
 
     private void initData() {
         new MsgBoxManager(this, 1,this);
         VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(videoDataListener);
-        initGimbal();
-        initGduvision();
-        initCamera();
-        mGDUCamera.getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
-            @Override
-            public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
-                if(displayMode == SettingsDefinitions.DisplayMode.THERMAL_ONLY){
-                    changeMode.setText("可见光");
-                }else{
-                    changeMode.setText("红外");
-                }
-                if(displayMode==SettingsDefinitions.DisplayMode.ZL){
-                    changeFouse.setText("变焦");
-                }else{
-                    changeFouse.setText("广角");
-                }
-                if(displayMode==SettingsDefinitions.DisplayMode.PIP){
-                    pipScreen.setText("复原");
-                }else{
-                    pipScreen.setText("分屏");
-                }
-
-            }
-
-            @Override
-            public void onFailure(GDUError var1) {
-                toast("发送失败");
-            }
-        });
-//        if (mGDUFlightController != null) {
-////            mGDUFlightController.setStateCallback(flightControllerState -> {
-////                flightState = flightControllerState.getFlightState();
-//                if (flightState == FlightState.GROUND) {
-//                    flyState.setText("开始起飞");
-//                } else if (flightState == FlightState.LANDING) {
-//                    flyState.setText("取消降落");
-//                }else{
-//                    flyState.setText("一键降落");
-//                }
-//                if(flightState == FlightState.GROUND){
-//                    backState.setEnabled(true);
-//                    backState.setAlpha(0.5f);
-//                }
-//                else{
-//                    backState.setEnabled(true);
-//                }
-//
-//        }
-
-        mGduCommunication3 = GduSocketManager.getInstance().getGduCommunication();
-
-
-        // 假设最小倍数 1.0x，最大倍数 5.0x
-        final float minZoom = 1.0f;
-        final float maxZoom = 160.0f;
-
-        String text = String.format("%.1fx", 1.0);
-
-        // 创建新的 Thumb 并设置
-        Drawable thumbDrawable = createThumbDrawable(FlightActivity.this, text);
-        zoomSeekBar.setThumb(thumbDrawable);
-
-        zoomSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // 计算当前倍数
-                float zoomFactor = minZoom + (progress / 10f);
-                String text = String.format("%.1fx", zoomFactor);
-
-                // 创建新的 Thumb 并设置
-                Drawable thumbDrawable = createThumbDrawable(FlightActivity.this, text);
-                seekBar.setThumb(thumbDrawable);
-
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                isPaused = true;
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                int focal_length = 10+seekBar.getProgress();
-                isPaused = false;
-
-                mGduCommunication3.zoomCustomSizeRatio((short)focal_length, new SocketCallBack3() {
-                    public void callBack(int code, GduFrame3 bean) {
-                        if(code==0){
-                            toast("设定焦距为:"+focal_length);
-                        }
-                        else {
-                            toast("设定失败");
-                        }
-                    }
-                });
-            }
-        });
-
     }
 
-    private void initGduvision(){
-        gduVision =(ourGDUVision) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGduVision();
-        if (gduVision==null){
-            toast("gduVision出现异常");
-            return;
-        }
-        else{
-            try {
-                gduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
-                    //                    long startTime=System.currentTimeMillis();
-                    @Override
-                    public void onTargetDetecting(List<TargetMode> list) {
-//                        if (list == null) {
-//                            toast("没有检测物体");
-//                        } else {
-//                            if(!isAIStart){
-//                                startAIRecognize.setEnabled(false);
-//                                quitAIRecognize.setEnabled(true);
-//                                isAIStart = true;
-////                                modelID=paintView.getModelID();
-////                                toast(String.format("%d", modelID));
-////                                updateModel(modelID);
-//                                show(aiState, "AI状态：未增量");
-//                            }
-//                            paintView.setRectParams(list);
-//                            //long endTime=System.currentTimeMillis();
-//                            //long ver= endTime -startTime;
-//                            //Log.d("delaytime","延长时间"+ver);
-//
-//                        }
-                    }
-
-                    @Override
-                    public void onTargetDetectFailed(int i) {
-                        toast("检测失败");
-
-                    }
-
-                    @Override
-                    public void onTargetDetectStart() {
-                        toast("检测开始");
-
-                    }
-
-                    @Override
-                    public void onTargetDetectFinished() {
-                        toast("检测结束");
-
-                    }
-                });
-            }
-            catch (Exception ignored){
-                toast("添加监视器错误");
-            }
-        }
-    }
-
-    private void initGimbal() {
-        mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
-        if (mGDUGimbal == null) {
-            toast("云台未识别，相关功能可能出现异常");
-            return;
-        }
-    }
 
     public void showNineGridShow(boolean show) {
         viewBinding.nightGridView.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -529,7 +258,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     public void beginCheckCloud() {
         showSuccess = false;
-        GDUGimbal mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+        GDUGimbal mGDUGimbal = (GDUGimbal) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
         if (mGDUGimbal == null) {
             return;
         }
@@ -582,7 +311,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         if (codecManager != null) {
             codecManager.onDestroy();
         }
-        stopBackgroundThread();
+        if (mCustomSizeFocusHelper != null) {
+            mCustomSizeFocusHelper.onDestroy();
+        }
     }
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
@@ -625,445 +356,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
     }
 
-    private HandlerThread backgroundThread;
-    private Handler backgroundHandler;
-
-    private void initBackgroundThread() {
-        backgroundThread = new HandlerThread("ModelUpdateThread");
-        backgroundThread.start();
-        backgroundHandler = new Handler(backgroundThread.getLooper());
-    }
-
-    private void stopBackgroundThread() {
-        if (backgroundThread != null) {
-            backgroundThread.quitSafely();
-            backgroundThread = null;
-            backgroundHandler = null;
-        }
-//        if (handlerThread != null) {
-//            handlerThread.quit();
-//        }
-    }
-
-    private void updateKnowNum(int modelID) {
-        int num = modelID % 100;
-        if (num == unkonwNum) {
-            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
-            return;
-        }
-        if(num != unkonwNum) {
-            show(unKnownum, "  " + "未知类数目 " + num);
-            unkonwNum=num;
-        }
-    }
-//    private void updateKnowNum(int modelID) {
-//        initBackgroundThread(); // 确保线程初始化
-//
-//        // 取消之前的任务，防止重复执行
-//        if (updateTask != null) {
-//            backgroundHandler.removeCallbacks(updateTask);
-//        }
-//
-//        int num = modelID % 100;
-//        if (num == unkonwNum) {
-//            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
-//            return;
-//        }
-//        if (backgroundHandler == null) {
-//            initBackgroundThread();
-//        }
-//        if(num != unkonwNum) {
-//            updateTask = new Runnable() {
-//                @Override
-//                public void run() {
-//                    runOnUiThread(() -> show(unKnownum,  "未知类数目：" + num));
-//
-//                    // 30ms 后再次执行
-//                    backgroundHandler.postDelayed(this, 30);
-//                }
-//            };
-//
-//            // 启动定时任务
-//            backgroundHandler.post(updateTask);
-//            unkonwNum=num;
-//        }
-//    }
-//
-//    // 停止任务
-//    private void stopUpdateKnowNum() {
-//        if (backgroundHandler != null && updateTask != null) {
-//            backgroundHandler.removeCallbacks(updateTask);
-//        }
-//    }
-
-    private boolean isTaskRunning = false; // 标记是否有延迟任务正在运行
-
-    private void updateModel(int modelID) {
-        int firstNum = modelID / 1000;
-        int secondNum = (modelID / 100) % 10;
-        int temp=modelID / 100;
-        // 如果当前有任务正在运行，直接按照 1077 处理
-        if (isTaskRunning) {
-            Log.d("TaskDebug", "Task is running, treating modelID as 1077: " + modelID);
-//            show(aiState, "AI状态：增量" + incState + "中"); // 按照 1077 处理
-            return;
-        }
-
-        // 如果 modelID 没有变化，直接返回
-        if (temp == 10 ) {
-            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
-            return;
-        }
-
-        // 确保 backgroundHandler 已初始化
-        if (backgroundHandler == null) {
-            initBackgroundThread();
-        }
-
-        // 记录最新的 modelID
-        latestModelID = firstNum;
-        Log.d("TaskDebug", "Latest modelID: " + latestModelID);
-
-        if (temp == 20 && isProcessRunning) {
-            // 标记任务开始运行
-            isTaskRunning = true;
-
-            incState = firstNum-1;
-            // 显示“增量中”
-            show(aiState, "AI状态：增量" + incState + "中");
-            toast("开始增量");
-
-            // 1 秒后显示“增量完成”
-            backgroundHandler.postDelayed(() -> {
-                if (!isProcessRunning) {
-                    Log.d("TaskDebug", "Process is not running, skipping resetStateTask");
-                    completeTask();
-                    return; // 如果进程被停止，则不再执行
-                }
-                show(aiState, "AI状态：增量" + incState + "完成");
-
-                // 0.5 秒后重新判断状态
-                backgroundHandler.postDelayed(() -> {
-                    completeTask();
-                }, 500); // 延迟 0.5 秒
-            }, 1000); // 延迟 1 秒
-        } else if(modelID == 1 && isProcessRunning) {
-            // 如果 modelID 不是 1077，或者进程被停止，直接显示“未增量”
-//            show(aiState, "AI状态：增量" + incState + "完成");
-        }else{
-//            show(aiState, "AI状态：未增量");
-        }
-    }
-
-    // 完成任务并重置状态
-    private void completeTask() {
-        isTaskRunning = false; // 标记任务完成
-        Log.d("TaskDebug", "Task completed, latest modelID: " + latestModelID);
-
-        // 根据最新的 modelID 更新状态
-//        updateModel(latestModelID);
-    }
-
-
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.iv_msgBoxLabel:
-                if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
-                        || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
-                    return;
-                }
-                showMsgBoxPopWindow(msgData);
-                viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
-                break;
-            case R.id.btn_mode_switch:
-                try {
-                    chacktimes++;
-                    if (chacktimes % 2 == 0) {
-                        mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.THERMAL_ONLY, new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(GDUError error) {
-                                if (error == null) {
-//                                    initData();
-                                    toast("设置成红外");
-                                } else {
-                                    toast("发送失败");
-                                }
-                            }
-                        });
-                        changeMode.setText("可见光");
-
-
-                    } else {
-                        mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.ZL, new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(GDUError error) {
-                                if (error == null) {
-//                                    initData();
-                                    toast("可见光");
-                                } else {
-                                    toast("发送失败");
-                                }
-                            }
-                        });
-                        changeMode.setText("红外");
-                    }
-                }
-                catch (Exception e){
-                    Toast.makeText(mContext, "changeMode Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-                break;
-            case R.id.btn_split_screen:
-                try {
-                    chacktimes2++;
-                    if (chacktimes2 % 2 == 0) {
-                        mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.PIP, new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(GDUError error) {
-                                if (error == null) {
-//                                    initData();
-                                    toast("设置成分屏");
-                                } else {
-                                    toast("发送失败");
-                                }
-                            }
-                        });
-                        pipScreen.setText("复原");
-
-
-                    } else {
-                        mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.ZL, new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(GDUError error) {
-                                if (error == null) {
-//                                    initData();
-                                    toast("复原");
-                                } else {
-                                    toast("发送失败");
-                                }
-                            }
-                        });
-                        pipScreen.setText("分屏");
-                    }
-                }
-                catch (Exception e){
-                    Toast.makeText(mContext, "changeMode Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-                break;
-            case R.id.btn_zoom:
-                try {
-                    chacktimes1++;
-                    if (chacktimes1 % 2 == 0) {
-                        mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.ZL, new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(GDUError error) {
-                                if (error == null) {
-//                                    initData();
-                                    toast("设置成变焦");
-                                } else {
-                                    toast("发送失败");
-                                }
-                            }
-                        });
-                        changeFouse.setText("变焦");
-
-
-                    } else {
-                        mGDUCamera.setDisplayMode(SettingsDefinitions.DisplayMode.WAL, new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(GDUError error) {
-                                if (error == null) {
-//                                    initData();
-                                    toast("设置成广角");
-                                } else {
-                                    toast("发送失败");
-                                }
-                            }
-                        });
-                        changeFouse.setText("广角");
-                    }
-                }
-                catch (Exception e){
-                    Toast.makeText(mContext, "changeMode Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-                break;
-            case R.id.btn_take_off:
-                mGDUFlightController.startLanding(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError var1) {
-                        if (var1 == null) {
-                            toast("开始降落");
-                        } else {
-                            toast("开始降落失败");
-                        }
-                    }
-                });
-//                GDUFlightController mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
-//                if (mGDUFlightController != null) {
-//                    if (flightState == FlightState.GROUND) {
-//                            //起飞高度设置成1.5米
-//                            flyState.setText("开始起飞");
-//                            mGDUFlightController.startTakeoff(150, new CommonCallbacks.CompletionCallback() {
-//                                @Override
-//                                public void onResult(GDUError var1) {
-//                                    if (var1 == null) {
-//                                        toast("起飞成功");
-//                                        flyState.setText("开始降落");
-//                                    } else {
-//                                        toast("起飞失败");
-//                                        flyState.setText("开始起飞");
-//                                    }
-//                                }
-//                            });
-//                    } else if (flightState == FlightState.FLING||flightState==FlightState.HOVERING||flightState==FlightState.BACKING) {
-//                            flyState.setText("开始降落");
-
-//                    } else if (flightState == FlightState.LANDING) {
-//                        mGDUFlightController.cancelLanding(new CommonCallbacks.CompletionCallback() {
-//                            @Override
-//                            public void onResult(GDUError var1) {
-//                                if (var1 == null) {
-//                                    toast("取消降落成功");
-//                                } else {
-//                                    toast("取消降落失败");
-//                                }
-//                            }
-//                            });
-//                            flyState.setText("开始降落");
-//
-//
-//                    }
-//                }
-                break;
-            case R.id.btn_return_home:
-                mGDUFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError var1) {
-                        if (var1 == null) {
-                            toast("开始返航");
-                        } else {
-                            toast("开始返航失败");
-                        }
-                    }
-                });
-                break;
-            case R.id.button_gimbal_rotate:  //TODO 俯仰，方位会变
-                Log.d("demo","开始向下");
-                Rotation rotation = new Rotation();
-                rotation.setMode(RotationMode.ABSOLUTE_ANGLE);
-                rotation.setPitch(-90);
-                //                rotation.set
-                mGDUGimbal.rotate(rotation, new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError error) {
-                        if (error == null) {
-                            toast("云台向下");
-                        } else {
-                            toast("发送失败");
-                        }
-                    }
-                });
-                break;
-
-            case R.id.button_gimbal_reset:
-                Log.d("demo","开始回正");
-                mGDUGimbal.reset(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError error) {
-                        if (error == null) {
-                            toast("云台回正");
-                        } else {
-                            toast("发送失败");
-                        }
-                    }
-                });
-                break;
-
-            case R.id.button_ai:
-//                toast(String.format("%d", modelID));
-//                show(aiState, "AI状态：未增量");
-                isProcessRunning=true;
-                gduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
-                    @Override
-                    public void onTargetDetecting(List<TargetMode> list) {
-                        if (list == null) {
-                            toast("没有检测物体");
-                        } else {
-                            if(!isAIStart){
-//                                modelID=paintView.getModelID();
-                                startAIRecognize.setEnabled(false);
-                                quitAIRecognize.setEnabled(true);
-
-//                                toast(String.format("%d", modelID));
-//                                updateModel(modelID);
-                                }
-                            }
-                            modelID=paintView.getModelID();
-//                            toast(String.format("%d", modelID));
-                            updateModel(modelID);
-                            updateKnowNum(modelID);
-                            paintView.setRectParams(list);
-                        }
-
-                    @Override
-                    public void onTargetDetectFailed(int i) {
-                        toast("检测失败");
-
-                    }
-
-                    @Override
-                    public void onTargetDetectStart() {
-                        toast("检测开始");
-
-                    }
-
-                    @Override
-                    public void onTargetDetectFinished() {
-                        toast("检测结束");
-
-                    }
-                });
-                startAIRecognize.setEnabled(false);
-                quitAIRecognize.setEnabled(true);
-                show(aiState, "AI状态：未增量");
-                show(unKnownum,"未知类数目：0");
-                break;
-            case R.id.button_quit_ai:
-                show(aiState, "");
-                isProcessRunning=false;
-                gduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
-                    //                    long startTime=System.currentTimeMillis();
-                    @Override
-                    public void onTargetDetecting(List<TargetMode> list) {
-                    }
-
-                    @Override
-                    public void onTargetDetectFailed(int i) {
-                    }
-
-                    @Override
-                    public void onTargetDetectStart() {
-                    }
-
-                    @Override
-                    public void onTargetDetectFinished() {
-                    }
-                });
-                startAIRecognize.setEnabled(true);
-                quitAIRecognize.setEnabled(false);
-                isProcessRunning = false;
-                // 移除所有未执行的任务
-                if (resetStateTask != null) {
-                    backgroundHandler.removeCallbacks(resetStateTask);
-                }
-                if (completeTask != null) {
-                    backgroundHandler.removeCallbacks(completeTask);
-                }
-                // 显示“未增量”
-                show(aiState, "");
-                show(unKnownum,"");
-                isAIStart = false;
-                break;
+        if (v.getId() == R.id.iv_msgBoxLabel) {
+            if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
+                    || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
+                return;
+            }
+            showMsgBoxPopWindow(msgData);
+            viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
+        }else if (v.getId() == R.id.ai_recognize_imageview){
+            viewModel.switchAIRecognize();
         }
     }
 
@@ -1118,93 +421,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         });
     }
 
-    public void toast(final String toast) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
-            }
-        });
+    public void showToast(String str) {
+        ThreadHelper.runOnUiThread(() -> Toast.makeText(this, str, Toast.LENGTH_SHORT).show());
     }
 
-    private Handler handler1 = new Handler(Looper.getMainLooper());
-
-    public void show(TextView textView, final String toast) {
-        if (toast == null) {
-            return; // 如果 toast 为空，直接返回
-        }
-        handler1.post(new Runnable() {
-            @Override
-            public void run() {
-                if (textView != null) {
-                    textView.setText(toast);
-                }
-            }
-        });
+    @Override
+    protected void onStop() {
+        super.onStop();
+        viewModel.stopTarget((byte) 0x02, GlobalVariable.mCurrentLightType);
     }
-
-//    public void show(TextView textView, final String toast) {
-//        runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                textView.setText(toast);
-////                Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//    }
-
-    //    添加滑动按钮，设置滑动变焦功能
-    private Drawable createThumbDrawable(Context context, String text) {
-        // Thumb 的直径，可根据需要调大或调小
-        int size = dp2px(context, 48);
-
-        // 创建一个空白位图
-        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-
-        // 1. 先绘制蓝色圆形背景
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.argb(128, 0, 191, 255));
-        float radius = size / 2f;
-        canvas.drawRect(10, 0, size-10, size, paint);
-
-        // 2. 绘制白色文字
-        paint.setColor(Color.WHITE);
-        paint.setTextSize(sp2px(context, 14)); // 字体大小，可自行调节
-        paint.setTextAlign(Paint.Align.CENTER);
-
-        // 计算文字垂直居中的基线
-        Paint.FontMetrics fontMetrics = paint.getFontMetrics();
-        float baseline = radius;
-
-
-        // 步骤3：旋转坐标系
-        canvas.rotate(90);
-        // 在圆心位置绘制文字
-        canvas.drawText(text, baseline, -radius - (fontMetrics.descent + fontMetrics.ascent) / 2, paint);
-
-//        canvas.restore();
-
-        // 3. 用生成的 Bitmap 创建 Drawable
-        return new BitmapDrawable(context.getResources(), bitmap);
-    }
-
-    /**
-     * dp 转 px 工具方法
-     */
-    private int dp2px(Context context, float dpValue) {
-        float scale = context.getResources().getDisplayMetrics().density;
-        return (int) (dpValue * scale + 0.5f);
-    }
-
-    /**
-     * sp 转 px 工具方法
-     */
-    private int sp2px(Context context, float spValue) {
-        float scale = context.getResources().getDisplayMetrics().scaledDensity;
-        return (int) (spValue * scale + 0.5f);
-    }
-
 }
-
-
