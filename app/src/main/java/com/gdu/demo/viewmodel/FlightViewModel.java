@@ -1,6 +1,5 @@
 package com.gdu.demo.viewmodel;
 
-import android.os.Message;
 import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
@@ -8,26 +7,18 @@ import androidx.lifecycle.ViewModel;
 
 import com.gdu.AlgorithmMark;
 import com.gdu.camera.LightType;
-import com.gdu.common.error.GDUError;
-import com.gdu.config.GduConfig;
 import com.gdu.config.GlobalVariable;
 import com.gdu.config.UavStaticVar;
 import com.gdu.demo.R;
 import com.gdu.demo.SdkDemoApplication;
 import com.gdu.detect.AIModelState;
 import com.gdu.drone.GimbalType;
-import com.gdu.sdk.util.CommonCallbacks;
 import com.gdu.socketmodel.GduSocketConfig3;
 import com.gdu.util.logger.MyLogUtils;
 import com.gdu.util.logs.AppLog;
 
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Objects;
 
-/**
- * @author wuqb
- * @date 2025/3/12
- * @description TODO
- */
 public class FlightViewModel extends ViewModel {
     private final MutableLiveData<Integer> toastLiveData = new MutableLiveData<>();
 
@@ -90,13 +81,12 @@ public class FlightViewModel extends ViewModel {
 
     /**
      * 开始目标识别
-     * @param lightType
      */
     public void startTargetDetect(LightType lightType) {
         MyLogUtils.i("startTargetDetect() lightType = " + lightType);
         Log.d("FlightViewModel", "startTargetDetect:lightType = " + lightType);
         setAIBoxTargetDetect((byte) 0x01);
-        SdkDemoApplication.getAircraftInstance().getGduVision().startTargetDetect((byte) lightType.getKey(), gduError -> {
+        Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getGduVision().startTargetDetect((byte) lightType.getKey(), gduError -> {
                     MyLogUtils.i("targetDetect callBack() code = " + gduError);
                     if (gduError == null) {
                         GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
@@ -112,17 +102,13 @@ public class FlightViewModel extends ViewModel {
 
     /**
      * 开关AI盒子算法模型 0x02840038
-     * @param detectType
+     * @param detectType: 这里的变量应该是指相机类型，可见光或红外。也有可能是判断视频或图像
      */
     public void setAIBoxTargetDetect(byte detectType) {
         for (int i = 0; i < GlobalVariable.targetDetectModelState.size(); i++) {
             AIModelState modelState = GlobalVariable.targetDetectModelState.get(i);
-            SdkDemoApplication.getAircraftInstance().getGduVision().setAIBoxTargetType(modelState.getModelId(), detectType, (short) modelState.getCount(), modelState.getLabelState(), new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(GDUError gduError) {
-                    AppLog.e("TargetDetectHelper", "setAIBoxTargetDetect modelId " + modelState.getModelId() + " detectType " + detectType + "  callBack() code = " + gduError);
-                }
-            });
+            Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getGduVision().setAIBoxTargetType(modelState.getModelId(), detectType, (short) modelState.getCount(), modelState.getLabelState(),
+                    gduError -> AppLog.e("TargetDetectHelper", "setAIBoxTargetDetect modelId " + modelState.getModelId() + " detectType " + detectType + "  callBack() code = " + gduError));
         }
     }
 
@@ -132,12 +118,9 @@ public class FlightViewModel extends ViewModel {
         if (GlobalVariable.otherCompId != GduSocketConfig3.AI_BOX) {
             return;
         }
-        SdkDemoApplication.getAircraftInstance().getGduVision().stopTargetDetect((byte) lightType.getKey(), new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(GDUError gduError) {
-                if (gduError == null){
-                    GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.NONE;
-                }
+        Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getGduVision().stopTargetDetect((byte) lightType.getKey(), gduError -> {
+            if (gduError == null){
+                GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.NONE;
             }
         });
     }
@@ -154,7 +137,7 @@ public class FlightViewModel extends ViewModel {
         }
         AppLog.e("TargetDetectHelper", "setTargetDetect aiRecognitionSwitch.first = " + GlobalVariable.aiRecognitionSwitch.first);
         if (GlobalVariable.aiRecognitionSwitch.first == 0x0C) {
-            SdkDemoApplication.getAircraftInstance().getGduVision().setTargetType((byte) 0x01, detectType, (short) 3, typeArray, gduError -> {
+            Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getGduVision().setTargetType((byte) 0x01, detectType, (short) 3, typeArray, gduError -> {
                 if (null == gduError){
                     if (detectType == 0x01) {
                         GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
@@ -170,7 +153,7 @@ public class FlightViewModel extends ViewModel {
                 }
             });
         } else {
-            SdkDemoApplication.getAircraftInstance().getGduVision().setAITargetType((byte) 0x00, detectType, (short) 3, typeArray, gduError -> {
+            Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getGduVision().setAITargetType((byte) 0x00, detectType, (short) 3, typeArray, gduError -> {
                 if (null == gduError){
                     if (detectType == 0x01) {
                         GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;

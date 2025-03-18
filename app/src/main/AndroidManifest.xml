@@ -16,7 +16,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -25,6 +24,10 @@
         android:supportsRtl="true"
         android:name=".SdkDemoApplication"
         android:theme="@style/AppTheme">
+
+        <meta-data android:name="com.amap.api.v2.apikey" android:value="18974eeb0fee1c00ba90b2d5a171dbe6">
+        </meta-data>
+
         <activity android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop">

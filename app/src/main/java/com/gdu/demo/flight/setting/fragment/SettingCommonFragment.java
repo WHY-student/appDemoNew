@@ -40,7 +40,6 @@ import com.gdu.login.LoginType;
 import com.gdu.login.UserInfoBeanNew;
 import com.gdu.sdk.util.CommonCallbacks;
 import com.gdu.sdk.util.CommonUtils;
-import com.gdu.sdk.vision.OnTargetDetectModelListener;
 import com.gdu.sdk.vision.aibox.bean.TargetLabel;
 import com.gdu.socket.GduSocketManager;
 import com.gdu.socketmodel.GduSocketConfig3;
@@ -66,10 +65,6 @@ import java.util.List;
 import java.util.Locale;
 
 
-/**
- * @Author: lixiqiang
- * @Date: 2022/6/27
- */
 public class SettingCommonFragment extends Fragment {
 
     private static final String TAG = SettingCommonFragment.class.getSimpleName();

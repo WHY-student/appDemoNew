@@ -49,6 +49,8 @@ import com.gdu.util.StringUtils;
 import com.gdu.util.ThreadHelper;
 import com.gdu.util.ViewUtils;
 import com.gdu.util.logger.MyLogUtils;
+import com.gdu.gimbal.Rotation;
+import com.gdu.gimbal.RotationMode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,6 +72,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private TargetDetectHelper mTargetDetectHelper;
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
+
+    private GDUGimbal mGDUGimbal;
+    private GDUFlightController mGDUFlightController;
 
 
     @Override
@@ -228,6 +233,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 //收到关闭目标识别成功回调后再次重置状态，防止部分极端场景本地重置状态到发送关闭中间时间段又收到周期回调，将状态还原导致无法退出的问题
             }
         });
+
+//        云台向下及回正
+        viewBinding.buttonGimbalRotate.setOnClickListener(this);
+        viewBinding.buttonGimbalReset.setOnClickListener(this);
     }
 
 
@@ -244,7 +253,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     public void beginCheckCloud() {
         showSuccess = false;
-        GDUGimbal mGDUGimbal = (GDUGimbal) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+        mGDUGimbal = (GDUGimbal) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
         if (mGDUGimbal == null) {
             return;
         }
@@ -344,15 +353,67 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.iv_msgBoxLabel) {
-            if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
-                    || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
-                return;
-            }
-            showMsgBoxPopWindow(msgData);
-            viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
-        }else if (v.getId() == R.id.ai_recognize_imageview){
-            viewModel.switchAIRecognize();
+        switch (v.getId()){
+            case R.id.iv_msgBoxLabel:
+                if (msgData.isEmpty() || StringUtils.isEmptyString(viewBinding.tvMsgBoxNum.getText().toString())
+                        || Integer.parseInt(viewBinding.tvMsgBoxNum.getText().toString().trim()) == 0) {
+                    return;
+                }
+                showMsgBoxPopWindow(msgData);
+                viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
+                break;
+            case R.id.ai_recognize_imageview:
+                viewModel.switchAIRecognize();
+                break;
+            case R.id.button_gimbal_rotate:
+                mGDUGimbal = (GDUGimbal) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+                Rotation rotation = new Rotation();
+                rotation.setMode(RotationMode.ABSOLUTE_ANGLE);
+                rotation.setPitch(-90);
+                mGDUGimbal.rotate(rotation, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(GDUError error) {
+                        if (error == null) {
+                            showToast("云台向下");
+                        }
+                    }
+                });
+                break;
+            case R.id.button_gimbal_reset:
+                mGDUGimbal = (GDUGimbal) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+                mGDUGimbal.reset(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(GDUError error) {
+                        if (error == null) {
+                            showToast("云台回正");
+                        }
+                    }
+                });
+                break;
+            case R.id.btn_take_off:
+                mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
+                mGDUFlightController.startLanding(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(GDUError var1) {
+                        if (var1 == null) {
+                            showToast("开始降落");
+                        }
+                    }
+                });
+                break;
+            case R.id.btn_return_home:
+                mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
+                mGDUFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(GDUError var1) {
+                        if (var1 == null) {
+                            showToast("开始返航");
+                        } else {
+                            showToast("启动返航失败");
+                        }
+                    }
+                });
+                break;
         }
     }
 

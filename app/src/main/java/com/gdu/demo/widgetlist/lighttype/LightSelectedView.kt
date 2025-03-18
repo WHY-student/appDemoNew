@@ -35,7 +35,6 @@ class LightSelectedView @JvmOverloads constructor(
         
         binding.tvVisibleLight.setOnClickListener {
             changeLight(SettingsDefinitions.DisplayMode.VISUAL_ONLY)
-
         }
         binding.tvWide.setOnClickListener{
             changeLight(SettingsDefinitions.DisplayMode.WAL)
