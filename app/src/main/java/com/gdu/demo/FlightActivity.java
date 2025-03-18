@@ -107,7 +107,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
 
     private GDUGimbal mGDUGimbal;
-    private GDUFlightController mGDUFlightController;
 
 
     @Override
@@ -662,55 +661,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 stopBackgroundThread();
 //                paintView.setRectParams(new ArrayList<>());
                 isAIStart = false;
-                break;
-            case R.id.button_gimbal_rotate:
-                mGDUGimbal = (GDUGimbal) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
-                Rotation rotation = new Rotation();
-                rotation.setMode(RotationMode.ABSOLUTE_ANGLE);
-                rotation.setPitch(-90);
-                mGDUGimbal.rotate(rotation, new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError error) {
-                        if (error == null) {
-                            showToast("云台向下");
-                        }
-                    }
-                });
-                break;
-            case R.id.button_gimbal_reset:
-                mGDUGimbal = (GDUGimbal) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
-                mGDUGimbal.reset(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError error) {
-                        if (error == null) {
-                            showToast("云台回正");
-                        }
-                    }
-                });
-                break;
-            case R.id.btn_take_off:
-                mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
-                mGDUFlightController.startLanding(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError var1) {
-                        if (var1 == null) {
-                            showToast("开始降落");
-                        }
-                    }
-                });
-                break;
-            case R.id.btn_return_home:
-                mGDUFlightController = SdkDemoApplication.getAircraftInstance().getFlightController();
-                mGDUFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError var1) {
-                        if (var1 == null) {
-                            showToast("开始返航");
-                        } else {
-                            showToast("启动返航失败");
-                        }
-                    }
-                });
                 break;
         }
 //        if (v.getId() == R.id.iv_msgBoxLabel) {

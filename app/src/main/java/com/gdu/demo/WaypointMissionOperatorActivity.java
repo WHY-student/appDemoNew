@@ -50,6 +50,13 @@ import com.gdu.sdk.util.CommonCallbacks;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 /**
  * 航点任务测试
  */
@@ -331,8 +338,43 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
         }
     }
 
+    // 用Element方式
+    public static ArrayList<String> element(NodeList list) {
+        ArrayList<String> waypoints_position = new ArrayList<>();
+        for (int i = 0; i < list.getLength(); i++) {
+            Element element = (Element) list.item(i);
+            NodeList childNodes = element.getElementsByTagName("coordinates");
+            String result = childNodes.item(0).getNodeValue();
+            waypoints_position.add(result);
+        }
+        return waypoints_position;
+    }
     private WaypointMission createWaypointMission() {
-        WaypointMission waypointMission = new WaypointMission();
+        // 读取xml文件
+        ArrayList<String> waypoints_position;
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document d = builder.parse("src/main/res/waypoints.xml");
+            NodeList sList = d.getElementsByTagName("Placemark");
+//            Element element = (Element) sList.item(0);
+//            sList = element.getElementsByTagName("WayPoints");
+            waypoints_position = element(sList);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        WaypointMission waypointMission;
+        for (String waypoint_position:waypoints_position) {
+            String s[] = waypoint_position.split(",");
+            double Longitude = Double.parseDouble(s[0]);
+            double Latitude = Double.parseDouble(s[1]);
+            float baseAltitude = Float.parseFloat(s[2]);
+
+            // 创建point
+            waypointMission = new WaypointMission();
+        }
+
         double baseLatitude = 30.471033;
         double baseLongitude = 114.40651390044887;
 
@@ -352,15 +394,13 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
 
         // Waypoint 0: (0,0)
         Waypoint waypoint0 = new Waypoint(baseLatitude, baseLongitude, baseAltitude);
-        waypoint0.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,0 + calculateTurnAngle()));
+        waypoint0.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 0 + calculateTurnAngle()));
         waypoint0.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
         waypoint0.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -90));
         waypoint0.setSpeed(5);
         waypoint0.setGimbalPitch(-90);
         waypointList.add(waypoint0);
 
-        HORIZONTAL_DISTANCE = 114.5 - 114.2;
-        VERTICAL_DISTANCE = 80.5-80.2;
 
         // Waypoint 1: (0,30)
         Waypoint waypoint1 = new Waypoint(baseLatitude + VERTICAL_DISTANCE, baseLongitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseAltitude);

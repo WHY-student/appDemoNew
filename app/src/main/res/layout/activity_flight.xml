@@ -284,44 +284,6 @@
         app:layout_constraintRight_toLeftOf="@id/take_photo_view"
         android:layout_marginRight="@dimen/dp_2"/>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="180dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <!-- 一键返航按钮 -->
-        <Button
-            android:id="@+id/btn_take_off"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="一键降落"
-            android:padding="16dp"
-            android:textColor="@color/black"
-            android:onClick="onClick"
-            android:layout_marginBottom="8dp"/>
-        <!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
-
-        <!-- 一键返航按钮 -->
-        <Button
-            android:id="@+id/btn_return_home"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="一键返航"
-            android:padding="16dp"
-            android:textColor="@color/btn_return_home_text_color"
-            android:onClick="onClick"
-            android:layout_marginBottom="8dp"/>
-
-
-
-
-    </LinearLayout>
-
-
     <!--变焦控件-->
     <com.gdu.demo.widget.zoomView.CustomVerticalRangeSeekBar
         android:id="@+id/zoom_seek_bar"
