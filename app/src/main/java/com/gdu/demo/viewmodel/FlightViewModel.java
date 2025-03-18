@@ -77,6 +77,7 @@ public class FlightViewModel extends ViewModel {
 
     public void switchAIRecognize(){
         startTargetDetect(GlobalVariable.mCurrentLightType);
+
     }
 
     /**

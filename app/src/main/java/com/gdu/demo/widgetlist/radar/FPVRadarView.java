@@ -16,6 +16,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -40,7 +41,7 @@ public class FPVRadarView extends View {
     /**
      * 角度变化敏感度，当航向角度变化小于该值，则不更新
      */
-    public final float ANGLE_CHANGED_SENSITIVITY = 0.1f;
+    public final float ANGLE_CHANGED_SENSITIVITY = 0.5f;
 
     private int width = 300;
     private int height = 400;
@@ -80,7 +81,7 @@ public class FPVRadarView extends View {
     //中心箭头的path
     final private Path arrowPath = new Path();
     //中心箭头顶角大小
-    final private float arrowTopAngle = 40f;
+    final private float arrowTopAngle = 30f;
     private int colorArrow = Color.parseColor("#00B5FF");
     //水平线
     final private Path horizonLine = new Path();
@@ -339,6 +340,8 @@ public class FPVRadarView extends View {
         pathPaint.setColor(colorGimbalArrow);
         pathPaint.setStyle(Paint.Style.FILL_AND_STROKE);
         canvas.save();
+//        float temp=253;
+//        canvas.rotate(temp, centerX, centerY);
         canvas.rotate(gimbalAngle, centerX, centerY);
         canvas.drawPath(gimbalDirection, pathPaint);
         canvas.restore();
@@ -619,6 +622,7 @@ public class FPVRadarView extends View {
             return;
         }
         this.angleOffset = angle;
+        Log.d("angle","航向角为"+angle);
         invalidate();
     }
 
@@ -631,7 +635,7 @@ public class FPVRadarView extends View {
         if (!enable) {
             return;
         }
-        if (angle < -180 || angle > 180) {
+        if (angle < 0 || angle > 180) {
             return;
         }
         if (angle == dipAngle) {
@@ -713,16 +717,57 @@ public class FPVRadarView extends View {
         invalidate();
     }
 
+    //    public void setGimbalAngle(float angle) {
+//        if (!enable) {
+//            return;
+//        }
+//        if (angle == gimbalAngle) {
+//            return;
+//        }
+//        this.gimbalAngle = angle;
+//        invalidate();
+//    }
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private float targetGimbalAngle; // 目标角度
+    private float currentGimbalAngle; // 当前角度
+    private final long delayMillis = 20; // 延迟时间（毫秒）
+    private final float angleStep = 3f; // 每次更新的角度步长//
+
     public void setGimbalAngle(float angle) {
         if (!enable) {
             return;
         }
-        if (angle == gimbalAngle) {
+        if (angle == targetGimbalAngle) {
             return;
         }
-        this.gimbalAngle = angle;
-        invalidate();
+        targetGimbalAngle = angle; // 设置目标角度
+        handler.post(angleUpdateRunnable); // 启动角度更新任务
     }
+
+    private final Runnable angleUpdateRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (currentGimbalAngle < targetGimbalAngle) {
+                currentGimbalAngle =currentObsState+(float)0.6*(targetGimbalAngle-currentGimbalAngle )+ angleStep; // 增加角度
+                if (currentGimbalAngle > targetGimbalAngle) {
+                    currentGimbalAngle = targetGimbalAngle; // 防止超出目标角度
+                }
+            } else if (currentGimbalAngle > targetGimbalAngle) {
+                currentGimbalAngle =currentObsState+(float)0.6*(targetGimbalAngle-currentGimbalAngle )- angleStep; // 减少角度
+                if (currentGimbalAngle < targetGimbalAngle) {
+                    currentGimbalAngle = targetGimbalAngle; // 防止低于目标角度
+                }
+            }
+
+            gimbalAngle = currentGimbalAngle; // 更新当前角度
+            invalidate(); // 刷新 UI
+
+            // 如果未达到目标角度，继续延迟更新
+            if (currentGimbalAngle != targetGimbalAngle) {
+                handler.postDelayed(this, delayMillis);
+            }
+        }
+    };
 
     /**
      * 通过角度和半径计算坐标
