@@ -35,10 +35,10 @@ android {
 
     signingConfigs {
         release {
-            keyAlias 'GDU_MSDK_DEMO'
-            keyPassword 'gdu_sdk'
-            storeFile file('key/GDU_Pro2.jks')
-            storePassword 'gdu_sdk'
+            keyAlias 'key0'
+            keyPassword '1234Abc'
+            storeFile file('key/hahah.jks')
+            storePassword '123456Abc'
         }
     }
 

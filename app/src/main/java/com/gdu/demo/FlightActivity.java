@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -83,6 +84,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private Button quitAIRecognize;
     private TextView aiState;
     private TextView unKnownum;
+    private AppCompatImageView AIRecognize;
 
     private Boolean isAIStart;
     private Runnable resetStateTask; // 用于重置状态的任务
@@ -99,6 +101,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private Handler mHandler = new Handler(Looper.getMainLooper());
 
     private Boolean isPaused = false;
+    private boolean isSelected = false;
 
 
 
@@ -216,6 +219,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        paintView = findViewById(R.id.ai_paint_view);
         unKnownum = findViewById(R.id.unknown_num);
         aiState = findViewById(R.id.ai_state);
+        AIRecognize=findViewById(R.id.ai_recognize_imageview);
         viewBinding.fpvRv.setShowObstacleOFF(!GlobalVariable.obstacleIsOpen);
         viewBinding.fpvRv.setObstacleMax(40);
         viewBinding.ivMsgBoxLabel.setOnClickListener(this);
@@ -557,6 +561,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 quitAIRecognize.setEnabled(true);
                 show(aiState, "AI状态：未增量");
                 show(unKnownum,"未知类数目：0");
+                AIRecognize.setImageResource(R.drawable.ai_recognize_selected);
                 break;
             case R.id.btn_take_off:
                 mGDUFlightController.startLanding(new CommonCallbacks.CompletionCallback() {
@@ -644,6 +649,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 // 显示“未增量”
                 show(aiState, "");
                 show(unKnownum,"");
+                AIRecognize.setImageResource(R.drawable.ai_recognize);
                 stopBackgroundThread();
 //                paintView.setRectParams(new ArrayList<>());
                 isAIStart = false;

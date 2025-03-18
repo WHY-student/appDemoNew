@@ -334,7 +334,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
     private WaypointMission createWaypointMission() {
         WaypointMission waypointMission = new WaypointMission();
         double baseLatitude = 30.471033;
-        double baseLongitude = 114.4280014;
+        double baseLongitude = 114.40651390044887;
 
 
         final float baseAltitude = 30.0f;
@@ -359,9 +359,12 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
         waypoint0.setGimbalPitch(-90);
         waypointList.add(waypoint0);
 
+        HORIZONTAL_DISTANCE = 114.5 - 114.2;
+        VERTICAL_DISTANCE = 80.5-80.2;
+
         // Waypoint 1: (0,30)
-        Waypoint waypoint1 = new Waypoint(baseLatitude, baseLongitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseAltitude);
-        waypoint1.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 0 - calculateTurnAngle()));
+        Waypoint waypoint1 = new Waypoint(baseLatitude + VERTICAL_DISTANCE, baseLongitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseAltitude);
+        waypoint1.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
         waypoint1.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
         waypoint1.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -45));
         waypoint1.setSpeed(5);
@@ -370,7 +373,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
 
         // Waypoint 2: (30,30)
         Waypoint waypoint2 = new Waypoint(baseLatitude + VERTICAL_DISTANCE * ONE_METER_OFFSET, baseLongitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseAltitude);
-        waypoint2.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, -180 + calculateTurnAngle()));
+        waypoint2.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
         waypoint2.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
         waypoint2.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -90));
         waypoint2.setSpeed(5);
@@ -379,7 +382,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
 
         // Waypoint 3: (30,0)
         Waypoint waypoint3 = new Waypoint(baseLatitude + VERTICAL_DISTANCE * ONE_METER_OFFSET, baseLongitude, baseAltitude);
-        waypoint3.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 180 - calculateTurnAngle()));
+        waypoint3.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
         waypoint3.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
         waypoint3.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, 0));
         waypoint3.setSpeed(5);

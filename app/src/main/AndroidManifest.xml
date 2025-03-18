@@ -25,6 +25,9 @@
         android:supportsRtl="true"
         android:name=".SdkDemoApplication"
         android:theme="@style/AppTheme">
+        <meta-data android:name="com.amap.api.v2.apikey"
+            android:value="9edd7d606690ed6fb29f6c489f0c0bc3">
+        </meta-data>
         <activity android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop">
