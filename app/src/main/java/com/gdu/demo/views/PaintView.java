@@ -58,6 +58,8 @@ public class PaintView extends AppCompatImageView {
     private HandlerThread backgroundThread; // 后台线程
     private Handler backgroundHandler; // 后台线程的 Handler
 
+    private long lastTime;
+
     public PaintView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         // 初始化主线程的 Handler
@@ -107,10 +109,14 @@ public class PaintView extends AppCompatImageView {
                     e.printStackTrace();
                 }
 
+                long startTime = System.currentTimeMillis();
+                if(startTime - lastTime > 100){
+                    PaintView.this.detectionBox = new ArrayList<>();
+                }
+
                 // 通过主线程的 Handler 调用 invalidate()
                 //long startTime = System.currentTimeMillis();
                 mainHandler.post(new Runnable() {
-                    long startTime = System.currentTimeMillis();
                     @Override
                     public void run() {
                         invalidate(); // 请求重绘
@@ -213,6 +219,7 @@ public class PaintView extends AppCompatImageView {
     }
 
     public void setRectParams(List<TargetMode> detectionBox) {
+        lastTime = System.currentTimeMillis();
         if (detectionBox == null || detectionBox.isEmpty()) {
             // 如果没有目标，清空 detectionBox
             this.detectionBox = new ArrayList<>();

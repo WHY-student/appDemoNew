@@ -250,10 +250,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 if (isSuccess && targetModes != null && !targetModes.isEmpty()) {
                     GlobalVariable.isTargetDetectMode = true;
                     mTargetDetectHelper.startShowTarget();
-//                    viewBinding.aiPaintView.setRectParams(targetModes);
-//                    modelID=viewBinding.aiPaintView.getModelID();
-//                    updateModel(modelID);
-//                    updateKnowNum(modelID);
                     GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
                 }
             }
@@ -305,9 +301,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     GlobalVariable.isTargetDetectMode = true;
                     mTargetDetectHelper.startShowTarget();
                     viewBinding.aiPaintView.setRectParams(targetModes);
-                    modelID = viewBinding.aiPaintView.getModelID();
-                    updateModel(modelID);
-                    updateKnowNum(modelID);
+                    updateModel(viewBinding.aiPaintView.getModelID());
                     GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
                 }
             }
@@ -473,62 +467,78 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private boolean isTaskRunning = false; // 标记是否有延迟任务正在运行
 
-    private void updateModel(int modelID) {
+    private void updateModel(int newModelID) {
+        if(modelID==newModelID){
+            return;
+        }
+        modelID = newModelID;
         int firstNum = modelID / 1000;
         int secondNum = (modelID / 100) % 10;
         int temp = modelID / 100;
-        // 如果当前有任务正在运行，直接按照 1077 处理
-        if (isTaskRunning) {
-            Log.d("TaskDebug", "Task is running, treating modelID as 1077: " + modelID);
-//            show(aiState, "AI状态：增量" + incState + "中"); // 按照 1077 处理
-            return;
-        }
-
-        // 如果 modelID 没有变化，直接返回
-        if (temp == 10) {
-            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
-            return;
-        }
-
-        // 确保 backgroundHandler 已初始化
-        if (backgroundHandler == null) {
-            initBackgroundThread();
-        }
-
-        // 记录最新的 modelID
-        latestModelID = firstNum;
-        Log.d("TaskDebug", "Latest modelID: " + latestModelID);
-
-        if (temp == 20 && isProcessRunning) {
-            // 标记任务开始运行
-            isTaskRunning = true;
-
-            incState = firstNum - 1;
-            // 显示“增量中”
-            show(aiState, "AI状态：增量" + incState + "中");
-            showToast("开始增量");
-
-            // 1 秒后显示“增量完成”
-            backgroundHandler.postDelayed(() -> {
-                if (!isProcessRunning) {
-                    Log.d("TaskDebug", "Process is not running, skipping resetStateTask");
-                    completeTask();
-                    return; // 如果进程被停止，则不再执行
-                }
-                show(aiState, "AI状态：增量" + incState + "完成");
-                showToast("增量完成");
-
-                // 0.5 秒后重新判断状态
-                backgroundHandler.postDelayed(() -> {
-                    completeTask();
-                }, 500); // 延迟 0.5 秒
-            }, 1000); // 延迟 1 秒
-        } else if (temp == 21 && isProcessRunning) {
-            // 如果 modelID 不是 1077，或者进程被停止，直接显示“未增量”
-            show(aiState, "AI状态：增量" + incState + "完成");
-        } else if (temp == 10 && isProcessRunning) {
+        incState = firstNum -1;
+        if(temp == 10){
             show(aiState, "AI状态：未增量");
+        }else {
+            if(secondNum==0){
+                show(aiState, "AI状态：增量" + incState + "中");
+            }else {
+                show(aiState, "AI状态：增量" + incState + "完成");
+            }
         }
+        updateKnowNum(modelID);
+
+        // 如果当前有任务正在运行，直接按照 1077 处理
+//        if (isTaskRunning) {
+//            Log.d("TaskDebug", "Task is running, treating modelID as 1077: " + modelID);
+////            show(aiState, "AI状态：增量" + incState + "中"); // 按照 1077 处理
+//            return;
+//        }
+//
+//        // 如果 modelID 没有变化，直接返回
+//        if (temp == 10) {
+//            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
+//            return;
+//        }
+//
+//        // 确保 backgroundHandler 已初始化
+//        if (backgroundHandler == null) {
+//            initBackgroundThread();
+//        }
+//
+//        // 记录最新的 modelID
+//        latestModelID = firstNum;
+//        Log.d("TaskDebug", "Latest modelID: " + latestModelID);
+//
+//        if (temp == 20 && isProcessRunning) {
+//            // 标记任务开始运行
+//            isTaskRunning = true;
+//
+//            incState = firstNum - 1;
+//            // 显示“增量中”
+//            show(aiState, "AI状态：增量" + incState + "中");
+//            showToast("开始增量");
+//
+//            // 1 秒后显示“增量完成”
+//            backgroundHandler.postDelayed(() -> {
+//                if (!isProcessRunning) {
+//                    Log.d("TaskDebug", "Process is not running, skipping resetStateTask");
+//                    completeTask();
+//                    return; // 如果进程被停止，则不再执行
+//                }
+//                show(aiState, "AI状态：增量" + incState + "完成");
+//                showToast("增量完成");
+//
+//                // 0.5 秒后重新判断状态
+//                backgroundHandler.postDelayed(() -> {
+//                    completeTask();
+//                }, 500); // 延迟 0.5 秒
+//            }, 1000); // 延迟 1 秒
+//        } else if (temp == 21 && isProcessRunning) {
+//            // 如果 modelID 不是 1077，或者进程被停止，直接显示“未增量”
+//            show(aiState, "AI状态：增量" + incState + "完成");
+//        } else if (temp == 10 && isProcessRunning) {
+//            show(aiState, "AI状态：未增量");
+//        }
     }
 
     // 完成任务并重置状态
@@ -561,6 +571,37 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     show(unKnownum, "未知类数目：0");
                     AIRecognize.setImageResource(R.drawable.ai_recognize_selected);
                     if (mGduVision != null) {
+                        mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
+                            //                    long startTime=System.currentTimeMillis();
+                            @Override
+                            public void onTargetDetecting(List<TargetMode> targetModes) {
+                                if (targetModes != null && !targetModes.isEmpty()) {
+                                    GlobalVariable.isTargetDetectMode = true;
+                                    mTargetDetectHelper.startShowTarget();
+                                    viewBinding.aiPaintView.setRectParams(targetModes);
+                                    updateModel(viewBinding.aiPaintView.getModelID());
+                                    GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
+                                }
+                            }
+
+                            @Override
+                            public void onTargetDetectFailed(int i) {
+                                showToast("检测失败");
+
+                            }
+
+                            @Override
+                            public void onTargetDetectStart() {
+                                showToast("检测开始");
+
+                            }
+
+                            @Override
+                            public void onTargetDetectFinished() {
+                                showToast("识别结束");
+
+                            }
+                        });
                         mGduVision.startTargetDetect(new CommonCallbacks.CompletionCallback() {
                             @Override
                             public void onResult(GDUError var1) {
@@ -585,7 +626,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             case R.id.button_quit_ai:
                 quitAIRecognize.setEnabled(false);
                 try{
-                    viewBinding.aiPaintView.setRectParams(new ArrayList<>());
                     // 移除所有未执行的任务
                     if (resetStateTask != null) {
                         backgroundHandler.removeCallbacks(resetStateTask);
@@ -599,6 +639,30 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     AIRecognize.setImageResource(R.drawable.ai_recognize);
                     stopBackgroundThread();
                     if (mGduVision != null) {
+                        mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
+                            //                    long startTime=System.currentTimeMillis();
+                            @Override
+                            public void onTargetDetecting(List<TargetMode> targetModes) {
+                            }
+
+                            @Override
+                            public void onTargetDetectFailed(int i) {
+                                showToast("检测失败");
+
+                            }
+
+                            @Override
+                            public void onTargetDetectStart() {
+                                showToast("检测开始");
+
+                            }
+
+                            @Override
+                            public void onTargetDetectFinished() {
+                                showToast("识别结束");
+
+                            }
+                        });
                         mGduVision.stopTargetDetect(new CommonCallbacks.CompletionCallback() {
                             @Override
                             public void onResult(GDUError var1) {
@@ -611,6 +675,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                             }
                         });
                     }
+                    viewBinding.aiPaintView.setRectParams(new ArrayList<>());
                     isProcessRunning = false;
                     AIRecognize.setEnabled(true);
                 }catch(Exception e){
