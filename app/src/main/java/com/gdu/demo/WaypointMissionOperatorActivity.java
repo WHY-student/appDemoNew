@@ -435,6 +435,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
             waypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,720));
             waypoint.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
             waypoint.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, (int) gimbal_pitch));
+            waypoint.addAction(new WaypointAction(WaypointActionType.STAY, 30));
             waypoint.setGimbalPitch(gimbal_pitch);
             waypointList.add(waypoint);
         }
