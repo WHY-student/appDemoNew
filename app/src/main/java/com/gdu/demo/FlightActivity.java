@@ -88,6 +88,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private TargetDetectHelper mTargetDetectHelper;
     private Button quitAIRecognize;
     private TextView aiState;
+    private Button startIncremental;
     private TextView unKnownum;
     private AppCompatImageView AIRecognize;
 
@@ -225,6 +226,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         quitAIRecognize = findViewById(R.id.button_quit_ai);
         quitAIRecognize.setEnabled(false);
 //        paintView = findViewById(R.id.ai_paint_view);
+        startIncremental = findViewById(R.id.button_start_incremental);
+        startIncremental.setEnabled(false);
         unKnownum = findViewById(R.id.unknown_num);
         aiState = findViewById(R.id.ai_state);
         AIRecognize = findViewById(R.id.ai_recognize_imageview);
@@ -619,6 +622,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     }
                     isProcessRunning = true;
                     quitAIRecognize.setEnabled(true);
+                    startIncremental.setEnabled(true);
                 } catch (Exception e) {
                     AIRecognize.setEnabled(true);
                 }
@@ -678,11 +682,15 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     viewBinding.aiPaintView.setRectParams(new ArrayList<>());
                     isProcessRunning = false;
                     AIRecognize.setEnabled(true);
+                    startIncremental.setEnabled(false);
                 }catch(Exception e){
                     quitAIRecognize.setEnabled(true);
                 }
                 break;
             case R.id.button_start_incremental:
+                if(unkonwNum < 10){
+                    showToast("未知类别数目过少，请收集更多未知类别");
+                }
                 if (mGduVision != null) {
                     mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, new CommonCallbacks.CompletionCallback() {
                         @Override

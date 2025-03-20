@@ -15,7 +15,9 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 
+import com.gdu.demo.R;
 import com.gdu.drone.TargetMode;
+import com.gdu.util.ResourceUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +49,17 @@ public class PaintView extends AppCompatImageView {
         class_label.add("new1");
         class_label.add("new2");
         class_label.add("unknown");
+    }
+
+    List<String> gdu_class_label = new ArrayList<>();
+    {
+        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0000));
+        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0001));
+        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0002));
+        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0003));
+        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0004));
+        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0005));
+        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0006));
     }
 //    private String text = "Sample Text";
     //private Handler handler;
@@ -110,7 +123,8 @@ public class PaintView extends AppCompatImageView {
                 }
 
                 long startTime = System.currentTimeMillis();
-                if(startTime - lastTime > 100){
+                if(startTime - lastTime > 150){
+                    // 如果超过一定时间没有检测到物体，则清空物体box
                     PaintView.this.detectionBox = new ArrayList<>();
                 }
 
@@ -179,24 +193,21 @@ public class PaintView extends AppCompatImageView {
 
         // 绘制逻辑 1920*1080      1920*1152      1920*1200        1080-》1200
         for (TargetMode detection : this.detectionBox) {
-//            int x = (int)(detection.getLeftX() / 1.5);
-//            int y = (int)(detection.getLeftY() / 1.5 * 1200.0 / 1080.0);
-//            int maxX = (int)((detection.getLeftX() + detection.getWidth()) / 1.5);
-//            int maxY = (int)((detection.getLeftY() + detection.getHeight()) / 1.5 * 1200.0 / 1080.0);
-            int x = (int)(detection.getLeftX());
-            int y = (int)(detection.getLeftY() * 1200.0 / 1080.0);
-            int maxX = (int)((detection.getLeftX() + detection.getWidth()));
-            int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0);
+            int x = (int)(detection.getLeftX() / 1.5);
+            int y = (int)(detection.getLeftY() * 1200.0 / 1080.0 / 1.5);
+            int maxX = (int)((detection.getLeftX() + detection.getWidth()) / 1.5);
+            int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0 / 1.5);
             aiState =detection.getId();
             String label = null;
             if (label == null) {
-                int labelindex = detection.getFlawType();
-                if (labelindex == -1) {
+
+                int labelIndex = gdu_class_label.indexOf(detection.getTargetName());
+                if (labelIndex == -1) {
                     label = "unknown";
-                } else if (labelindex > 9) {
+                } else if (labelIndex > 9) {
                     label = "test";
                 } else {
-                    label = class_label.get(labelindex);
+                    label = class_label.get(labelIndex);
                 }
             }
             if (x >= 0 && y >= 0 && maxX <= 1920 && maxY <= 1200) {
@@ -225,7 +236,7 @@ public class PaintView extends AppCompatImageView {
             this.detectionBox = new ArrayList<>();
         } else {
             // 如果有目标，更新 detectionBox
-            this.detectionBox = new ArrayList<>();
+//            this.detectionBox = new ArrayList<>();
             this.detectionBox = new ArrayList<>(detectionBox);
         }
 //        this.detectionBox = detectionBox;
