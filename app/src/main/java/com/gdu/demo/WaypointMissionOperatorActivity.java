@@ -126,7 +126,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
                                 coordinateConverter.coord(latLng);
                                 mPlaneMarker.setPosition(coordinateConverter.convert());
                             }
-                            flyInfoView.setText(flightControllerState.getString());
+//                            flyInfoView.setText(flightControllerState.getString());
                         }
                     });
                 }
