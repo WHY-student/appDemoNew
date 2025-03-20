@@ -16,6 +16,7 @@ import com.gdu.common.error.GDUError;
 import com.gdu.demo.R;
 import com.gdu.demo.SdkDemoApplication;
 import com.gdu.demo.databinding.ActivityMediaDetailBinding;
+import com.gdu.demo.ourgdu.ourGDUAircraft;
 import com.gdu.sdk.camera.GDUCamera;
 import com.gdu.sdk.camera.GDUMediaManager;
 import com.gdu.sdk.products.GDUAircraft;
@@ -60,7 +61,7 @@ public class MediaDetailActivity extends Activity {
     }
 
     private void initData() {
-        GDUCamera camera = ((GDUCamera) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getCamera());
+        GDUCamera camera = ((GDUCamera) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getCamera());
         if (camera != null) {
             manager = camera.getMediaManager();
         }

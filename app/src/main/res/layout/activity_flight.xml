@@ -93,14 +93,27 @@
 
 
     <!--飞行信息-->
+
     <com.gdu.demo.widgetlist.camerapara.CameraParaView
         android:id="@+id/camera_para_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginRight="24dp"
+        android:layout_marginTop="404dp"
+        android:layout_marginRight="840dp"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/top_state_view" />
+        app:layout_constraintTop_toBottomOf="@id/top_state_view">
+
+        <Button
+            android:id="@+id/btn_take_off"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:padding="16dp"
+            android:text="一键降落"
+            android:textColor="@color/black"
+            tools:layout_editor_absoluteX="146dp"
+            tools:layout_editor_absoluteY="30dp" />
+    </com.gdu.demo.widgetlist.camerapara.CameraParaView>
 
     <com.gdu.demo.widgetlist.flyState.FlyStateView
         android:id="@+id/fly_state"
@@ -203,27 +216,9 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <!-- 一键返航按钮 -->
-        <Button
-            android:id="@+id/btn_take_off"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="一键降落"
-            android:padding="16dp"
-            android:textColor="@color/black"
-            android:onClick="onClick"
-            android:layout_marginBottom="8dp"/>
         <!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
 
         <!-- 一键返航按钮 -->
-        <Button
-            android:id="@+id/btn_return_home"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="一键返航"
-            android:padding="16dp"
-            android:textColor="@color/btn_return_home_text_color"
-            android:onClick="onClick"
-            android:layout_marginBottom="8dp"/>
 
 
     </LinearLayout>
@@ -320,6 +315,16 @@
         app:rsb_tick_mark_text_color="@android:color/white"
         app:rsb_tick_mark_text_size="@dimen/sp_10" />
 
+    <Button
+        android:id="@+id/btn_return_home"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onClick"
+        android:padding="16dp"
+        android:text="一键返航"
+        android:textColor="@color/btn_return_home_text_color"
+        tools:layout_editor_absoluteX="118dp"
+        tools:layout_editor_absoluteY="481dp" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
