@@ -242,6 +242,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         aiState = findViewById(R.id.ai_state);
         AIRecognize = findViewById(R.id.ai_recognize_imageview);
         spinner = findViewById(R.id.spinner);
+        spinner.setVisibility(View.GONE);
+
         viewBinding.fpvRv.setShowObstacleOFF(!GlobalVariable.obstacleIsOpen);
         viewBinding.fpvRv.setObstacleMax(40);
         viewBinding.ivMsgBoxLabel.setOnClickListener(this);
@@ -470,22 +472,19 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private void showUnknownNUm(){// 结果为 34
         dataList = new ArrayList<>();
-        dataList.add("未知类数量:0"); // 默认文本
+        dataList.add("未知类数量: 0"); // 默认文本
         dataList.add("新类1数量：0" );
         dataList.add("新类2数量：0" );
         dataList.add("新类3数量：0" );
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, dataList);
-//        adapter.setDropDownViewResource(R.layout.custom_spinner_dropdown_item);
+        adapter = new ArrayAdapter<>(this, R.layout.spinner_item_white, dataList);
+        adapter.setDropDownViewResource(R.layout.spinner_item_white);
         spinner.setAdapter(adapter);
 
         // 设置 Spinner 的选项选择监听器
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position > 0) { // 忽略默认文本
-                    String selectedItem = parent.getItemAtPosition(position).toString();
-//                    Toast.makeText(FlightActivity.this, "Selected: " + selectedItem, Toast.LENGTH_SHORT).show();
-                }
+                return;
             }
 
 
@@ -694,6 +693,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     isProcessRunning = true;
                     quitAIRecognize.setEnabled(true);
                     startIncremental.setEnabled(true);
+                    spinner.setVisibility(View.VISIBLE);
                 } catch (Exception e) {
                     AIRecognize.setEnabled(true);
                 }
@@ -756,6 +756,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     isProcessRunning = false;
                     AIRecognize.setEnabled(true);
                     startIncremental.setEnabled(false);
+                    spinner.setVisibility(View.GONE);
                 }catch(Exception e){
                     quitAIRecognize.setEnabled(true);
                 }

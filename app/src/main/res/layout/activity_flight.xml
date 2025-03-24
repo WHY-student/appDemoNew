@@ -204,11 +204,13 @@
 
         <Spinner
             android:id="@+id/spinner"
-            android:layout_width="200dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
-            android:background="@color/color_C8D2D6"
-            android:layout_marginBottom="16dp" />/>
+            android:layout_marginBottom="16dp"
+            android:popupBackground="#00000000"
+
+            />
 
     </LinearLayout>
 
