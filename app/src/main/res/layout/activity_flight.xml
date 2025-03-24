@@ -209,7 +209,6 @@
             android:textColor="@color/white"
             android:layout_marginBottom="16dp"
             android:popupBackground="#00000000"
-
             />
 
     </LinearLayout>
@@ -316,6 +315,17 @@
 
 
     <!-- 变焦控件 -->
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="316dp"
+        android:layout_height="264dp"
+        android:layout_marginStart="644dp"
+        android:layout_marginTop="60dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ai_recognize_imageview"
+        tools:listitem="@layout/item_image" />
+
     <com.gdu.demo.widget.zoomView.CustomVerticalRangeSeekBar
         android:id="@+id/zoom_seek_bar"
         android:layout_width="@dimen/dp_38"

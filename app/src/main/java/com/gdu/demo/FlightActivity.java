@@ -23,6 +23,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.gdu.AlgorithmMark;
 import com.gdu.beans.WarnBean;
@@ -42,6 +44,8 @@ import com.gdu.demo.utils.GisUtil;
 import com.gdu.demo.utils.LoadingDialogUtils;
 import com.gdu.demo.utils.SettingDao;
 import com.gdu.demo.viewmodel.FlightViewModel;
+import com.gdu.demo.views.ImageAdapter;
+import com.gdu.demo.views.ImageItem;
 import com.gdu.demo.views.PaintView;
 import com.gdu.demo.widget.TopStateView;
 import com.gdu.demo.widget.zoomView.S220CustomSizeFocusHelper;
@@ -122,6 +126,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private GDUGimbal mGDUGimbal;
 
     private ourGDUVision mGduVision;
+    List<ImageItem> imageItems = new ArrayList<>();
 
 
     @Override
@@ -302,6 +307,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        云台向下及回正
         viewBinding.buttonGimbalRotate.setOnClickListener(this);
         viewBinding.buttonGimbalReset.setOnClickListener(this);
+        setPhotoShow(3);
     }
 
 
@@ -343,6 +349,23 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         showUnknownNUm();
     }
 
+    public void setPhotoShow(int temp){
+        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签1"));
+        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签2"));
+        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签3"));
+        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签4"));
+        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签5"));
+        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签6"));
+        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签7"));
+        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签8"));
+        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签9"));
+
+        // 初始化 RecyclerView
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new GridLayoutManager(this, 3)); // 每排 3 个
+        ImageAdapter adapter = new ImageAdapter(imageItems);
+        recyclerView.setAdapter(adapter);
+    }
 
     public void showNineGridShow(boolean show) {
         viewBinding.nightGridView.setVisibility(show ? View.VISIBLE : View.GONE);
