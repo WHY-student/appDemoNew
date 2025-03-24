@@ -15,11 +15,14 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 
+import com.gdu.config.GlobalVariable;
 import com.gdu.demo.R;
+import com.gdu.detect.AIModelLabel;
 import com.gdu.drone.TargetMode;
 import com.gdu.util.ResourceUtil;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.List;
 
 
@@ -49,20 +52,19 @@ public class PaintView extends AppCompatImageView {
         class_label.add("new1");
         class_label.add("new2");
         class_label.add("unknown");
+        class_label.add("unknown2");
     }
 
-    List<String> gdu_class_label = new ArrayList<>();
-    {
-        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0000));
-        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0001));
-        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0002));
-        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0003));
-        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0004));
-        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0005));
-        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0006));
-    }
-//    private String text = "Sample Text";
-    //private Handler handler;
+//    List<String> gdu_class_label = new ArrayList<>();
+//    {
+//        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0000));
+//        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0001));
+//        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0002));
+//        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0003));
+//        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0004));
+//        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0005));
+//        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0006));
+//    }
     private Rect temp=new Rect();
 
     private long timestamp = System.currentTimeMillis();
@@ -83,7 +85,7 @@ public class PaintView extends AppCompatImageView {
         backgroundThread.start();
         // 初始化后台线程的 Handler
         backgroundHandler = new Handler(backgroundThread.getLooper());
-
+        GlobalVariable.targetDetectLabels = new ArrayList<>();
         // 启动后台任务
         startBackgroundTask();
 
@@ -201,7 +203,7 @@ public class PaintView extends AppCompatImageView {
             String label = null;
             if (label == null) {
 
-                int labelIndex = gdu_class_label.indexOf(detection.getTargetName());
+                int labelIndex = detection.getTargetType();
                 if (labelIndex == -1) {
                     label = "unknown";
                 } else if (labelIndex > 9) {

@@ -1,23 +1,28 @@
-package com.gdu.demo.ourgdu;
 //
 // Source code recreated from a .class file by IntelliJ IDEA
 // (powered by FernFlower decompiler)
 //
+package com.gdu.demo.ourgdu;
+
 
 import android.util.Log;
-
 import com.gdu.common.error.GDUError;
 import com.gdu.drone.TargetMode;
 import com.gdu.sdk.util.CommonCallbacks;
 import com.gdu.sdk.vision.OnTargetDetectListener;
+import com.gdu.sdk.vision.OnTargetDetectModelListener;
 import com.gdu.sdk.vision.OnTargetTrackListener;
+import com.gdu.sdk.vision.aibox.AIBoxManager;
+import com.gdu.sdk.vision.aibox.bean.VideoSizeMode;
 import com.gdu.socket.GduCommunication3;
 import com.gdu.socket.GduFrame3;
 import com.gdu.socket.GduSocketManager;
 import com.gdu.socket.SocketCallBack3;
 import com.gdu.util.ByteUtilsLowBefore;
 import com.gdu.util.RectUtil;
-
+import com.gdu.util.logger.MyLogUtils;
+import com.gdu.util.logs.AppLog;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -26,16 +31,20 @@ public class ourGDUVision {
     private GduCommunication3 mGduCommunication3 = GduSocketManager.getInstance().getGduCommunication();
     private OnTargetDetectListener targetDetectListener;
     private OnTargetTrackListener targetTrackListener;
+    private OnTargetDetectModelListener targetDetectModelListener;
     private final List<TargetMode> mTargetModeList = new ArrayList();
+    private ourAIBoxManager aiBoxManager = new ourAIBoxManager();
     private final SocketCallBack3 targetDetectCallBack = new SocketCallBack3() {
         public void callBack(int code, GduFrame3 bean) {
-            if (bean != null && bean.frameContent != null) {
+            if (code == 0 && bean != null) {
                 try {
-                    ourGDUVision.this.getDetectTargetNew(bean.frameContent);
+                    ourGDUVision.this.aiBoxManager.getDetectTargetNew(bean);
                 } catch (Exception var4) {
                     Exception e = var4;
-                    Log.i("获取监测目标出错", e.toString());
+                    MyLogUtils.e("获取监测目标出错", e);
                 }
+            } else if (null != ourGDUVision.this.targetDetectListener) {
+                ourGDUVision.this.targetDetectListener.onTargetDetectFailed(-1);
             }
 
         }
@@ -71,163 +80,55 @@ public class ourGDUVision {
 
         }
     };
-
-    private final SocketCallBack3 ourDetectCallBack = new SocketCallBack3() { // from class: com.gdu.sdk.vision.GDUVision.1
-        /* JADX WARN: Multi-variable type inference failed */
-        /* JADX WARN: Type inference failed for: r0v2, types: [byte[]] */
-        /* JADX WARN: Type inference failed for: r0v3, types: [java.lang.Exception] */
-        /* JADX WARN: Type inference failed for: r0v8, types: [com.gdu.sdk.vision.GDUVision] */
-        @Override // com.gdu.gdusocket.SocketCallBack3
-        public void callBack(int b, GduFrame3 gduFrame3) {
-            if (gduFrame3 == null || gduFrame3.frameContent == null) {
-                return;
+    private final SocketCallBack3 targetDetectModelsCallback = (code, bean) -> {
+        if (bean != null && bean.frameContent != null) {
+            if (code == 0) {
+                byte[] content = bean.frameContent;
+                int m = ByteUtilsLowBefore.byte2Int(content, 0);
+                String sJson = new String(bean.frameContent, 4, m);
+                AppLog.e("SettingCommonFragment", "getTargetDetectModels " + new String(sJson.getBytes(StandardCharsets.UTF_8)));
+                if (null != this.targetDetectModelListener) {
+                    this.targetDetectModelListener.onTargetDetectModel(sJson);
+                }
+            } else if (null != this.targetDetectModelListener) {
+                this.targetDetectModelListener.onTargetDetectModel((String)null);
             }
 
-            try {
-                ourGDUVision.this.ourGetDetectTargetNew(gduFrame3.frameContent);
-            } catch (Exception exception) {
-                Log.i("获取监测目标出错", exception.toString());
+        } else {
+            if (null != this.targetDetectModelListener) {
+                this.targetDetectModelListener.onTargetDetectModel((String)null);
             }
+
         }
     };
 
-
-    private TargetMode ourParseTargetModeNew(byte[] var1) {
-        TargetMode var10000 = new TargetMode();
-        //byte[] var10007 = var1;
-        //byte[] var10008 = var1;
-        //byte[] var10009 = var1;
-//        byte[] var10010 = var1;
-
-        short var7 = ByteUtilsLowBefore.byte2short(var1, 0);
-        short var8 = ByteUtilsLowBefore.byte2short(var1, 2);
-        short var2 = ByteUtilsLowBefore.byte2short(var1, 4);
-        short var3 = ByteUtilsLowBefore.byte2short(var1, 6);
-        byte var4 = var1[8];
-
-        byte id = var1[9];
-        int var5 =ByteUtilsLowBefore.byte2Int(var1,10);
-        //byte var4 = var10008[8];
-        //byte var5 = (byte)(var10007[9] & 1 & 255);
-        var10000.setHeight(var3);
-        var10000.setWidth(var2);
-        var10000.setLeftX(var7);
-        var10000.setLeftY(var8);
-        var10000.setTargetConfidence((short)var4);
-        var10000.setFlawType(id);
-        var10000.setId(var5);
-        return var10000;
-    }
-
-    private void ourGetDetectTargetNew(byte[] var1) {
-        //int var2;
-
-        if(var1.length>38){
-//            int startIndex=38;//待修改，可以根据解析的帧xiu
-            byte objectLength = var1[36];
-            CopyOnWriteArrayList boxList = new CopyOnWriteArrayList();
-
-            for(int index = 0; index < objectLength; ++index) {
-//                byte[] var7 = Arrays.copyOfRange(targetBox,var6*14,var6*14+14);
-                byte[] boxBytes = new byte[14];
-
-                for(int var8 = 0; var8 < 14; ++var8) {
-                    boxBytes[var8] = var1[index * 14 + var8 + 38];
-                }
-
-                boxList.add(this.ourParseTargetModeNew(boxBytes));
-            }
-
-
-            List var10;
-//        byte nowBox = 0;
-            if ((var10 = this.mTargetModeList) != null) {
-
-                var10.clear();
-                this.mTargetModeList.addAll(boxList);
-            }
-
-            OnTargetDetectListener var9;
-            if ((var9 = this.targetDetectListener) != null) {
-                var9.onTargetDetecting(boxList);
-            }
-
-        }
-    }
-
     public ourGDUVision() {
-        this.mGduCommunication3.addCycleACKCB(42205240, this.ourDetectCallBack);
-
-//        this.mGduCommunication3.addCycleACKCB(16908309, this.targetDetectCallBack);
-//        this.mGduCommunication3.addCycleACKCB(49283093, this.targetDetectCallBack);
-//        this.mGduCommunication3.addCycleACKCB(33555224, this.targetDetectCallBack);
-//        this.mGduCommunication3.addCycleACKCB(16908304, this.videoTrackCallback);
-//        this.mGduCommunication3.addCycleACKCB(49283088, this.videoTrackCallback);
-//        this.mGduCommunication3.addCycleACKCB(16908305, this.multipleTargetTrackCb);
-//        this.mGduCommunication3.addCycleACKCB(49283089, this.multipleTargetTrackCb);
+        this.mGduCommunication3.addCycleACKCB(16908309, this.targetDetectCallBack);
+        this.mGduCommunication3.addCycleACKCB(49283093, this.targetDetectCallBack);
+        this.mGduCommunication3.addCycleACKCB(33555224, this.targetDetectCallBack);
+        this.mGduCommunication3.addCycleACKCB(42205205, this.targetDetectCallBack);
+        this.mGduCommunication3.addCycleACKCB(16908342, this.targetDetectCallBack);
+        this.mGduCommunication3.addCycleACKCB(42205240, this.targetDetectCallBack);
+        this.mGduCommunication3.addCycleACKCB(16908344, this.targetDetectCallBack);
+        this.mGduCommunication3.addCycleACKCB(16908304, this.videoTrackCallback);
+        this.mGduCommunication3.addCycleACKCB(49283088, this.videoTrackCallback);
+        this.mGduCommunication3.addCycleACKCB(16908305, this.multipleTargetTrackCb);
+        this.mGduCommunication3.addCycleACKCB(49283089, this.multipleTargetTrackCb);
+        this.mGduCommunication3.addCycleACKCB(42205201, this.multipleTargetTrackCb);
+        this.mGduCommunication3.addCycleACKCB(42205239, this.targetDetectModelsCallback);
     }
 
     public void setOnTargetDetectListener(OnTargetDetectListener listener) {
         this.targetDetectListener = listener;
+        this.aiBoxManager.setOnTargetDetectListener(listener);
     }
 
     public void setOnTargetTrackListener(OnTargetTrackListener listener) {
         this.targetTrackListener = listener;
     }
 
-    private void getDetectTargetNew(byte[] content) {
-        int length = content.length;
-        if (length >= 3) {
-            byte packageInfo = content[length - 2];
-            byte var10000 = content[length - 1];
-            byte totalNum = (byte)(packageInfo >> 4 & 255);
-            byte currentNum = (byte)(packageInfo & 15);
-            Log.i("getDetectTargetNew()", "totalNum = " + totalNum + ",currentNum = " + currentNum);
-            int targetNum = (length - 2) / 10;
-            List<TargetMode> targetModes = new CopyOnWriteArrayList();
-
-            for(int i = 0; i < targetNum; ++i) {
-                byte[] targetBytes = new byte[10];
-
-                for(int j = 0; j < 10; ++j) {
-                    targetBytes[j] = content[i * 10 + j];
-                }
-
-                TargetMode targetMode = this.parseTargetModeNew(targetBytes);
-                targetModes.add(targetMode);
-            }
-
-            if (this.mTargetModeList != null) {
-                if (currentNum == 0) {
-                    this.mTargetModeList.clear();
-                }
-
-                this.mTargetModeList.addAll(targetModes);
-                if (currentNum == totalNum - 1 && this.targetDetectListener != null) {
-                    this.targetDetectListener.onTargetDetecting(targetModes);
-                }
-            }
-
-        }
-    }
-
-    private TargetMode parseTargetModeNew(byte[] content) {
-        TargetMode targetMode = new TargetMode();
-        short pointX = ByteUtilsLowBefore.byte2short(content, 0);
-        short pointY = ByteUtilsLowBefore.byte2short(content, 2);
-        short width = ByteUtilsLowBefore.byte2short(content, 4);
-        short height = ByteUtilsLowBefore.byte2short(content, 6);
-        byte targetConfidence = content[8];
-        byte targetInfo = content[9];
-        byte flawType = (byte)(targetInfo & 1 & 255);
-        byte targetType = (byte)(targetInfo >> 1 & 255);
-        targetMode.setHeight(height);
-        targetMode.setWidth(width);
-        targetMode.setLeftX(pointX);
-        targetMode.setLeftY(pointY);
-        targetMode.setTargetConfidence((short)targetConfidence);
-        targetMode.setFlawType(flawType);
-        return targetMode;
+    public void setFrameSize(VideoSizeMode mode, int width, int height) {
+        this.aiBoxManager.setFrameSize(mode, width, height);
     }
 
     private void getMultiDetectTargetNew(byte[] content) {
@@ -323,7 +224,15 @@ public class ourGDUVision {
     }
 
     public void startTargetDetect(CommonCallbacks.CompletionCallback callback) {
-        this.mGduCommunication3.targetDetect((byte)1, (short)0, (short)0, (short)0, (short)0, (byte)0, (byte)0, (code, bean) -> {
+        this.targetDetect((byte)1, (short)0, (short)0, (short)0, (short)0, (byte)0, (byte)0, callback);
+    }
+
+    public void startTargetDetect(byte lightType, CommonCallbacks.CompletionCallback callback) {
+        this.targetDetect((byte)1, (short)0, (short)0, (short)0, (short)0, (byte)0, lightType, callback);
+    }
+
+    public void targetDetect(byte detectType, short leftX, short leftY, short width, short height, byte detectMethod, byte lightType, CommonCallbacks.CompletionCallback callback) {
+        this.mGduCommunication3.targetDetect(detectType, leftX, leftY, width, height, detectMethod, lightType, (code, bean) -> {
             if (callback != null) {
                 if (code == 0) {
                     callback.onResult((GDUError)null);
@@ -337,6 +246,22 @@ public class ourGDUVision {
 
     public void stopTargetDetect(CommonCallbacks.CompletionCallback callback) {
         this.mGduCommunication3.targetDetect((byte)2, (short)0, (short)0, (short)0, (short)0, (byte)0, (byte)0, (code, bean) -> {
+            if (callback != null) {
+                if (code == 0) {
+                    callback.onResult((GDUError)null);
+                    if (this.targetDetectListener != null) {
+                        this.targetDetectListener.onTargetDetectFinished();
+                    }
+                } else {
+                    callback.onResult(GDUError.COMMON_TIMEOUT);
+                }
+            }
+
+        });
+    }
+
+    public void stopTargetDetect(byte lightType, CommonCallbacks.CompletionCallback callback) {
+        this.mGduCommunication3.targetDetect((byte)2, (short)0, (short)0, (short)0, (short)0, (byte)0, lightType, (code, bean) -> {
             if (callback != null) {
                 if (code == 0) {
                     callback.onResult((GDUError)null);
@@ -413,5 +338,61 @@ public class ourGDUVision {
             }
 
         });
+    }
+
+    public void setAIBoxTargetType(int modelId, byte detectType, int typeCount, byte[] typeState, CommonCallbacks.CompletionCallback callback) {
+        this.mGduCommunication3.setAIBoxTargetType(modelId, detectType, (short)typeCount, typeState, (code, bean) -> {
+            if (callback != null) {
+                if (code == 0) {
+                    callback.onResult((GDUError)null);
+                } else {
+                    callback.onResult(GDUError.COMMON_TIMEOUT);
+                }
+            }
+
+        });
+    }
+
+    public void setTargetType(byte modelType, byte detectType, short typeCount, byte[] typeState, CommonCallbacks.CompletionCallback callback) {
+        this.mGduCommunication3.setTargetType(modelType, detectType, typeCount, typeState, (code, bean) -> {
+            if (callback != null) {
+                if (code == 0) {
+                    callback.onResult((GDUError)null);
+                } else {
+                    callback.onResult(GDUError.COMMON_TIMEOUT);
+                }
+            }
+
+        });
+    }
+
+    public void setAITargetType(byte modelType, byte detectType, short typeCount, byte[] typeState, CommonCallbacks.CompletionCallback callback) {
+        this.mGduCommunication3.setAITargetType(modelType, detectType, typeCount, typeState, (code, bean) -> {
+            if (callback != null) {
+                if (code == 0) {
+                    callback.onResult((GDUError)null);
+                } else {
+                    callback.onResult(GDUError.COMMON_TIMEOUT);
+                }
+            }
+
+        });
+    }
+
+    public void getTargetDetectModels(CommonCallbacks.CompletionCallback callback) {
+        this.mGduCommunication3.getTargetDetectModels((code, bean) -> {
+            if (callback != null) {
+                if (code == 0) {
+                    callback.onResult((GDUError)null);
+                } else {
+                    callback.onResult(GDUError.COMMON_TIMEOUT);
+                }
+            }
+
+        });
+    }
+
+    public void setOnTargetDetectModelsListener(OnTargetDetectModelListener listener) {
+        this.targetDetectModelListener = listener;
     }
 }

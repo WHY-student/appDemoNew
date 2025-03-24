@@ -70,6 +70,7 @@ dependencies {
 
     api "com.orhanobut:logger:2.2.0"
     api "org.greenrobot:eventbus:3.3.1"
+    implementation 'org.greenrobot:greendao:3.3.0'
     api "com.google.code.gson:gson:2.10.1"
     api  files('libs/GduLibrary-2.0.67.aar')
 

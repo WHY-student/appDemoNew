@@ -8,6 +8,7 @@ import com.gdu.common.error.GDUError
 import com.gdu.demo.R
 import com.gdu.demo.SdkDemoApplication
 import com.gdu.demo.databinding.LayoutLightSelectedBinding
+import com.gdu.demo.ourgdu.ourGDUAircraft
 import com.gdu.demo.widgetlist.core.base.widget.WidgetModel
 import com.gdu.demo.widgetlist.flyState.FlyStateModel
 import com.gdu.sdk.camera.GDUCamera
@@ -50,7 +51,7 @@ class LightSelectedView @JvmOverloads constructor(
             changeLight(SettingsDefinitions.DisplayMode.PIP)
         }
 
-        mGDUGimbal = (SdkDemoApplication.getProductInstance() as GDUAircraft).gimbal as? GDUGimbal
+        mGDUGimbal = (SdkDemoApplication.getProductInstance() as ourGDUAircraft).gimbal as? GDUGimbal
         mGDUGimbal?.let {
             val list: List<SettingsDefinitions.DisplayMode> = it.supportDisplayMode
             for (mode in list) {
@@ -92,7 +93,7 @@ class LightSelectedView @JvmOverloads constructor(
                 return
             }
             currentType = data.lightType
-            mGDUGimbal = (SdkDemoApplication.getProductInstance() as GDUAircraft).gimbal as? GDUGimbal
+            mGDUGimbal = (SdkDemoApplication.getProductInstance() as ourGDUAircraft).gimbal as? GDUGimbal
             when (data.lightType) {
                 0x00 -> {
                     mGDUGimbal?.let {
@@ -236,7 +237,7 @@ class LightSelectedView @JvmOverloads constructor(
 
 
     private fun changeLight(type: SettingsDefinitions.DisplayMode) {
-        val mGDUCamera = (SdkDemoApplication.getProductInstance() as GDUAircraft).camera as? GDUCamera
+        val mGDUCamera = (SdkDemoApplication.getProductInstance() as ourGDUAircraft).camera as? GDUCamera
         mGDUCamera?.setDisplayMode(type) { error ->
             if (error == null) {
                 Toast.makeText(context, "设置成功", Toast.LENGTH_SHORT).show()

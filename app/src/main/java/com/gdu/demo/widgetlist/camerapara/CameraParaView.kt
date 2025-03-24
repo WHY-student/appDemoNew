@@ -7,6 +7,7 @@ import com.gdu.config.GlobalVariable
 import com.gdu.demo.R
 import com.gdu.demo.SdkDemoApplication
 import com.gdu.demo.databinding.LayoutCameraParaBinding
+import com.gdu.demo.ourgdu.ourGDUAircraft
 import com.gdu.demo.utils.CameraUtil
 import com.gdu.demo.widgetlist.core.base.widget.WidgetModel
 import com.gdu.sdk.camera.GDUCamera
@@ -31,7 +32,7 @@ class CameraParaView @JvmOverloads constructor(
 
     override fun initView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) {
         binding = LayoutCameraParaBinding.bind(inflate(context, R.layout.layout_camera_para, this))
-        mGDUCamera = (SdkDemoApplication.getProductInstance() as GDUAircraft).camera as? GDUCamera
+        mGDUCamera = (SdkDemoApplication.getProductInstance() as ourGDUAircraft).camera as? GDUCamera
         initListener()
 
     }

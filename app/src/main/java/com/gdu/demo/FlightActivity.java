@@ -121,7 +121,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private GDUGimbal mGDUGimbal;
 
-    private GDUVision mGduVision;
+    private ourGDUVision mGduVision;
 
 
     @Override
@@ -306,7 +306,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private void initData() {
         new MsgBoxManager(this, 1, this);
         VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(videoDataListener);
-        mGduVision = ((GDUAircraft) SdkDemoApplication.getProductInstance()).getGduVision();
+        mGduVision = ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGduVision();
         mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
             //                    long startTime=System.currentTimeMillis();
             @Override
@@ -324,7 +324,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             @Override
             public void onTargetDetectFailed(int i) {
                 showToast("检测失败");
-
             }
 
             @Override
@@ -350,7 +349,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     public void beginCheckCloud() {
         showSuccess = false;
-        mGDUGimbal = (GDUGimbal) ((GDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+        mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
         if (mGDUGimbal == null) {
             return;
         }

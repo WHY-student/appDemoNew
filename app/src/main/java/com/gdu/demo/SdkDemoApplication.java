@@ -3,6 +3,8 @@ package com.gdu.demo;
 import android.app.Application;
 
 import com.gdu.config.GduAppEnv;
+import com.gdu.demo.ourgdu.ourGDUAircraft;
+import com.gdu.demo.ourgdu.ourGDUSDKManager;
 import com.gdu.sdk.base.BaseProduct;
 import com.gdu.sdk.manager.GDUSDKManager;
 import com.gdu.sdk.products.GDUAircraft;
@@ -26,19 +28,19 @@ public class SdkDemoApplication extends Application {
 
 
     public static synchronized BaseProduct getProductInstance() {
-        product = GDUSDKManager.getInstance().getProduct();
+        product = ourGDUSDKManager.getInstance().getProduct();
         return product;
     }
 
-    public static synchronized GDUAircraft getAircraftInstance() {
+    public static synchronized ourGDUAircraft getAircraftInstance() {
         if (!isAircraftConnected()) {
             return null;
         }
-        return (GDUAircraft) getProductInstance();
+        return (ourGDUAircraft) getProductInstance();
     }
 
     public static boolean isAircraftConnected() {
-        return getProductInstance() != null && getProductInstance() instanceof GDUAircraft;
+        return getProductInstance() != null && getProductInstance() instanceof ourGDUAircraft;
     }
     
     public static SdkDemoApplication getSingleApp() {
