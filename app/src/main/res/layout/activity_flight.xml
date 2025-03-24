@@ -93,14 +93,15 @@
 
 
     <!--飞行信息-->
-    <com.gdu.demo.widgetlist.camerapara.CameraParaView
-        android:id="@+id/camera_para_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginRight="24dp"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/top_state_view" />
+
+<!--    <com.gdu.demo.widgetlist.camerapara.CameraParaView-->
+<!--        android:id="@+id/camera_para_view"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="4dp"-->
+<!--        android:layout_marginRight="16dp"-->
+<!--        app:layout_constraintRight_toRightOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/top_state_view" />-->
 
     <com.gdu.demo.widgetlist.flyState.FlyStateView
         android:id="@+id/fly_state"
@@ -162,22 +163,52 @@
             android:onClick="onClick"
             android:text="开始增量" />
 
+<!--        <Button-->
+<!--            android:id="@+id/btn_take_off"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="一键降落"-->
+<!--            android:padding="16dp"-->
+<!--            android:textColor="@color/black"-->
+<!--            android:onClick="onClick"-->
+<!--            android:layout_marginBottom="8dp"/>-->
+<!--        &lt;!&ndash;            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;&ndash;&gt;-->
+
+<!--        &lt;!&ndash; 一键返航按钮 &ndash;&gt;-->
+<!--        <Button-->
+<!--            android:id="@+id/btn_return_home"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="一键返航"-->
+<!--            android:padding="16dp"-->
+<!--            android:textColor="@color/btn_return_home_text_color"-->
+<!--            android:onClick="onClick"-->
+<!--            android:layout_marginBottom="8dp"/>-->
+
         <TextView
             android:id="@+id/ai_state"
             android:layout_width="180dp"
             android:layout_height="wrap_content"
             android:text=""
-            android:textSize="20sp"
+            android:textSize="16sp"
             android:textColor="@color/white" />
 
-        <TextView
-            android:id="@+id/unknown_num"
-            android:layout_marginStart="16dp"
-            android:layout_width="wrap_content"
+<!--        <TextView-->
+<!--            android:id="@+id/unknown_num"-->
+<!--            android:layout_marginStart="8dp"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text=""-->
+<!--            android:textSize="16sp"-->
+<!--            android:textColor="@color/white" />-->
+
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="20sp"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"
+            android:background="@color/color_C8D2D6"
+            android:layout_marginBottom="16dp" />/>
 
     </LinearLayout>
 
@@ -196,9 +227,9 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="180dp"
+        android:layout_marginTop="410dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -208,7 +239,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="一键降落"
-            android:padding="16dp"
+            android:padding="8dp"
             android:textColor="@color/black"
             android:onClick="onClick"
             android:layout_marginBottom="8dp"/>
@@ -273,36 +304,27 @@
 
 
     <!--拍照录像-->
-    <com.gdu.demo.widgetlist.takephoto.TakePhotoView
-        android:id="@+id/take_photo_view"
-        android:layout_width="@dimen/dp_54"
-        android:layout_height="@dimen/dp_180"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/top_state_view"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+<!--    <com.gdu.demo.widgetlist.takephoto.TakePhotoView-->
+<!--        android:id="@+id/take_photo_view"-->
+<!--        android:layout_width="@dimen/dp_54"-->
+<!--        android:layout_height="@dimen/dp_180"-->
+<!--        app:layout_constraintRight_toRightOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/top_state_view"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"/>-->
 
 
-    <!--云台俯仰角-->
-   <com.gdu.demo.widgetlist.gimbalangle.GimbalAngleView
-        android:id="@+id/gimbal_angle_view"
-        android:layout_width="@dimen/dp_22"
-        android:layout_height="@dimen/dp_150"
-        app:layout_constraintTop_toBottomOf="@id/top_state_view"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toLeftOf="@id/take_photo_view"
-        android:layout_marginRight="@dimen/dp_2"/>
-
-    <!--变焦控件-->
+    <!-- 变焦控件 -->
     <com.gdu.demo.widget.zoomView.CustomVerticalRangeSeekBar
         android:id="@+id/zoom_seek_bar"
         android:layout_width="@dimen/dp_38"
         android:layout_height="@dimen/dp_160"
         android:background="@android:color/transparent"
-        app:layout_constraintRight_toLeftOf="@id/gimbal_angle_view"
-        app:layout_constraintTop_toBottomOf="@id/top_state_view"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ai_recognize_imageview"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginRight="@dimen/dp_1"
-        app:rsb_gravity="center"
+        android:layout_marginLeft="16dp"
+        android:layout_marginBottom="150dp"
+        app:rsb_gravity="top"
         app:rsb_indicator_show_mode="alwaysHide"
         app:rsb_mode="single"
         app:rsb_progress_color="@android:color/transparent"
@@ -320,6 +342,17 @@
         app:rsb_tick_mark_text_color="@android:color/white"
         app:rsb_tick_mark_text_size="@dimen/sp_10" />
 
+    <!-- 云台俯仰角 -->
+    <com.gdu.demo.widgetlist.gimbalangle.GimbalAngleView
+        android:id="@+id/gimbal_angle_view"
+        android:layout_width="@dimen/dp_22"
+        android:layout_height="@dimen/dp_150"
+        app:layout_constraintLeft_toRightOf="@id/zoom_seek_bar"
+        app:layout_constraintTop_toBottomOf="@id/ai_recognize_imageview"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginLeft="16dp"
+        android:layout_marginBottom="150dp"
+    />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

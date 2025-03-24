@@ -842,4 +842,5 @@
     <string name="match_title">确定要进行遥控器对频吗</string>
     <string name="clound_checking">Calibrating, please ensure that the Aircraft is stationary</string>
     <string name="string_gimbal_reset_params_dialog_content">Restore the default settings of gimbal</string>
+    <string name="spinner_prompt">Unknown number</string> <!-- 下拉菜单标题 -->
 </resources>
