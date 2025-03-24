@@ -184,33 +184,31 @@
 <!--            android:textColor="@color/btn_return_home_text_color"-->
 <!--            android:onClick="onClick"-->
 <!--            android:layout_marginBottom="8dp"/>-->
-
-        <TextView
-            android:id="@+id/ai_state"
-            android:layout_width="180dp"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="16sp"
-            android:textColor="@color/white" />
-
-<!--        <TextView-->
-<!--            android:id="@+id/unknown_num"-->
-<!--            android:layout_marginStart="8dp"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text=""-->
-<!--            android:textSize="16sp"-->
-<!--            android:textColor="@color/white" />-->
-
-        <Spinner
-            android:id="@+id/spinner"
+        <LinearLayout
+            android:id="@+id/all_ai_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:layout_marginBottom="16dp"
-            android:popupBackground="#00000000"
-            />
+            android:background="#80FFFFFF"
+            android:layout_marginTop="3dp">
 
+            <TextView
+                android:id="@+id/ai_state"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="AI状态未增量"
+                android:textColor="@color/color_00B4FF"
+                android:textSize="20sp"
+                />
+
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/color_00B4FF"
+                android:popupBackground="@color/white"
+                />
+        </LinearLayout>
     </LinearLayout>
 
 
@@ -318,13 +316,15 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
-        android:layout_width="316dp"
-        android:layout_height="264dp"
-        android:layout_marginStart="644dp"
-        android:layout_marginTop="60dp"
+        android:layout_width="350dp"
+        android:layout_height="320dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/ai_recognize_imageview"
-        tools:listitem="@layout/item_image" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:listitem="@layout/item_image"
+        android:background="#80FFFFFF"
+        />
 
     <com.gdu.demo.widget.zoomView.CustomVerticalRangeSeekBar
         android:id="@+id/zoom_seek_bar"

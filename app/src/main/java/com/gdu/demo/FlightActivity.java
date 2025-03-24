@@ -247,7 +247,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         aiState = findViewById(R.id.ai_state);
         AIRecognize = findViewById(R.id.ai_recognize_imageview);
         spinner = findViewById(R.id.spinner);
-        spinner.setVisibility(View.GONE);
+        findViewById(R.id.all_ai_state).setVisibility(View.GONE);
 
         viewBinding.fpvRv.setShowObstacleOFF(!GlobalVariable.obstacleIsOpen);
         viewBinding.fpvRv.setObstacleMax(40);
@@ -350,20 +350,19 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     }
 
     public void setPhotoShow(int temp){
-        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签1"));
-        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签2"));
-        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签3"));
-        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签4"));
-        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签5"));
-        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签6"));
-        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签7"));
-        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签8"));
-        imageItems.add(new ImageItem(R.drawable.ai_loading, "标签9"));
+        imageItems.add(new ImageItem("images/image1.png", "标签1"));
+        imageItems.add(new ImageItem("images/image2.png", "标签2"));
+        imageItems.add(new ImageItem("images/image3.png", "标签3"));
+        imageItems.add(new ImageItem("images/image4.png", "标签4"));
+        imageItems.add(new ImageItem("images/image5.png", "标签5"));
+        imageItems.add(new ImageItem("images/image6.png", "标签6"));
+        imageItems.add(new ImageItem("images/image7.png", "标签7"));
+        imageItems.add(new ImageItem("images/image8.png", "标签8"));
 
         // 初始化 RecyclerView
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setLayoutManager(new GridLayoutManager(this, 3)); // 每排 3 个
-        ImageAdapter adapter = new ImageAdapter(imageItems);
+        recyclerView.setLayoutManager(new GridLayoutManager(this, temp)); // 每排 3 个
+        ImageAdapter adapter = new ImageAdapter(imageItems, this);
         recyclerView.setAdapter(adapter);
     }
 
@@ -535,7 +534,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
             // 添加新数据
             spinner.setPrompt("未知类数目：");
-            dataList.add("未知类数量"+temp2); // 默认文本
+            dataList.add("未知类数量："+temp2); // 默认文本
             dataList.add("新类1数量：" + part1);
             dataList.add("新类2数量：" + part2);
             dataList.add("新类3数量：" + part3);
@@ -716,7 +715,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     isProcessRunning = true;
                     quitAIRecognize.setEnabled(true);
                     startIncremental.setEnabled(true);
-                    spinner.setVisibility(View.VISIBLE);
+                    findViewById(R.id.all_ai_state).setVisibility(View.VISIBLE);
                 } catch (Exception e) {
                     AIRecognize.setEnabled(true);
                 }
@@ -779,7 +778,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     isProcessRunning = false;
                     AIRecognize.setEnabled(true);
                     startIncremental.setEnabled(false);
-                    spinner.setVisibility(View.GONE);
+                    findViewById(R.id.all_ai_state).setVisibility(View.GONE);
                 }catch(Exception e){
                     quitAIRecognize.setEnabled(true);
                 }
@@ -787,20 +786,21 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             case R.id.button_start_incremental:
                 if(unkonwNum < 10){
                     showToast("未知类别数目过少，请收集更多未知类别");
-                }
-                if (mGduVision != null) {
-                    mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(GDUError var1) {
-                            if (var1 == null) {
-                                showToast("开始增量");
-                            } else {
-                                showToast("开始增量失败");
+                }else{
+                    if (mGduVision != null) {
+                        mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(GDUError var1) {
+                                if (var1 == null) {
+                                    showToast("开始增量");
+                                } else {
+                                    showToast("开始增量失败");
+                                }
                             }
-                        }
-                    });
-                } else {
-                    showToast("请检查初始化是否成功");
+                        });
+                    } else {
+                        showToast("请检查初始化是否成功");
+                    }
                 }
                 break;
 

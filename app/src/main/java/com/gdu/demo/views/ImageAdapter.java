@@ -1,5 +1,6 @@
 package com.gdu.demo.views;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,15 +9,18 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.gdu.demo.R;
 
 import java.util.List;
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> {
     private List<ImageItem> imageItems;
+    private Context context;
 
-    public ImageAdapter(List<ImageItem> imageItems) {
+    public ImageAdapter(List<ImageItem> imageItems, Context context) {
         this.imageItems = imageItems;
+        this.context = context;
     }
 
     @NonNull
@@ -29,7 +33,9 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ImageItem item = imageItems.get(position);
-        holder.imageView.setImageResource(item.getImageResId());
+        Glide.with(context)
+                .load("file:///android_asset/" + item.getAssetFileName())
+                .into(holder.imageView);
         holder.textView.setText(item.getLabel());
     }
 
