@@ -280,9 +280,9 @@
 
     <ImageView
         android:id="@+id/yuv_imageview"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
         android:layout_width="384dp"
-        android:layout_height="216dp"/>
+        android:layout_height="216dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true" />
 
 </RelativeLayout>
