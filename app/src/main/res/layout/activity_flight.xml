@@ -51,15 +51,15 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <!--  AI识别  -->
-<!--    <androidx.appcompat.widget.AppCompatImageView-->
-<!--        android:id="@+id/ai_recognize_imageview"-->
-<!--        android:layout_width="@dimen/dp_26"-->
-<!--        android:layout_height="@dimen/dp_26"-->
-<!--        android:layout_marginStart="@dimen/dp_12"-->
-<!--        android:src="@drawable/ai_recognize"-->
-<!--        android:visibility="gone"-->
-<!--        app:layout_constraintTop_toTopOf="@id/iv_msgBoxLabel"-->
-<!--        app:layout_constraintLeft_toRightOf="@id/iv_msgBoxLabel"/>-->
+    <!--    <androidx.appcompat.widget.AppCompatImageView-->
+    <!--        android:id="@+id/ai_recognize_imageview"-->
+    <!--        android:layout_width="@dimen/dp_26"-->
+    <!--        android:layout_height="@dimen/dp_26"-->
+    <!--        android:layout_marginStart="@dimen/dp_12"-->
+    <!--        android:src="@drawable/ai_recognize"-->
+    <!--        android:visibility="gone"-->
+    <!--        app:layout_constraintTop_toTopOf="@id/iv_msgBoxLabel"-->
+    <!--        app:layout_constraintLeft_toRightOf="@id/iv_msgBoxLabel"/>-->
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/ai_recognize_imageview"
@@ -70,6 +70,17 @@
         android:visibility="visible"
         app:layout_constraintTop_toTopOf="@id/iv_msgBoxLabel"
         app:layout_constraintLeft_toRightOf="@id/iv_msgBoxLabel"/>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/ai_show_photo"
+        android:layout_width="@dimen/dp_26"
+        android:layout_height="250dp"
+        android:layout_marginLeft="820dp"
+        android:layout_marginTop="88dp"
+        android:src="@drawable/picture_2"
+        android:visibility="visible"
+        app:layout_constraintLeft_toRightOf="@id/iv_msgBoxLabel"
+        app:layout_constraintTop_toTopOf="@id/iv_msgBoxLabel" />
 
     <com.noober.background.view.BLTextView
         android:id="@+id/tv_msgBoxNum"
@@ -94,14 +105,14 @@
 
     <!--飞行信息-->
 
-<!--    <com.gdu.demo.widgetlist.camerapara.CameraParaView-->
-<!--        android:id="@+id/camera_para_view"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginTop="4dp"-->
-<!--        android:layout_marginRight="16dp"-->
-<!--        app:layout_constraintRight_toRightOf="parent"-->
-<!--        app:layout_constraintTop_toBottomOf="@id/top_state_view" />-->
+    <!--    <com.gdu.demo.widgetlist.camerapara.CameraParaView-->
+    <!--        android:id="@+id/camera_para_view"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_marginTop="4dp"-->
+    <!--        android:layout_marginRight="16dp"-->
+    <!--        app:layout_constraintRight_toRightOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@id/top_state_view" />-->
 
     <com.gdu.demo.widgetlist.flyState.FlyStateView
         android:id="@+id/fly_state"
@@ -137,13 +148,13 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
-<!--        <Button-->
-<!--            android:id="@+id/ai_recognize_imageview"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginStart="100dp"-->
-<!--            android:onClick="onClick"-->
-<!--            android:text="ai识别" />-->
+        <!--        <Button-->
+        <!--            android:id="@+id/ai_recognize_imageview"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_marginStart="100dp"-->
+        <!--            android:onClick="onClick"-->
+        <!--            android:text="ai识别" />-->
 
         <Button
             android:id="@+id/button_quit_ai"
@@ -163,27 +174,27 @@
             android:onClick="onClick"
             android:text="开始增量" />
 
-<!--        <Button-->
-<!--            android:id="@+id/btn_take_off"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="一键降落"-->
-<!--            android:padding="16dp"-->
-<!--            android:textColor="@color/black"-->
-<!--            android:onClick="onClick"-->
-<!--            android:layout_marginBottom="8dp"/>-->
-<!--        &lt;!&ndash;            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;&ndash;&gt;-->
+        <!--        <Button-->
+        <!--            android:id="@+id/btn_take_off"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:text="一键降落"-->
+        <!--            android:padding="16dp"-->
+        <!--            android:textColor="@color/black"-->
+        <!--            android:onClick="onClick"-->
+        <!--            android:layout_marginBottom="8dp"/>-->
+        <!--        &lt;!&ndash;            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;&ndash;&gt;-->
 
-<!--        &lt;!&ndash; 一键返航按钮 &ndash;&gt;-->
-<!--        <Button-->
-<!--            android:id="@+id/btn_return_home"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="一键返航"-->
-<!--            android:padding="16dp"-->
-<!--            android:textColor="@color/btn_return_home_text_color"-->
-<!--            android:onClick="onClick"-->
-<!--            android:layout_marginBottom="8dp"/>-->
+        <!--        &lt;!&ndash; 一键返航按钮 &ndash;&gt;-->
+        <!--        <Button-->
+        <!--            android:id="@+id/btn_return_home"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:text="一键返航"-->
+        <!--            android:padding="16dp"-->
+        <!--            android:textColor="@color/btn_return_home_text_color"-->
+        <!--            android:onClick="onClick"-->
+        <!--            android:layout_marginBottom="8dp"/>-->
         <LinearLayout
             android:id="@+id/all_ai_state"
             android:layout_width="wrap_content"
@@ -303,13 +314,13 @@
 
 
     <!--拍照录像-->
-<!--    <com.gdu.demo.widgetlist.takephoto.TakePhotoView-->
-<!--        android:id="@+id/take_photo_view"-->
-<!--        android:layout_width="@dimen/dp_54"-->
-<!--        android:layout_height="@dimen/dp_180"-->
-<!--        app:layout_constraintRight_toRightOf="parent"-->
-<!--        app:layout_constraintTop_toBottomOf="@id/top_state_view"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"/>-->
+    <!--    <com.gdu.demo.widgetlist.takephoto.TakePhotoView-->
+    <!--        android:id="@+id/take_photo_view"-->
+    <!--        android:layout_width="@dimen/dp_54"-->
+    <!--        android:layout_height="@dimen/dp_180"-->
+    <!--        app:layout_constraintRight_toRightOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@id/top_state_view"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"/>-->
 
 
     <!-- 变焦控件 -->
@@ -318,6 +329,7 @@
         android:id="@+id/recyclerView"
         android:layout_width="350dp"
         android:layout_height="320dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -364,7 +376,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginLeft="16dp"
         android:layout_marginBottom="150dp"
-    />
+        />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
