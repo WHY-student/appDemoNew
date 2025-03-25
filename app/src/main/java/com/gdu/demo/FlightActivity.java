@@ -350,6 +350,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     }
 
     public void setPhotoShow(int temp){
+        imageItems.clear();
         imageItems.add(new ImageItem("images/image1.png", "标签1"));
         imageItems.add(new ImageItem("images/image2.png", "标签2"));
         imageItems.add(new ImageItem("images/image3.png", "标签3"));
@@ -779,6 +780,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     AIRecognize.setEnabled(true);
                     startIncremental.setEnabled(false);
                     findViewById(R.id.all_ai_state).setVisibility(View.GONE);
+                    setPhotoShow(3);
                 }catch(Exception e){
                     quitAIRecognize.setEnabled(true);
                 }
@@ -793,6 +795,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                             public void onResult(GDUError var1) {
                                 if (var1 == null) {
                                     showToast("开始增量");
+                                    imageItems.add(new ImageItem("images/image1.png", "标签9"));
+                                    imageItems.add(new ImageItem("images/image2.png", "标签10"));
+                                    imageItems.add(new ImageItem("images/image3.png", "标签11"));
+                                    RecyclerView recyclerView = findViewById(R.id.recyclerView);
+                                    recyclerView.setLayoutManager(new GridLayoutManager(FlightActivity.this, 3)); // 每排 3 个
+                                    ImageAdapter adapter = new ImageAdapter(imageItems, FlightActivity.this);
+                                    recyclerView.setAdapter(adapter);
                                 } else {
                                     showToast("开始增量失败");
                                 }
