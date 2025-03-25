@@ -97,8 +97,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private Button quitAIRecognize;
     private TextView aiState;
     private Button startIncremental;
+    private RecyclerView recyclerView;
 //    private TextView unKnownum;
     private AppCompatImageView AIRecognize;
+    private AppCompatImageView showPhoto;
     private Spinner spinner;
 
     private Runnable resetStateTask; // 用于重置状态的任务
@@ -110,6 +112,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private int latestModelID = 0;
     private int tempModelID=0;
     private int modelID = 0;
+    private boolean isShow=false;
     private ArrayAdapter<String> adapter;
     private List<String> dataList;
 
@@ -246,6 +249,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        unKnownum = findViewById(R.id.unknown_num);
         aiState = findViewById(R.id.ai_state);
         AIRecognize = findViewById(R.id.ai_recognize_imageview);
+        showPhoto=findViewById(R.id.ai_show_photo);
         spinner = findViewById(R.id.spinner);
         findViewById(R.id.all_ai_state).setVisibility(View.GONE);
 
@@ -253,6 +257,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         viewBinding.fpvRv.setObstacleMax(40);
         viewBinding.ivMsgBoxLabel.setOnClickListener(this);
         viewBinding.aiRecognizeImageview.setOnClickListener(this);
+        viewBinding.aiShowPhoto.setOnClickListener(this);
         ViewUtils.setViewShowOrHide(viewBinding.aiRecognizeImageview, viewModel.isShowAiBox());
 
         SettingDao settingDao = SettingDao.getSingle();
@@ -361,7 +366,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         imageItems.add(new ImageItem("images/image8.png", "标签8"));
 
         // 初始化 RecyclerView
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(this, temp)); // 每排 3 个
         ImageAdapter adapter = new ImageAdapter(imageItems, this);
         recyclerView.setAdapter(adapter);
@@ -851,6 +856,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         return false;
                     }
                 });
+                break;
+            case R.id.ai_show_photo:
+                Log.d("show","");
+                if(isShow){
+                    recyclerView.setVisibility(View.GONE);
+                    isShow=false;
+                }else {
+                    recyclerView.setVisibility(View.VISIBLE);
+                    isShow=true;
+
+                }
                 break;
 
         }
