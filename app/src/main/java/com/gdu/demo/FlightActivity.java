@@ -125,6 +125,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private boolean isShow=false;
     private ArrayAdapter<String> adapter;
     private List<String> dataList;
+    private ImageAdapter adapter1;
 
 
     // 定义一个 Runnable 任务，用于更新 AI 状态
@@ -404,8 +405,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         // 初始化 RecyclerView
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(this, temp)); // 每排 3 个
-        ImageAdapter adapter = new ImageAdapter(imageItems, this);
-        recyclerView.setAdapter(adapter);
+        adapter1 = new ImageAdapter(imageItems, this);
+        recyclerView.setAdapter(adapter1);
     }
 
     public void showNineGridShow(boolean show) {
@@ -540,7 +541,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private void showUnknownNUm(){// 结果为 34
         dataList = new ArrayList<>();
-        dataList.add("未知类数量: 0"); // 默认文本
+        dataList.add("未知类数量：0"); // 默认文本
         dataList.add("新类1数量：0" );
         dataList.add("新类2数量：0" );
         dataList.add("新类3数量：0" );
@@ -552,13 +553,16 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
+                spinner.setSelection(0);
+                showToast(""+latestModelID);
                 return;
             }
 
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
+                spinner.setSelection(0);
+                showToast(""+latestModelID);
                 // 当没有选项被选中时调用
             }
         });
@@ -566,22 +570,18 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     }
 
     private void updateSpinnerData(int modelID) {
-        // 清空旧数据
-        if(modelID==latestModelID){
-            return;
-        }
-        if(modelID!=latestModelID){
+        if(modelID == latestModelID) return;
+
+        runOnUiThread(() -> {
             dataList.clear();
-            int temp=modelID%100000000;
-            int temp2=temp/1000000;
-            int lastSixDigits = modelID % 1000000; // 结果为 1234
-            int part1 = (lastSixDigits / 10000) % 100; // 结果为 0
-            int part2 = (lastSixDigits / 100) % 100;   // 结果为 12
+            int temp = modelID % 100000000;
+            int temp2 = temp / 1000000;
+            int lastSixDigits = modelID % 1000000;
+            int part1 = (lastSixDigits / 10000) % 100;
+            int part2 = (lastSixDigits / 100) % 100;
             int part3 = lastSixDigits % 100;
 
-            // 添加新数据
-//            spinner.setPrompt("未知类数目：");
-            dataList.add("未知类数量："+temp2); // 默认文本
+            dataList.add("未知类数量：" + temp2);
             dataList.add("新类1数量：" + part1);
             dataList.add("新类2数量：" + part2);
             dataList.add("新类3数量：" + part3);
@@ -589,14 +589,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
 
 
-            // 通知适配器数据已更改
-            adapter.notifyDataSetChanged();
-//            spinner.set
+            // 重新设置适配器以确保更新
+            if(adapter == null) {
+                adapter = new ArrayAdapter<>(this, R.layout.spinner_item_white, dataList);
+                adapter.setDropDownViewResource(R.layout.spinner_item_white);
+                spinner.setAdapter(adapter);
+            } else {
+                adapter.notifyDataSetChanged();
+            }
 
-            // 可选：设置默认选中项
-            spinner.setSelection(0); // 默认选中第一项
-            latestModelID=modelID;
-        }
+            latestModelID = modelID;
+        });
     }
     private void updateKnowNum(int modelID) {
         int num = modelID % 100;
@@ -617,9 +620,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             return;
         }
         modelID = newModelID;
-        int firstNum = modelID / 1000;
-        int secondNum = (modelID / 100) % 10;
-        int temp = modelID / 100;
+        int firstNum = modelID / 1000000000;
+        int secondNum = (modelID%1000000000)/100000000;
+        int temp = modelID / 100000000;
         incState = firstNum -1;
         if(temp == 10){
             show(aiState, "AI状态：未增量");
@@ -630,7 +633,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 show(aiState, "AI状态：增量" + incState + "完成");
             }
         }
-        updateSpinnerData(modelID);
+//        updateSpinnerData(modelID);
 
         // 如果当前有任务正在运行，直接按照 1077 处理
 //        if (isTaskRunning) {
@@ -709,6 +712,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 break;
             case R.id.ai_recognize_imageview:
 //                viewModel.switchAIRecognize();
+                updateSpinnerData(0);
                 AIRecognize.setEnabled(false);
                 try {
                     // 开启检测
@@ -727,6 +731,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                     tempModelID=viewBinding.aiPaintView.getModelID();
                                     updateModel(viewBinding.aiPaintView.getModelID());
                                     GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
+                                    updateSpinnerData(tempModelID);
                                 }
                             }
 
@@ -770,7 +775,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 } catch (Exception e) {
                     AIRecognize.setEnabled(true);
                 }
-                updateSpinnerData(tempModelID);
+//                int id=2100001207;
+//                updateSpinnerData(id);
                 break;
             case R.id.button_quit_ai:
                 quitAIRecognize.setEnabled(false);
@@ -825,7 +831,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         });
                     }
                     viewBinding.aiPaintView.setRectParams(new ArrayList<>());
-                    updateSpinnerData(0);
+//                    updateSpinnerData(0);
                     isProcessRunning = false;
                     AIRecognize.setEnabled(true);
                     startIncremental.setEnabled(false);
@@ -877,6 +883,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                     recyclerView.setLayoutManager(new GridLayoutManager(FlightActivity.this, 3)); // 每排 3 个
                                     ImageAdapter adapter = new ImageAdapter(imageItems, FlightActivity.this);
                                     recyclerView.setAdapter(adapter);
+                                    adapter1.notifyDataSetChanged();
                                 } else {
                                     showToast("开始增量失败");
                                 }
@@ -886,6 +893,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         showToast("请检查初始化是否成功");
                     }
                 }
+                updateSpinnerData(tempModelID);
                 break;
 
             case R.id.btn_take_off:

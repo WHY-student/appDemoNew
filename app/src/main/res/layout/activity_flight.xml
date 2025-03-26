@@ -19,12 +19,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!--九宫格-->
+
     <com.gdu.demo.views.PaintView
         android:id="@+id/ai_paint_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        tools:layout_editor_absoluteX="1dp"
+        tools:layout_editor_absoluteY="0dp" />
 
-    <!--九宫格-->
     <com.gdu.demo.widget.CustomJiuGongGeView
         android:id="@+id/night_grid_view"
         android:layout_width="match_parent"
@@ -374,7 +377,7 @@
         app:layout_constraintLeft_toRightOf="@id/zoom_seek_bar"
         app:layout_constraintTop_toBottomOf="@id/ai_recognize_imageview"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginLeft="16dp"
+        android:layout_marginLeft="32dp"
         android:layout_marginBottom="150dp"
         />
 
