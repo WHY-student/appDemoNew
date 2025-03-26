@@ -1,15 +1,21 @@
 package com.gdu.demo;
 
 import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.content.Context;
+import android.hardware.display.DisplayManager;
+import android.media.MediaCodec;
+import android.media.MediaFormat;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.AdapterView;
@@ -39,11 +45,13 @@ import com.gdu.demo.flight.msgbox.MsgBoxPopView;
 import com.gdu.demo.flight.msgbox.MsgBoxViewCallBack;
 import com.gdu.demo.flight.setting.fragment.SettingDialogFragment;
 import com.gdu.demo.ourgdu.ourGDUAircraft;
+import com.gdu.demo.ourgdu.ourGDUCodecManager;
 import com.gdu.demo.ourgdu.ourGDUVision;
 import com.gdu.demo.utils.GisUtil;
 import com.gdu.demo.utils.LoadingDialogUtils;
 import com.gdu.demo.utils.SettingDao;
 import com.gdu.demo.viewmodel.FlightViewModel;
+import com.gdu.demo.views.ExternalDisplayPresentation;
 import com.gdu.demo.views.ImageAdapter;
 import com.gdu.demo.views.ImageItem;
 import com.gdu.demo.views.PaintView;
@@ -57,6 +65,7 @@ import com.gdu.radar.ObstaclePoint;
 import com.gdu.radar.PerceptionInformation;
 import com.gdu.sdk.camera.VideoFeeder;
 import com.gdu.sdk.codec.GDUCodecManager;
+import com.gdu.sdk.codec.ImageProcessingManager;
 import com.gdu.sdk.flightcontroller.GDUFlightController;
 import com.gdu.sdk.gimbal.GDUGimbal;
 import com.gdu.sdk.manager.GDUSDKManager;
@@ -73,6 +82,7 @@ import com.gdu.util.logger.MyLogUtils;
 import com.gdu.gimbal.Rotation;
 import com.gdu.gimbal.RotationMode;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,7 +92,7 @@ import java.util.Objects;
 public class FlightActivity extends FragmentActivity implements TextureView.SurfaceTextureListener, MsgBoxViewCallBack, View.OnClickListener {
 
     private ActivityFlightBinding viewBinding;
-    private GDUCodecManager codecManager;
+    private ourGDUCodecManager codecManager;
     private Context mContext;
     private VideoFeeder.VideoDataListener videoDataListener;
     private GDUFlightController mGDUFlightController;
@@ -131,6 +141,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private ourGDUVision mGduVision;
     List<ImageItem> imageItems = new ArrayList<>();
 
+    private ExternalDisplayPresentation mPresentation;
+
+    private ImageProcessingManager mImageProcessingManager;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -138,10 +151,24 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         viewBinding = ActivityFlightBinding.inflate(getLayoutInflater());
         setContentView(viewBinding.getRoot());
         viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
+        mImageProcessingManager = new ImageProcessingManager(this);
         initView();
         initData();
         initBackgroundThread();
         initListener();
+//        setupExternalDisplay();
+    }
+
+    private void setupExternalDisplay() {
+        DisplayManager displayManager = (DisplayManager) getSystemService(DISPLAY_SERVICE);
+        Display[] displays = displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION);
+        Log.d("setupExternalDisplay", "setupExternalDisplay: "+displays.length);
+        if (displays != null && displays.length > 0) {
+            // 简单起见，使用第一个外接显示设备
+            Display externalDisplay = displays[0];
+            mPresentation = new ExternalDisplayPresentation(this, externalDisplay);
+            mPresentation.show();
+        }
     }
 
     private void initListener() {
@@ -236,6 +263,15 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         public void run() {
                             // 延迟后执行的操作
                             codecManager.sendDataToDecoder(bytes, size);
+                            // 这种直接通过yuvData复制的操作排除掉，因为这种操作会加重CPU的消耗，导致视频信号不畅
+//                            byte[] yuvData =  codecManager.getYuvData();
+//                            if(yuvData==null){
+//                                Log.d("run ", "run: ");
+//                            }
+//                            Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+//                            if(bitmap!=null){
+//                                mPresentation.setBitMap(bitmap);
+//                            }
                         }
                     }, 550);
                 }
@@ -435,13 +471,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         if (mCustomSizeFocusHelper != null) {
             mCustomSizeFocusHelper.onDestroy();
         }
+        if (mPresentation != null) {
+            mPresentation.dismiss();
+        }
         stopBackgroundThread();
     }
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         if (codecManager == null) {
-            codecManager = new GDUCodecManager(FlightActivity.this, surface, width, height);
+            codecManager = new ourGDUCodecManager(FlightActivity.this, surface, width, height);
+//            codecManager = mPresentation.getCodecManager();
         }
 
     }
@@ -512,6 +552,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
                 return;
             }
 
@@ -539,17 +580,21 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             int part3 = lastSixDigits % 100;
 
             // 添加新数据
-            spinner.setPrompt("未知类数目：");
+//            spinner.setPrompt("未知类数目：");
             dataList.add("未知类数量："+temp2); // 默认文本
             dataList.add("新类1数量：" + part1);
             dataList.add("新类2数量：" + part2);
             dataList.add("新类3数量：" + part3);
+            unkonwNum = temp2;
+
+
 
             // 通知适配器数据已更改
             adapter.notifyDataSetChanged();
+//            spinner.set
 
             // 可选：设置默认选中项
-//            spinner.setSelection(0); // 默认选中第一项
+            spinner.setSelection(0); // 默认选中第一项
             latestModelID=modelID;
         }
     }
@@ -790,6 +835,31 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     quitAIRecognize.setEnabled(true);
                 }
                 break;
+            case R.id.button_gimbal_rotate:
+                mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+                Rotation rotation = new Rotation();
+                rotation.setMode(RotationMode.ABSOLUTE_ANGLE);
+                rotation.setPitch(-90);
+                mGDUGimbal.rotate(rotation, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(GDUError error) {
+                        if (error == null) {
+                            showToast("云台向下");
+                        }
+                    }
+                });
+                break;
+            case R.id.button_gimbal_reset:
+                mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+                mGDUGimbal.reset(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(GDUError error) {
+                        if (error == null) {
+                            showToast("云台回正");
+                        }
+                    }
+                });
+                break;
             case R.id.button_start_incremental:
                 if(unkonwNum < 10){
                     showToast("未知类别数目过少，请收集更多未知类别");
@@ -858,7 +928,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 });
                 break;
             case R.id.ai_show_photo:
-                Log.d("show","");
                 if(isShow){
                     recyclerView.setVisibility(View.GONE);
                     isShow=false;

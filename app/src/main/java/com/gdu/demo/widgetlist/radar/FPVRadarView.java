@@ -622,7 +622,6 @@ public class FPVRadarView extends View {
             return;
         }
         this.angleOffset = angle;
-        Log.d("angle","航向角为"+angle);
         invalidate();
     }
 
