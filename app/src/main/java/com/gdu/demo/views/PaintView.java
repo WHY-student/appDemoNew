@@ -51,8 +51,8 @@ public class PaintView extends AppCompatImageView {
         class_label.add("pickup");
         class_label.add("new1");
         class_label.add("new2");
+        class_label.add("saved");
         class_label.add("unknown");
-        class_label.add("unknown2");
     }
 
 //    List<String> gdu_class_label = new ArrayList<>();

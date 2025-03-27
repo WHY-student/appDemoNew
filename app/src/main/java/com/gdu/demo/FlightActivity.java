@@ -876,14 +876,14 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                             public void onResult(GDUError var1) {
                                 if (var1 == null) {
                                     showToast("开始增量");
-                                    imageItems.add(new ImageItem("images/image1.png", "标签9"));
-                                    imageItems.add(new ImageItem("images/image2.png", "标签10"));
-                                    imageItems.add(new ImageItem("images/image3.png", "标签11"));
-                                    RecyclerView recyclerView = findViewById(R.id.recyclerView);
-                                    recyclerView.setLayoutManager(new GridLayoutManager(FlightActivity.this, 3)); // 每排 3 个
-                                    ImageAdapter adapter = new ImageAdapter(imageItems, FlightActivity.this);
-                                    recyclerView.setAdapter(adapter);
-                                    adapter1.notifyDataSetChanged();
+                                    List<ImageItem> newItems = new ArrayList<>();
+                                    newItems.add(new ImageItem("images/image1.png", "标签9"));
+                                    newItems.add(new ImageItem("images/image2.png", "标签10"));
+                                    newItems.add(new ImageItem("images/image3.png", "标签11"));
+//                                    RecyclerView recyclerView = findViewById(R.id.recyclerView);
+                                    GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+//                                  int spanCount = layoutManager.getSpanCount(); // 应该是3
+                                    adapter1.addNewItems(newItems, layoutManager);
                                 } else {
                                     showToast("开始增量失败");
                                 }
