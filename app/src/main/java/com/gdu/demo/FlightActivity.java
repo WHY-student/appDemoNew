@@ -2,25 +2,26 @@ package com.gdu.demo;
 
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.content.Context;
-import android.hardware.display.DisplayManager;
-import android.media.MediaCodec;
-import android.media.MediaFormat;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
-import android.view.Display;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
-import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,10 +52,8 @@ import com.gdu.demo.utils.GisUtil;
 import com.gdu.demo.utils.LoadingDialogUtils;
 import com.gdu.demo.utils.SettingDao;
 import com.gdu.demo.viewmodel.FlightViewModel;
-import com.gdu.demo.views.ExternalDisplayPresentation;
 import com.gdu.demo.views.ImageAdapter;
 import com.gdu.demo.views.ImageItem;
-import com.gdu.demo.views.PaintView;
 import com.gdu.demo.widget.TopStateView;
 import com.gdu.demo.widget.zoomView.S220CustomSizeFocusHelper;
 import com.gdu.drone.LocationCoordinate2D;
@@ -64,15 +63,11 @@ import com.gdu.gimbal.GimbalState;
 import com.gdu.radar.ObstaclePoint;
 import com.gdu.radar.PerceptionInformation;
 import com.gdu.sdk.camera.VideoFeeder;
-import com.gdu.sdk.codec.GDUCodecManager;
 import com.gdu.sdk.codec.ImageProcessingManager;
 import com.gdu.sdk.flightcontroller.GDUFlightController;
 import com.gdu.sdk.gimbal.GDUGimbal;
-import com.gdu.sdk.manager.GDUSDKManager;
-import com.gdu.sdk.products.GDUAircraft;
 import com.gdu.sdk.radar.GDURadar;
 import com.gdu.sdk.util.CommonCallbacks;
-import com.gdu.sdk.vision.GDUVision;
 import com.gdu.sdk.vision.OnTargetDetectListener;
 import com.gdu.util.CollectionUtils;
 import com.gdu.util.StringUtils;
@@ -82,7 +77,6 @@ import com.gdu.util.logger.MyLogUtils;
 import com.gdu.gimbal.Rotation;
 import com.gdu.gimbal.RotationMode;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -108,9 +102,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private TextView aiState;
     private Button startIncremental;
     private RecyclerView recyclerView;
-//    private TextView unKnownum;
     private AppCompatImageView AIRecognize;
-    private AppCompatImageView showPhoto;
     private Spinner spinner;
 
     private Runnable resetStateTask; // 用于重置状态的任务
@@ -130,7 +122,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     // 定义一个 Runnable 任务，用于更新 AI 状态
 
-
     private Handler mHandler = new Handler(Looper.getMainLooper());
 
     private Boolean isPaused = false;
@@ -141,10 +132,15 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private ourGDUVision mGduVision;
     List<ImageItem> imageItems = new ArrayList<>();
-
-    private ExternalDisplayPresentation mPresentation;
-
     private ImageProcessingManager mImageProcessingManager;
+    PopupWindow attributePopupWindow;
+
+    View attributePopupView;
+
+    PopupWindow photoPopupWindow;
+
+    View photoPopupView;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -152,25 +148,43 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         viewBinding = ActivityFlightBinding.inflate(getLayoutInflater());
         setContentView(viewBinding.getRoot());
         viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
-        mImageProcessingManager = new ImageProcessingManager(this);
         initView();
         initData();
         initBackgroundThread();
         initListener();
-//        setupExternalDisplay();
+        initAttributeDialog();
+        initPhotoDialog();
+
     }
 
-    private void setupExternalDisplay() {
-        DisplayManager displayManager = (DisplayManager) getSystemService(DISPLAY_SERVICE);
-        Display[] displays = displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION);
-        Log.d("setupExternalDisplay", "setupExternalDisplay: "+displays.length);
-        if (displays != null && displays.length > 0) {
-            // 简单起见，使用第一个外接显示设备
-            Display externalDisplay = displays[0];
-            mPresentation = new ExternalDisplayPresentation(this, externalDisplay);
-            mPresentation.show();
-        }
+    public void initAttributeDialog() {
+        attributePopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.layout_popup_attribute, null);
+        // 创建PopupWindow实例
+        attributePopupWindow = new PopupWindow(
+                attributePopupView,
+                1100,
+                670,
+                true
+        );
+        // 设置背景（避免点击外部无法关闭）
+        attributePopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        attributePopupWindow.setOutsideTouchable(true);
     }
+    public void initPhotoDialog() {
+        photoPopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.popup_layout, null);
+        // 创建PopupWindow实例
+        photoPopupWindow = new PopupWindow(
+                photoPopupView,
+                1100,
+                670,
+                true
+        );
+        // 设置背景（避免点击外部无法关闭）
+        photoPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        photoPopupWindow.setOutsideTouchable(true);
+        setPhotoShow(4);
+    }
+
 
     private void initListener() {
         mGDUFlightController = Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getFlightController();
@@ -262,8 +276,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     mHandler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            // 延迟后执行的操作
                             codecManager.sendDataToDecoder(bytes, size);
+                            // 延迟后执行的操作
                             // 这种直接通过yuvData复制的操作排除掉，因为这种操作会加重CPU的消耗，导致视频信号不畅
 //                            byte[] yuvData =  codecManager.getYuvData();
 //                            if(yuvData==null){
@@ -286,7 +300,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        unKnownum = findViewById(R.id.unknown_num);
         aiState = findViewById(R.id.ai_state);
         AIRecognize = findViewById(R.id.ai_recognize_imageview);
-        showPhoto=findViewById(R.id.ai_show_photo);
         spinner = findViewById(R.id.spinner);
         findViewById(R.id.all_ai_state).setVisibility(View.GONE);
 
@@ -349,7 +362,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        云台向下及回正
         viewBinding.buttonGimbalRotate.setOnClickListener(this);
         viewBinding.buttonGimbalReset.setOnClickListener(this);
-        setPhotoShow(3);
     }
 
 
@@ -365,15 +377,21 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     GlobalVariable.isTargetDetectMode = true;
                     mTargetDetectHelper.startShowTarget();
                     viewBinding.aiPaintView.setRectParams(targetModes);
-                    tempModelID=viewBinding.aiPaintView.getModelID();
-                    updateModel(viewBinding.aiPaintView.getModelID());
+//                    tempModelID=viewBinding.aiPaintView.getModelID();
+//                    updateModel(viewBinding.aiPaintView.getModelID());
                     GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
                 }
             }
 
             @Override
             public void onTargetDetectFailed(int i) {
-                showToast("检测失败");
+                if(i!=-1){
+                    tempModelID=i;
+                    updateModel(tempModelID);
+                    updateSpinnerData(tempModelID);
+                }else {
+                    showToast("检测失败");
+                }
             }
 
             @Override
@@ -403,7 +421,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         imageItems.add(new ImageItem("images/image8.png", "标签8"));
 
         // 初始化 RecyclerView
-        recyclerView = findViewById(R.id.recyclerView);
+        recyclerView = photoPopupView.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(this, temp)); // 每排 3 个
         adapter1 = new ImageAdapter(imageItems, this);
         recyclerView.setAdapter(adapter1);
@@ -472,19 +490,125 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         if (mCustomSizeFocusHelper != null) {
             mCustomSizeFocusHelper.onDestroy();
         }
-        if (mPresentation != null) {
-            mPresentation.dismiss();
-        }
         stopBackgroundThread();
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         if (codecManager == null) {
             codecManager = new ourGDUCodecManager(FlightActivity.this, surface, width, height);
+            // 设置为true后才能获取到图像
+            codecManager.enabledYuvData(true);
 //            codecManager = mPresentation.getCodecManager();
         }
 
+
+        mImageProcessingManager = new ImageProcessingManager(FlightActivity.this);
+        viewBinding.textureView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                // 根据事件类型处理（如ACTION_DOWN、ACTION_UP等）
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_UP:
+                        int x = (int) event.getX();
+                        int y = (int) event.getY();
+                        TargetMode clickBox =  viewBinding.aiPaintView.getTargetModebyXY(x,y);
+                        if (clickBox==null){
+                            Log.d("clickBox", "onClick: 未点击到物体");
+                            break;
+                        }
+                        showAttributewithBox(clickBox);
+                        v.performClick();
+                        break;
+                    case MotionEvent.ACTION_DOWN:
+                        return true;
+                }
+                return true; // 返回true表示消费事件，后续事件继续传递
+            }
+
+        });
+
+    }
+
+    public void showAttributewithBox(TargetMode clickBox){
+
+        final float density = getResources().getDisplayMetrics().density;
+
+        // 转换最大尺寸限制
+        int maxWidthPx = (int) (400 * density); // 500dp -> 像素
+        int maxHeightPx = (int) (200 * density); // 200dp -> 像素
+        byte[] yuvData = codecManager.getYuvData();
+        if(yuvData==null){
+            Log.d("yuvData", "yuvData null");
+        }
+        Bitmap fullBitmap = mImageProcessingManager.convertYUVtoRGB(yuvData,
+                codecManager.getVideoWidth(), codecManager.getVideoHeight());
+        if(fullBitmap==null){
+            Log.d("fullBitmap", "fullBitmap null");
+        }
+        Bitmap croppedBitmap = Bitmap.createBitmap(fullBitmap, clickBox.getLeftX(), clickBox.getLeftY(), clickBox.getWidth(), clickBox.getHeight());
+        fullBitmap.recycle(); // 释放原图内存
+        float widthRatio = (float) maxWidthPx / croppedBitmap.getWidth();
+        float heightRatio = (float) maxHeightPx / croppedBitmap.getHeight();
+        // 取最小值以保证两个方向都不超限
+        float scaleFactor = Math.min(widthRatio, heightRatio);
+        Matrix matrix = new Matrix();
+        matrix.postScale(scaleFactor, scaleFactor);
+
+        Bitmap scaledBitmap = Bitmap.createBitmap(
+                croppedBitmap, 0, 0, croppedBitmap.getWidth(), croppedBitmap.getHeight(), matrix, true
+        );
+        ImageView instanceImageView = attributePopupView.findViewById(R.id.target_image);
+        instanceImageView.setImageBitmap(scaledBitmap);
+
+        // 显示里面对应的各条属性，目前仅展示class
+        String class_label = viewBinding.aiPaintView.getClassLabel().get(clickBox.getTargetType()%16);
+        show(attributePopupView.findViewById(R.id.target_label_name), "类别："+class_label);
+        int coarseIndex = clickBox.getTargetType() / 16;
+        List<String> attributeList;
+        switch (coarseIndex){
+            case 1:
+                attributeList = viewBinding.aiPaintView.getAttributeLabel1();
+                break;
+            case 2:
+                attributeList = viewBinding.aiPaintView.getAttributeLabel2();
+                break;
+            case 3:
+                attributeList = viewBinding.aiPaintView.getAttributeLabel3();
+                break;
+            default:
+                attributeList = viewBinding.aiPaintView.getAttributeLabel1();
+                Log.d("attribute", "大类没有index");
+//                return;
+        }
+
+        // 1. 将byte转换为8位二进制字符串（补前导零）
+        String byteBinary = String.format("%8s", Integer.toBinaryString(clickBox.getTargetConfidence() & 0xFF))
+                .replace(' ', '0');
+
+        // 2. 将int转换为32位二进制字符串（补前导零）
+//        String intBinary = String.format("%32s", Integer.toBinaryString(clickBox.getId()))
+//                .replace(' ', '0');
+        String intBinary = String.format("%32s", Integer.toBinaryString(501))
+                .replace(' ', '0');
+
+        // 3. 拼接成40位二进制字符串
+        String combined = intBinary + byteBinary;
+        int len = attributeList.size();
+
+        StringBuilder result = new StringBuilder();
+        for (int pos = 0; pos < len; pos++) {
+            if (combined.charAt(pos) == '1') { // 从左到右对应高位到低位
+                result.append(attributeList.get(pos)+"\n");
+            }
+        }
+
+        String attribute_labels = result.toString();
+        show(attributePopupView.findViewById(R.id.target_attribute), attribute_labels);
+
+        attributePopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, 0);
     }
 
     @Override
@@ -717,7 +841,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 try {
                     // 开启检测
                     show(aiState, "AI状态：未增量");
-//                    show(unKnownum, "未知类数目：0");
                     AIRecognize.setImageResource(R.drawable.ai_recognize_selected);
                     if (mGduVision != null) {
                         mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
@@ -728,17 +851,22 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                     GlobalVariable.isTargetDetectMode = true;
                                     mTargetDetectHelper.startShowTarget();
                                     viewBinding.aiPaintView.setRectParams(targetModes);
-                                    tempModelID=viewBinding.aiPaintView.getModelID();
-                                    updateModel(viewBinding.aiPaintView.getModelID());
                                     GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
-                                    updateSpinnerData(tempModelID);
+//                                    tempModelID=viewBinding.aiPaintView.getModelID();
+//                                    updateModel(viewBinding.aiPaintView.getModelID());
+//                                    updateSpinnerData(tempModelID);
                                 }
                             }
 
                             @Override
                             public void onTargetDetectFailed(int i) {
-                                showToast("检测失败");
-
+                                if(i!=-1){
+                                    tempModelID=i;
+                                    updateModel(tempModelID);
+                                    updateSpinnerData(tempModelID);
+                                }else {
+                                    showToast("检测失败");
+                                }
                             }
 
                             @Override
@@ -836,7 +964,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     AIRecognize.setEnabled(true);
                     startIncremental.setEnabled(false);
                     findViewById(R.id.all_ai_state).setVisibility(View.GONE);
-                    setPhotoShow(3);
+                    setPhotoShow(4);
                 }catch(Exception e){
                     quitAIRecognize.setEnabled(true);
                 }
@@ -879,8 +1007,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                     imageItems.add(new ImageItem("images/image1.png", "标签9"));
                                     imageItems.add(new ImageItem("images/image2.png", "标签10"));
                                     imageItems.add(new ImageItem("images/image3.png", "标签11"));
-                                    RecyclerView recyclerView = findViewById(R.id.recyclerView);
-                                    recyclerView.setLayoutManager(new GridLayoutManager(FlightActivity.this, 3)); // 每排 3 个
+                                    recyclerView = photoPopupView.findViewById(R.id.recyclerView);
+                                    recyclerView.setLayoutManager(new GridLayoutManager(FlightActivity.this, 4)); // 每排 3 个
                                     ImageAdapter adapter = new ImageAdapter(imageItems, FlightActivity.this);
                                     recyclerView.setAdapter(adapter);
                                     adapter1.notifyDataSetChanged();
@@ -936,16 +1064,14 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 });
                 break;
             case R.id.ai_show_photo:
-                if(isShow){
-                    recyclerView.setVisibility(View.GONE);
-                    isShow=false;
-                }else {
-                    recyclerView.setVisibility(View.VISIBLE);
-                    isShow=true;
-
-                }
+//                if(isShow){
+//                    isShow=false;
+//                }else {
+                photoPopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, 0);
+//                    isShow=true;
+//
+//                }
                 break;
-
         }
     }
 

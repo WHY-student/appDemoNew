@@ -16,6 +16,8 @@ import com.gdu.demo.ourgdu.ourGDUCodecManager;
 public class ExternalDisplayPresentation extends Presentation {
 
     private TextureView mExternalTextureView;
+
+
     private ourGDUCodecManager codecManager;
 
     public ExternalDisplayPresentation(Context context, Display display) {
@@ -33,7 +35,6 @@ public class ExternalDisplayPresentation extends Presentation {
         mExternalTextureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
             public void onSurfaceTextureAvailable(SurfaceTexture surface, int w, int h) {
-                Log.d("onSurfaceTextureAvailable: ", "onSurfaceTextureAvailable: ");
                 codecManager = new ourGDUCodecManager(mExternalTextureView.getContext(), surface, w, h);
             }
 
@@ -60,6 +61,11 @@ public class ExternalDisplayPresentation extends Presentation {
 
     public ourGDUCodecManager getCodecManager(){
         return codecManager;
+    }
+
+
+    public TextureView getmExternalTextureView() {
+        return mExternalTextureView;
     }
 
 }

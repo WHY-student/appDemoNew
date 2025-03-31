@@ -43,6 +43,7 @@ public class ourGDUCodecManager {
     private TextureView mTextureView;
     private SurfaceHolder mSurfaceHolder;
     private GduCodec mGduCodec;
+    private GduCodec ourGduCodec;
     private GduYUVCodec mYUVCodec;
     private ImageProcessingManager mFastYUVtoRGB;
     private GDUCamera mCurrentCamera;
@@ -86,12 +87,69 @@ public class ourGDUCodecManager {
         this.init();
     }
 
+    public void addSurface(SurfaceTexture addSurface){
+
+        this.ourGduCodec = new GduCodec();
+        this.ourGduCodec.setOnDecoderListener(new GduCodec.OnDecoderListener() {
+            public void OnYUVGot(byte[] yuvData, int length) {
+            }
+
+            public void onDataGot(DecoderPkgBean decoderPkgBean) {
+            }
+
+            public void onParameterSetGot(List<byte[]> bytes, byte videoType) {
+            }
+
+            public void onParameterChanged(List<byte[]> bytes, byte videoType) {
+            }
+        });
+
+        SpsPpsUtils spsPpsUtils = new SpsPpsUtils();
+        RonLog.LogD(new String[]{"test decoder sCodingFormat " + GlobalVariable.sCodingFormat + " " + GlobalVariable.gimbalType});
+        List<byte[]> sp = spsPpsUtils.getSpsAndPps();
+        RonLog.LogD(new String[]{"test decoder getSpsAndPps " + sp.size()});
+        int videoWidth = spsPpsUtils.getVideoW(GlobalVariable.ppsspsIndex);
+        int videoHeight = spsPpsUtils.getVideoH(GlobalVariable.ppsspsIndex);
+        Surface surface = new Surface(addSurface);
+//        Surface oldsurface = new Surface(mSurfaceTexture);
+        if (GlobalVariable.gimbalType != GimbalType.ByrdT_None_Zoom) {
+            if (GlobalVariable.isInPlayBack) {
+                if (GlobalVariable.sVideoPSList != null && this.hasGetSpsPps) {
+                    Log.d("resetMediaCodec", "initCodec sVideoPSList = " + GlobalVariable.sVideoPSList.size());
+                    if (GlobalVariable.sVideoPSList.size() == 2) {
+                        this.ourGduCodec.init(videoWidth, videoHeight, (byte[])GlobalVariable.sVideoPSList.get(0), (byte[])GlobalVariable.sVideoPSList.get(1), (byte[])null, surface);
+                        this.mGimbalDecoderInitialized = true;
+                    } else if (GlobalVariable.sVideoPSList.size() == 3) {
+                        this.ourGduCodec.init(videoWidth, videoHeight, (byte[])GlobalVariable.sVideoPSList.get(1), (byte[])GlobalVariable.sVideoPSList.get(2), (byte[])GlobalVariable.sVideoPSList.get(0), surface);
+                        this.mGimbalDecoderInitialized = true;
+                    }
+                }
+            } else {
+                if (sp.size() == 3) {
+                    //走的这个逻辑
+                    this.ourGduCodec.init(videoWidth, videoHeight, (byte[])sp.get(1), (byte[])sp.get(2), (byte[])sp.get(0), surface);
+                } else {
+                    this.ourGduCodec.init(videoWidth, videoHeight, (byte[])sp.get(0), (byte[])sp.get(1), (byte[])null, surface);
+                }
+
+                this.mGimbalDecoderInitialized = true;
+            }
+        } else if (GlobalVariable.sPSDKCompId != 0 && GlobalVariable.sVideoPSList != null) {
+            if (GlobalVariable.sVideoPSList.size() == 2) {
+                this.ourGduCodec.init(videoWidth, videoHeight, (byte[])GlobalVariable.sVideoPSList.get(0), (byte[])GlobalVariable.sVideoPSList.get(1), (byte[])null, surface);
+                this.mGimbalDecoderInitialized = true;
+            } else if (GlobalVariable.sVideoPSList.size() == 3) {
+                this.ourGduCodec.init(videoWidth, videoHeight, (byte[])GlobalVariable.sVideoPSList.get(1), (byte[])GlobalVariable.sVideoPSList.get(2), (byte[])GlobalVariable.sVideoPSList.get(0), surface);
+                this.mGimbalDecoderInitialized = true;
+            }
+        }
+    }
+
 
 
     private void init() {
         this.initCamera();
         this.mGduCodec = new GduCodec();
-        RonLog.LogD(new String[]{"test create GduCodec init"});
         this.mYUVCodec = new GduYUVCodec();
         this.mFastYUVtoRGB = new ImageProcessingManager(this.mContext);
         this.mGduCodec.setOnDecoderListener(new GduCodec.OnDecoderListener() {
@@ -421,6 +479,15 @@ public class ourGDUCodecManager {
                 }
 
             }
+            if (this.ourGduCodec != null) {
+                Log.d("reSetDecoderConfig", "sps = " + sp.size());
+                if (sp.size() == 3) {
+                    this.ourGduCodec.reInitDecoder(width, height, (byte[])sp.get(1), (byte[])sp.get(2), (byte[])sp.get(0));
+                } else {
+                    this.ourGduCodec.reInitDecoder(width, height, (byte[])sp.get(0), (byte[])sp.get(1), (byte[])null);
+                }
+
+            }
         }
     }
 
@@ -435,6 +502,9 @@ public class ourGDUCodecManager {
                     if (this.mGduCodec != null) {
                         this.mGduCodec.setCurrentVps(data);
                     }
+                    if (this.ourGduCodec != null) {
+                        this.ourGduCodec.setCurrentVps(data);
+                    }
 
                     if (this.mYUVCodec != null) {
                         this.mYUVCodec.setCurrentVps(data);
@@ -446,6 +516,9 @@ public class ourGDUCodecManager {
                     if (this.mGduCodec != null) {
                         this.mGduCodec.setCurrentSps(data);
                     }
+                    if (this.ourGduCodec != null) {
+                        this.ourGduCodec.setCurrentSps(data);
+                    }
 
                     if (this.mYUVCodec != null) {
                         this.mYUVCodec.setCurrentSps(data);
@@ -456,6 +529,9 @@ public class ourGDUCodecManager {
                     this.mCurrentPps = data;
                     if (this.mGduCodec != null) {
                         this.mGduCodec.setCurrentPps(data);
+                    }
+                    if (this.ourGduCodec != null) {
+                        this.ourGduCodec.setCurrentPps(data);
                     }
 
                     if (this.mYUVCodec != null) {
@@ -476,6 +552,9 @@ public class ourGDUCodecManager {
                             if (this.mGduCodec != null && this.mGimbalDecoderInitialized) {
                                 this.mGduCodec.resetMediaCodec();
                             }
+                            if (this.ourGduCodec != null && this.mGimbalDecoderInitialized) {
+                                this.ourGduCodec.resetMediaCodec();
+                            }
 
                             if (this.mYUVCodec != null) {
                                 this.mYUVCodec.resetMediaCodec();
@@ -494,6 +573,9 @@ public class ourGDUCodecManager {
                     if (this.mGduCodec != null) {
                         this.mGduCodec.setCurrentSps(data);
                     }
+                    if (this.ourGduCodec != null) {
+                        this.ourGduCodec.setCurrentSps(data);
+                    }
 
                     if (this.mYUVCodec != null) {
                         this.mYUVCodec.setCurrentSps(data);
@@ -504,6 +586,9 @@ public class ourGDUCodecManager {
                     this.mCurrentPps = data;
                     if (this.mGduCodec != null) {
                         this.mGduCodec.setCurrentPps(data);
+                    }
+                    if (this.ourGduCodec != null) {
+                        this.ourGduCodec.setCurrentPps(data);
                     }
 
                     if (this.mYUVCodec != null) {
@@ -522,6 +607,9 @@ public class ourGDUCodecManager {
                         if (GlobalVariable.gimbalType == GimbalType.ByrT_IR_1K || GlobalVariable.gimbalType == GimbalType.ByrT_6k || GlobalVariable.gimbalType == GimbalType.GIMBAL_8KC || GlobalVariable.gimbalType == GimbalType.Small_Double_Light || GlobalVariable.gimbalType == GimbalType.GIMBAL_FOUR_LIGHT) {
                             if (this.mGduCodec != null && this.mGimbalDecoderInitialized) {
                                 this.mGduCodec.resetMediaCodec();
+                            }
+                            if (this.ourGduCodec != null && this.mGimbalDecoderInitialized) {
+                                this.ourGduCodec.resetMediaCodec();
                             }
 
                             if (this.mYUVCodec != null) {
@@ -655,6 +743,9 @@ public class ourGDUCodecManager {
         if (this.mGduCodec != null) {
             this.mGduCodec.onResume();
         }
+        if (this.ourGduCodec != null) {
+            this.ourGduCodec.onResume();
+        }
 
         if (this.mYUVCodec != null) {
             this.mYUVCodec.onResume();
@@ -667,6 +758,9 @@ public class ourGDUCodecManager {
         this.isOnPause = true;
         if (this.mGduCodec != null) {
             this.mGduCodec.onPause();
+        }
+        if (this.ourGduCodec != null) {
+            this.ourGduCodec.onPause();
         }
 
         if (this.mYUVCodec != null) {
@@ -681,6 +775,10 @@ public class ourGDUCodecManager {
         if (this.mGduCodec != null) {
             this.mGduCodec.onDestroy();
             this.mGduCodec = null;
+        }
+        if (this.ourGduCodec != null) {
+            this.ourGduCodec.onDestroy();
+            this.ourGduCodec = null;
         }
 
         if (this.mYUVCodec != null) {

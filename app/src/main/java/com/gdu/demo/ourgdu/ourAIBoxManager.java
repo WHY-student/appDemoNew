@@ -27,6 +27,7 @@ public class ourAIBoxManager {
     private int frameWidth;
     private int frameHeight;
     private final List<TargetMode> mTargetModeList;
+//    private int modelID = 0;
 
     public ourAIBoxManager() {
         this.show_mode = VideoSizeMode.MODE_16_9;
@@ -90,7 +91,7 @@ public class ourAIBoxManager {
                 System.arraycopy(content, 38 + i * 14, targetBytes, 0, 14);
                 TargetMode targetMode = this.parseTargetAIBox(targetBytes);
                 targetMode.setCreateTime(createTime);
-                targetMode.setTargetName(this.getTargetName(modelId, targetMode.getTargetType()));
+                targetMode.setTargetName(this.getTargetName(1066, targetMode.getTargetType()));
 //                targetMode.setTargetType((short)-1);
                 targetModes.add(targetMode);
             }
@@ -102,6 +103,7 @@ public class ourAIBoxManager {
             this.mTargetId = 0;
             if (this.targetDetectListener != null) {
                 this.targetDetectListener.onTargetDetecting(this.mTargetModeList);
+                this.targetDetectListener.onTargetDetectFailed(modelId);
             }
 
         }

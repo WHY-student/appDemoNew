@@ -11,6 +11,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
@@ -27,10 +28,27 @@ import java.util.List;
 
 
 public class PaintView extends AppCompatImageView {
-    private  int aiState=0;
+//    private  int aiState=0;
 
     List<TargetMode> detectionBox = new ArrayList<>();
-//    List<String> class_label = new ArrayList<>();
+
+    public List<String> getClassLabel() {
+        return class_label;
+    }
+
+    public List<String> getAttributeLabel1() {
+        return attribute_label1;
+    }
+
+    public List<String> getAttributeLabel2() {
+        return attribute_label2;
+    }
+
+    public List<String> getAttributeLabel3() {
+        return attribute_label3;
+    }
+
+    //    List<String> class_label = new ArrayList<>();
 //    {
 //        class_label.add("bus");
 //        class_label.add("car");
@@ -55,6 +73,97 @@ public class PaintView extends AppCompatImageView {
         class_label.add("unknown2");
     }
 
+    List<String> attribute_label1 = new ArrayList<>();
+    {
+        attribute_label1.add("has wing type: fixed wing");
+        attribute_label1.add("has wing type: Variable Swept Wing");
+        attribute_label1.add("has wing position: upper monoplane");
+        attribute_label1.add("has wing position: center monoplane");
+        attribute_label1.add("has wing position: lower monoplane");
+        attribute_label1.add("has wing shape: flat");
+        attribute_label1.add("has wing shape: trapezoidal");
+        attribute_label1.add("has wing shape: tangent triangle");
+        attribute_label1.add("has wing shape: cut-tip diamond");
+        attribute_label1.add("has leading edge: flat");
+        attribute_label1.add("has leading edge: swept back");
+        attribute_label1.add("has trailing edge: forward swept");
+        attribute_label1.add("has trailing edge: flat");
+        attribute_label1.add("has trailing edge: swept back");
+        attribute_label1.add("has spreading ratio: small");
+        attribute_label1.add("has spreading ratio: medium");
+        attribute_label1.add("has spreading ratio: large");
+        attribute_label1.add("has upper anticline");
+        attribute_label1.add("has inferior anticline");
+        attribute_label1.add("has engine type: turboprop");
+        attribute_label1.add("has engine type: turbofan");
+        attribute_label1.add("has engine type: turbine engine");
+        attribute_label1.add("has engine position: Front of Wing");
+        attribute_label1.add("has engine position: behind the wing");
+        attribute_label1.add("has engine position: rear");
+        attribute_label1.add("has number of engines: 1");
+        attribute_label1.add("has number of engines: 2");
+        attribute_label1.add("has number of engines: 4");
+        attribute_label1.add("has number of engines: 8");
+        attribute_label1.add("has nose: blunt cone");
+        attribute_label1.add("has nose: Round");
+        attribute_label1.add("has nose: pointed cone");
+        attribute_label1.add("has shape: fine");
+        attribute_label1.add("has color: white");
+        attribute_label1.add("has color: gray");
+        attribute_label1.add("has cockpit: bubble");
+        attribute_label1.add("has cockpit: stepped");
+        attribute_label1.add("has tail: horizontal");
+        attribute_label1.add("has tail: triangular");
+        attribute_label1.add("has tail: split type");
+    }
+    List<String> attribute_label2 = new ArrayList<>();
+    {
+        attribute_label2.add("has position of the island: to the right of the bow");
+        attribute_label2.add("has position of the island: right of amidships");
+        attribute_label2.add("has position of the island: to the right of the transom");
+        attribute_label2.add("has location of island: amidships");
+        attribute_label2.add("has ship island size: medium");
+        attribute_label2.add("has ship island size: large");
+        attribute_label2.add("has bow shape: trapezoidal");
+        attribute_label2.add("has bow shape: square");
+        attribute_label2.add("has bow shape: sharp");
+        attribute_label2.add("has hull profile: symmetrical");
+        attribute_label2.add("has hull profile: asymmetric");
+        attribute_label2.add("has deck texture: type1");
+        attribute_label2.add("has deck texture: type 2");
+        attribute_label2.add("has deck texture: type 3");
+        attribute_label2.add("has deck texture: type 4");
+        attribute_label2.add("has weapons status: armed");
+        attribute_label2.add("has deck gun position: forward");
+        attribute_label2.add("has helideck position: forward");
+        attribute_label2.add("has helideck position: aft");
+        attribute_label2.add("has integrated ship building structure");
+        attribute_label2.add("has deck size: large");
+        attribute_label2.add("has deck size: small");
+    }
+    List<String> attribute_label3 = new ArrayList<>();
+    {
+        attribute_label3.add("has wheeled");
+        attribute_label3.add("has shoes and belt");
+        attribute_label3.add("has four wheels");
+        attribute_label3.add("has six wheels");
+        attribute_label3.add("has eight wheels");
+        attribute_label3.add("has ten wheels");
+        attribute_label3.add("has armor");
+        attribute_label3.add("has cannon");
+        attribute_label3.add("has large artillery");
+        attribute_label3.add("has number of barrels: 1");
+        attribute_label3.add("has number of barrels: 4");
+        attribute_label3.add("has barrel length: short");
+        attribute_label3.add("has barrel length: medium");
+        attribute_label3.add("has barrel length: long");
+        attribute_label3.add("has number of missile launchers: 1");
+        attribute_label3.add("has number of missile launchers: multiple");
+        attribute_label3.add("has side entrances");
+        attribute_label3.add("has hatches");
+        attribute_label3.add("has periscope");
+        attribute_label3.add("has function: amphibious");
+    }
 //    List<String> gdu_class_label = new ArrayList<>();
 //    {
 //        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0000));
@@ -199,11 +308,11 @@ public class PaintView extends AppCompatImageView {
             int y = (int)(detection.getLeftY() * 1200.0 / 1080.0);
             int maxX = (int)((detection.getLeftX() + detection.getWidth()));
             int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0);
-            aiState =detection.getId();
+//            aiState =detection.getId();
             String label = null;
             if (label == null) {
 
-                int labelIndex = detection.getTargetType();
+                int labelIndex = detection.getTargetType() % 16;
                 if (labelIndex == -1) {
                     label = "unknown";
                 } else if (labelIndex > 9) {
@@ -216,8 +325,8 @@ public class PaintView extends AppCompatImageView {
                 canvas.drawRect(new Rect(x, y, maxX, maxY), paint); // 绘制矩形
                 canvas.drawText(label, x, y - 5, paint2); // 绘制文本
             }
-            Log.d("detection id", "检测框id " + aiState + " ms");
-            Log.d("detectionifo", "长宽 " + x+y+ " ms");
+//            Log.d("detection id", "检测框id " + aiState + " ms");
+//            Log.d("detectionifo", "长宽 " + x+y+ " ms");
         }
 
         // 清空检测框数据
@@ -251,9 +360,23 @@ public class PaintView extends AppCompatImageView {
         //Log.d("PaintView", "Data received at: " + receiveTime);
 //        invalidate();
     }
-    public int getModelID(){
-        return this.aiState;
+
+    public TargetMode getTargetModebyXY(int clickX, int clickY){
+        for (TargetMode detection : this.detectionBox) {
+            int x = (int) (detection.getLeftX());
+            int y = (int) (detection.getLeftY() * 1200.0 / 1080.0);
+            int maxX = (int) ((detection.getLeftX() + detection.getWidth()));
+            int maxY = (int) ((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0);
+            if(clickX>=x && clickX<= maxX && clickY>=y && clickY<=maxY){
+                return detection;
+            }
+        }
+        return null;
     }
+
+//    public int getModelID(){
+//        return this.aiState;
+//    }
 }
 
 
