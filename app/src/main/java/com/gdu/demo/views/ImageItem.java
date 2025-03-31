@@ -10,7 +10,11 @@ public class ImageItem {
     private String label;
     // 构造方法1：用于静态资源
     public ImageItem(String imagePath, String label) {
-        this.imagePath = imagePath;
+        if(imagePath.contains("/data/")){
+            this.filePath = imagePath;
+        }else{
+            this.imagePath = imagePath;
+        }
         this.label = label;
     }
 

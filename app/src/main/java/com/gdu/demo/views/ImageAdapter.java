@@ -54,9 +54,16 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
             }
             // 情况2：静态资源（assets目录下的图片）
             else{
-                Glide.with(context)
-                        .load("file:///android_asset/" + item.getImagePath())
-                        .into(holder.imageView);
+                if(item.getImagePath()!=null){
+                    Glide.with(context)
+                            .load("file:///android_asset/" + item.getImagePath())
+                            .into(holder.imageView);
+                }
+                else {
+                    Glide.with(context)
+                            .load(item.getFilePath())
+                            .into(holder.imageView);
+                }
             }
         } else {
             // 空项处理（占位用）
@@ -99,7 +106,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
     }
     @Override
     public int getItemViewType(int position) {
-        return imageItems.get(position).getImagePath().isEmpty() ?
+        return ((imageItems.get(position).getImagePath()!=null && imageItems.get(position).getImagePath().isEmpty()) &&
+                imageItems.get(position).getFilePath()!=null && imageItems.get(position).getFilePath().isEmpty()) ?
                 TYPE_EMPTY : TYPE_ITEM;
     }
     public void addNewItems(List<ImageItem> newItems, GridLayoutManager layoutManager) {

@@ -6,11 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
-import android.content.Context;
-import android.hardware.display.DisplayManager;
-import android.media.MediaCodec;
-import android.media.MediaFormat;
-import android.os.Build;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -61,7 +56,6 @@ import com.gdu.demo.viewmodel.FlightViewModel;
 import com.gdu.demo.views.ImageAdapter;
 import com.gdu.demo.views.ImageItem;
 import com.gdu.demo.views.ImageStorageManager;
-import com.gdu.demo.views.PaintView;
 import com.gdu.demo.widget.TopStateView;
 import com.gdu.demo.widget.zoomView.S220CustomSizeFocusHelper;
 import com.gdu.drone.LocationCoordinate2D;
@@ -97,7 +91,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private ActivityFlightBinding viewBinding;
     private ourGDUCodecManager codecManager=null;
-    private Context mContext;
     private VideoFeeder.VideoDataListener videoDataListener;
     private GDUFlightController mGDUFlightController;
 
@@ -124,9 +117,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private int latestModelID = 0;
     private int tempModelID=0;
     private int modelID = 0;
-    private boolean isShow=false;
     private ArrayAdapter<String> adapter;
-    private List<String> dataList;
+    private List<String> dataList = new ArrayList<>();
     private ImageAdapter adapter1;
     private ImageView mYUVImageView;
 
@@ -134,9 +126,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     // 定义一个 Runnable 任务，用于更新 AI 状态
 
     private Handler mHandler = new Handler(Looper.getMainLooper());
-
-    private Boolean isPaused = false;
-    private boolean isSelected = false;
+    private Handler handler1 = new Handler(Looper.getMainLooper());
+//    private Boolean isPaused = false;
+//    private boolean isSelected = false;
 
 
     private GDUGimbal mGDUGimbal;
@@ -164,25 +156,14 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
         initView();
         initData();
-        initGduVision();
+        initGduVision(true);
+        initCamera();
         initBackgroundThread();
         initListener();
         storageManager = new ImageStorageManager(this);
 //        setupExternalDisplay();
         initAttributeDialog();
         initPhotoDialog();
-    }
-
-    private void setupExternalDisplay() {
-        DisplayManager displayManager = (DisplayManager) getSystemService(DISPLAY_SERVICE);
-        Display[] displays = displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION);
-        Log.d("setupExternalDisplay", "setupExternalDisplay: "+displays.length);
-        if (displays != null && displays.length > 0) {
-            // 简单起见，使用第一个外接显示设备
-            Display externalDisplay = displays[0];
-            mPresentation = new ExternalDisplayPresentation(this, externalDisplay);
-            mPresentation.show();
-        }
     }
 
 
@@ -231,6 +212,21 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         aiState = findViewById(R.id.ai_state);
         AIRecognize = findViewById(R.id.ai_recognize_imageview);
         spinner = findViewById(R.id.spinner);
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                spinner.setSelection(0);
+                return;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                spinner.setSelection(0);
+//                showToast(""+latestModelID);
+                // 当没有选项被选中时调用
+            }
+        });
         findViewById(R.id.all_ai_state).setVisibility(View.GONE);
 
         viewBinding.fpvRv.setShowObstacleOFF(!GlobalVariable.obstacleIsOpen);
@@ -292,9 +288,86 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        云台向下及回正
         viewBinding.buttonGimbalRotate.setOnClickListener(this);
         viewBinding.buttonGimbalReset.setOnClickListener(this);
-        setPhotoShow(3);
         mYUVImageView = findViewById(R.id.test_imageview);
     }
+
+    private void initData() {
+        new MsgBoxManager(this, 1, this);
+        VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(videoDataListener);
+        updateSpinnerData(0);
+//        showUnknownNUm();
+    }
+    // true的话就打开listener,false的话就关闭
+    public void initGduVision(boolean flag){
+        mGduVision = ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGduVision();
+        if(flag){
+            // true的话就打开
+            mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
+                //                    long startTime=System.currentTimeMillis();
+                @Override
+                public void onTargetDetecting(List<TargetMode> targetModes) {
+                    if (targetModes != null && !targetModes.isEmpty()) {
+                        GlobalVariable.isTargetDetectMode = true;
+                        mTargetDetectHelper.startShowTarget();
+                        viewBinding.aiPaintView.setRectParams(targetModes);
+//                    tempModelID=viewBinding.aiPaintView.getModelID();
+//                    updateModel(viewBinding.aiPaintView.getModelID());
+                        GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
+                    }
+                }
+
+                @Override
+                public void onTargetDetectFailed(int i) {
+                    if(i!=-1){
+                        tempModelID=i;
+                        updateModel(tempModelID);
+                        updateSpinnerData(tempModelID);
+                    }else {
+                        showToast("检测失败");
+                    }
+                }
+
+                @Override
+                public void onTargetDetectStart() {
+                    showToast("检测开始");
+
+                }
+
+                @Override
+                public void onTargetDetectFinished() {
+                    showToast("识别结束");
+
+                }
+            });
+        }else{
+            // false就关掉
+            mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
+                //                    long startTime=System.currentTimeMillis();
+                @Override
+                public void onTargetDetecting(List<TargetMode> targetModes) {
+                }
+
+                @Override
+                public void onTargetDetectFailed(int i) {
+                    showToast("检测失败");
+
+                }
+
+                @Override
+                public void onTargetDetectStart() {
+                    showToast("检测开始");
+
+                }
+
+                @Override
+                public void onTargetDetectFinished() {
+                    showToast("识别结束");
+
+                }
+            });
+        }
+    }
+
     private void initCamera(){
         mGDUCamera = (GDUCamera) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getCamera();
         if (mGDUCamera != null) {
@@ -315,54 +388,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        codecManager.enabledYuvData(true);
     }
 
-    private void initData() {
-        new MsgBoxManager(this, 1, this);
-        VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(videoDataListener);
-        showUnknownNUm();
-    }
-
-    public void initGduVision(){
-        mGduVision = ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGduVision();
-        mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
-            //                    long startTime=System.currentTimeMillis();
-            @Override
-            public void onTargetDetecting(List<TargetMode> targetModes) {
-                if (targetModes != null && !targetModes.isEmpty()) {
-                    GlobalVariable.isTargetDetectMode = true;
-                    mTargetDetectHelper.startShowTarget();
-                    viewBinding.aiPaintView.setRectParams(targetModes);
-//                    tempModelID=viewBinding.aiPaintView.getModelID();
-//                    updateModel(viewBinding.aiPaintView.getModelID());
-                    GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
-                }
-            }
-
-            @Override
-            public void onTargetDetectFailed(int i) {
-                if(i!=-1){
-                    tempModelID=i;
-                    updateModel(tempModelID);
-                    updateSpinnerData(tempModelID);
-                }else {
-                    showToast("检测失败");
-                }
-            }
-
-            @Override
-            public void onTargetDetectStart() {
-                showToast("检测开始");
-
-            }
-
-            @Override
-            public void onTargetDetectFinished() {
-                showToast("识别结束");
-
-            }
-        });
-        showUnknownNUm();
-        initCamera();
-    }
     private HandlerThread backgroundThread;
     private Handler backgroundHandler;
 
@@ -371,34 +396,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         backgroundThread.start();
         backgroundHandler = new Handler(backgroundThread.getLooper());
     }
-    public void initAttributeDialog() {
-        attributePopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.layout_popup_attribute, null);
-        // 创建PopupWindow实例
-        attributePopupWindow = new PopupWindow(
-                attributePopupView,
-                1100,
-                670,
-                true
-        );
-        // 设置背景（避免点击外部无法关闭）
-        attributePopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        attributePopupWindow.setOutsideTouchable(true);
-    }
-    public void initPhotoDialog() {
-        photoPopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.popup_layout, null);
-        // 创建PopupWindow实例
-        photoPopupWindow = new PopupWindow(
-                photoPopupView,
-                1100,
-                670,
-                true
-        );
-        // 设置背景（避免点击外部无法关闭）
-        photoPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        photoPopupWindow.setOutsideTouchable(true);
-        setPhotoShow(4);
-    }
-
 
     private void initListener() {
         mGDUFlightController = Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getFlightController();
@@ -469,6 +466,33 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         });
     }
 
+    public void initAttributeDialog() {
+        attributePopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.layout_popup_attribute, null);
+        // 创建PopupWindow实例
+        attributePopupWindow = new PopupWindow(
+                attributePopupView,
+                1100,
+                670,
+                true
+        );
+        // 设置背景（避免点击外部无法关闭）
+        attributePopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        attributePopupWindow.setOutsideTouchable(true);
+    }
+    public void initPhotoDialog() {
+        photoPopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.popup_layout, null);
+        // 创建PopupWindow实例
+        photoPopupWindow = new PopupWindow(
+                photoPopupView,
+                1100,
+                670,
+                true
+        );
+        // 设置背景（避免点击外部无法关闭）
+        photoPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        photoPopupWindow.setOutsideTouchable(true);
+        setPhotoShow(4);
+    }
 
     public void setPhotoShow(int temp){
         imageItems.clear();
@@ -727,37 +751,22 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
     }
 
-    private void showUnknownNUm(){// 结果为 34
-        dataList = new ArrayList<>();
-        dataList.add("未知类数量：0"); // 默认文本
-        dataList.add("新类1数量：0" );
-        dataList.add("新类2数量：0" );
-        dataList.add("新类3数量：0" );
-        adapter = new ArrayAdapter<>(this, R.layout.spinner_item_white, dataList);
-        adapter.setDropDownViewResource(R.layout.spinner_item_white);
-        spinner.setAdapter(adapter);
-
-        // 设置 Spinner 的选项选择监听器
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                spinner.setSelection(0);
-                return;
-            }
-
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                spinner.setSelection(0);
-//                showToast(""+latestModelID);
-                // 当没有选项被选中时调用
-            }
-        });
-
-    }
+//    private void showUnknownNUm(){// 结果为 34
+//        dataList = new ArrayList<>();
+//        dataList.add("未知类数量：0"); // 默认文本
+//        dataList.add("新类1数量：0" );
+//        dataList.add("新类2数量：0" );
+//        dataList.add("新类3数量：0" );
+//        adapter = new ArrayAdapter<>(this, R.layout.spinner_item_white, dataList);
+//        adapter.setDropDownViewResource(R.layout.spinner_item_white);
+//        spinner.setAdapter(adapter);
+//
+//        // 设置 Spinner 的选项选择监听器
+//
+//    }
 
     private void updateSpinnerData(int modelID) {
-        if(modelID == latestModelID) return;
+        if(modelID!=0 && modelID == latestModelID) return;
 
         runOnUiThread(() -> {
             dataList.clear();
@@ -774,33 +783,35 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             dataList.add("新类3数量：" + part3);
             unkonwNum = temp2;
 
-
-
             // 重新设置适配器以确保更新
-            if(adapter == null) {
-                adapter = new ArrayAdapter<>(this, R.layout.spinner_item_white, dataList);
-                adapter.setDropDownViewResource(R.layout.spinner_item_white);
-                spinner.setAdapter(adapter);
-            } else {
-                adapter.notifyDataSetChanged();
-            }
+//            if(adapter == null) {
+//                adapter = new ArrayAdapter<>(this, R.layout.spinner_item_white, dataList);
+//                adapter.setDropDownViewResource(R.layout.spinner_item_white);
+//                spinner.setAdapter(adapter);
+//            } else {
+//                adapter.notifyDataSetChanged();
+//            }
+            adapter = new ArrayAdapter<>(this, R.layout.spinner_item_white, dataList);
+            adapter.setDropDownViewResource(R.layout.spinner_item_white);
+            spinner.setAdapter(adapter);
+            adapter.notifyDataSetChanged();
 
             latestModelID = modelID;
         });
     }
-    private void updateKnowNum(int modelID) {
-        int num = modelID % 100;
-        if (num == unkonwNum) {
-            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
-            return;
-        }
-        if (num != unkonwNum) {
-//            show(unKnownum, "  " + "未知类数目 " + num);
-            unkonwNum = num;
-        }
-    }
+//    private void updateKnowNum(int modelID) {
+//        int num = modelID % 100;
+//        if (num == unkonwNum) {
+//            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
+//            return;
+//        }
+//        if (num != unkonwNum) {
+////            show(unKnownum, "  " + "未知类数目 " + num);
+//            unkonwNum = num;
+//        }
+//    }
 
-    private boolean isTaskRunning = false; // 标记是否有延迟任务正在运行
+//    private boolean isTaskRunning = false; // 标记是否有延迟任务正在运行
 
     private void updateModel(int newModelID) {
         if(modelID==newModelID){
@@ -876,16 +887,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        }
     }
 
-    // 完成任务并重置状态
-    private void completeTask() {
-        isTaskRunning = false; // 标记任务完成
-//        Log.d("TaskDebug", "Task completed, latest modelID: " + latestModelID);
+//    // 完成任务并重置状态
+//    private void completeTask() {
+//        isTaskRunning = false; // 标记任务完成
+////        Log.d("TaskDebug", "Task completed, latest modelID: " + latestModelID);
+//
+//        // 根据最新的 modelID 更新状态
+////        updateModel(latestModelID);
+//    }
 
-        // 根据最新的 modelID 更新状态
-//        updateModel(latestModelID);
-    }
 
-
+    @SuppressLint("NonConstantResourceId")
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -898,87 +910,36 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 viewBinding.ivMsgBoxLabel.setSelected(!viewBinding.ivMsgBoxLabel.isSelected());
                 break;
             case R.id.ai_recognize_imageview:
-//                viewModel.switchAIRecognize();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    codecManager.enabledYuvData(true);
-                }
+                codecManager.enabledYuvData(true);
                 updateSpinnerData(0);
-//                Bitmap bitmap = generateSampleBitmap(); // 生成测试Bitmap
-//                int savedNumber = storageManager.saveImage(bitmap);
-//                if (savedNumber > 0) {
-//                    lastSavedNumber = savedNumber;
-//                    Toast.makeText(this, "保存成功，编号: " + savedNumber, Toast.LENGTH_SHORT).show();
-//                }
                 AIRecognize.setEnabled(false);
                 try {
                     // 开启检测
-                    show(aiState, "AI状态：未增量");
-                    AIRecognize.setImageResource(R.drawable.ai_recognize_selected);
-                    if (mGduVision != null) {
-                        mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
-                            //                    long startTime=System.currentTimeMillis();
-                            @Override
-                            public void onTargetDetecting(List<TargetMode> targetModes) {
-                                if (targetModes != null && !targetModes.isEmpty()) {
-                                    GlobalVariable.isTargetDetectMode = true;
-                                    mTargetDetectHelper.startShowTarget();
-                                    viewBinding.aiPaintView.setRectParams(targetModes);
-                                    GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
-//                                    tempModelID=viewBinding.aiPaintView.getModelID();
-//                                    updateModel(viewBinding.aiPaintView.getModelID());
-//                                    updateSpinnerData(tempModelID);
-                                }
+                    initGduVision(true);
+                    mGduVision.startTargetDetect(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(GDUError var1) {
+                            if (var1 == null) {
+                                showToast("识别开始");
+                            } else {
+                                showToast("开始识别失败");
+                                AIRecognize.setEnabled(true);
                             }
-
-                            @Override
-                            public void onTargetDetectFailed(int i) {
-                                if(i!=-1){
-                                    tempModelID=i;
-                                    updateModel(tempModelID);
-                                    updateSpinnerData(tempModelID);
-                                }else {
-                                    showToast("检测失败");
-                                }
-                            }
-
-                            @Override
-                            public void onTargetDetectStart() {
-                                showToast("检测开始");
-
-                            }
-
-                            @Override
-                            public void onTargetDetectFinished() {
-                                showToast("识别结束");
-
-                            }
-                        });
-                        mGduVision.startTargetDetect(new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(GDUError var1) {
-                                if (var1 == null) {
-                                    showToast("识别开始");
-                                } else {
-                                    showToast("开始识别失败");
-                                    AIRecognize.setEnabled(true);
-                                }
-                            }
-                        });
-                    }else {
-                        showToast("请检查初始化是否完成");
-                        AIRecognize.setEnabled(true);
-                    }
+                        }
+                    });
                     isProcessRunning = true;
                     quitAIRecognize.setEnabled(true);
                     startIncremental.setEnabled(true);
+                    show(aiState, "AI状态：未增量");
+                    AIRecognize.setImageResource(R.drawable.ai_recognize_selected);
                     findViewById(R.id.all_ai_state).setVisibility(View.VISIBLE);
                 } catch (Exception e) {
+                    showToast("请检查初始化是否完成");
                     AIRecognize.setEnabled(true);
                 }
-//                int id=2100001207;
-//                updateSpinnerData(id);
                 break;
             case R.id.button_quit_ai:
+                codecManager.enabledYuvData(false);
                 quitAIRecognize.setEnabled(false);
                 try{
                     // 移除所有未执行的任务
@@ -989,35 +950,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         backgroundHandler.removeCallbacks(completeTask);
                     }
                     // 显示“未增量”
-                    show(aiState, "");
-//                    show(unKnownum, "");
-                    AIRecognize.setImageResource(R.drawable.ai_recognize);
                     stopBackgroundThread();
                     if (mGduVision != null) {
-                        mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
-                            //                    long startTime=System.currentTimeMillis();
-                            @Override
-                            public void onTargetDetecting(List<TargetMode> targetModes) {
-                            }
-
-                            @Override
-                            public void onTargetDetectFailed(int i) {
-                                showToast("检测失败");
-
-                            }
-
-                            @Override
-                            public void onTargetDetectStart() {
-                                showToast("检测开始");
-
-                            }
-
-                            @Override
-                            public void onTargetDetectFinished() {
-                                showToast("识别结束");
-
-                            }
-                        });
+                        initGduVision(false);
                         mGduVision.stopTargetDetect(new CommonCallbacks.CompletionCallback() {
                             @Override
                             public void onResult(GDUError var1) {
@@ -1031,10 +966,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         });
                     }
                     viewBinding.aiPaintView.setRectParams(new ArrayList<>());
-//                    updateSpinnerData(0);
                     isProcessRunning = false;
                     AIRecognize.setEnabled(true);
                     startIncremental.setEnabled(false);
+                    AIRecognize.setImageResource(R.drawable.ai_recognize);
                     findViewById(R.id.all_ai_state).setVisibility(View.GONE);
                     setPhotoShow(4);
                 }catch(Exception e){
@@ -1067,41 +1002,42 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 });
                 break;
             case R.id.button_start_incremental:
-                if(unkonwNum < 10){
-                    showToast("未知类别数目过少，请收集更多未知类别");
-                }else{
-                    if (mGduVision != null) {
-                        mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(GDUError var1) {
-                                if (var1 == null) {
-                                    showToast("开始增量");
-                                    imageItems.add(new ImageItem("images/image1.png", "标签9"));
-                                    imageItems.add(new ImageItem("images/image2.png", "标签10"));
-                                    imageItems.add(new ImageItem("images/image3.png", "标签11"));
-                                    recyclerView = photoPopupView.findViewById(R.id.recyclerView);
-                                    recyclerView.setLayoutManager(new GridLayoutManager(FlightActivity.this, 4)); // 每排 3 个
-                                    ImageAdapter adapter = new ImageAdapter(imageItems, FlightActivity.this);
-                                    recyclerView.setAdapter(adapter);
-                                    adapter1.notifyDataSetChanged();
-                                } else {
-                                    showToast("开始增量失败");
-                                }
+//                if(unkonwNum < 10){
+//                    showToast("未知类别数目过少，请收集更多未知类别");
+//                    break;
+//                }
+
+                if (mGduVision != null) {
+                    mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(GDUError var1) {
+                            if (var1 == null) {
+                                showToast("开始增量");
+//                                imageItems.add(new ImageItem("images/image1.png", "标签9"));
+//                                imageItems.add(new ImageItem("images/image2.png", "标签10"));
+//                                imageItems.add(new ImageItem("images/image3.png", "标签11"));
+//                                recyclerView = photoPopupView.findViewById(R.id.recyclerView);
+//                                recyclerView.setLayoutManager(new GridLayoutManager(FlightActivity.this, 4)); // 每排 3 个
+//                                ImageAdapter adapter = new ImageAdapter(imageItems, FlightActivity.this);
+//                                recyclerView.setAdapter(adapter);
+//                                adapter1.notifyDataSetChanged();
+                            } else {
+                                showToast("开始增量失败");
                             }
-                        });
-                    } else {
-                        showToast("请检查初始化是否成功");
-                byte[] yuvData = codecManager.getYuvData();;
-                if(yuvData==null){
-                    showToast("codecManager为空");
-                }else {
+                        }
+                    });
+                } else {
+                    showToast("请检查初始化是否成功");
+                }
+                byte[] yuvData = codecManager.getYuvData();
+                if(yuvData!=null){
                     Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
                     Bitmap bitmap2=Bitmap.createBitmap(bitmap,100,100,100,50);
-//                    mYUVImageView.setImageBitmap(bitmap2);
+                    bitmap.recycle();
                     int savedNumber = storageManager.saveImage(bitmap2);
                     if (savedNumber > 0) {
                         lastSavedNumber = savedNumber;
-                        Toast.makeText(this, "保存成功，编号: " + savedNumber, Toast.LENGTH_SHORT).show();
+                        showToast("保存成功，编号: " + savedNumber);
                     }
 //                    if (lastSavedNumber > 0) {
 //                        storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
@@ -1110,45 +1046,18 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //                    }
                     String picture1=storageManager.getImageAbsolutePath(lastSavedNumber);
                     showToast(picture1);
+                    Log.d("picture", picture1);
                     List<ImageItem> newItems = new ArrayList<>();
                     storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
                     newItems.add(new ImageItem(picture1, "标签9"));
                     newItems.add(new ImageItem("images/image2.png", "标签10"));
                     newItems.add(new ImageItem("images/image3.png", "标签11"));
-//                                    RecyclerView recyclerView = findViewById(R.id.recyclerView);
                     GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-//                                  int spanCount = layoutManager.getSpanCount(); // 应该是3
                     adapter1.addNewItems(newItems, layoutManager);
+                }else {
+                    showToast("yuvData为空");
                 }
-//                if(unkonwNum < 10){
-//                    showToast("未知类别数目过少，请收集更多未知类别");
-//                }else{
-//                    if (mGduVision != null) {
-//                        mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, new CommonCallbacks.CompletionCallback() {
-//                            @Override
-//                            public void onResult(GDUError var1) {
-//                                if (var1 == null) {
-//                                    showToast("开始增量");
-//                                    List<ImageItem> newItems = new ArrayList<>();
-//                                    newItems.add(new ImageItem("images/image1.png", "标签9"));
-//                                    newItems.add(new ImageItem("images/image2.png", "标签10"));
-//                                    newItems.add(new ImageItem("images/image3.png", "标签11"));
-////                                    RecyclerView recyclerView = findViewById(R.id.recyclerView);
-//                                    GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-////                                  int spanCount = layoutManager.getSpanCount(); // 应该是3
-//                                    adapter1.addNewItems(newItems, layoutManager);
-//                                } else {
-//                                    showToast("开始增量失败");
-//                                }
-//                            }
-//                        });
-//                    } else {
-//                        showToast("请检查初始化是否成功");
-//                    }
-//                }
-//                updateSpinnerData(tempModelID);
                 break;
-
             case R.id.btn_take_off:
                 mGDUFlightController.startLanding(new CommonCallbacks.CompletionCallback() {
                     @Override
@@ -1163,15 +1072,15 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 break;
             case R.id.btn_return_home:
                 mGDUFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(GDUError var1) {
-                    if (var1 == null) {
-                        showToast("开始返航");
-                    } else {
-                        showToast("开始返航失败");
+                    @Override
+                    public void onResult(GDUError var1) {
+                        if (var1 == null) {
+                            showToast("开始返航");
+                        } else {
+                            showToast("开始返航失败");
+                        }
                     }
-                }
-            });
+                });
                 break;
             case R.id.spinner:
                 // 添加新数据
@@ -1189,18 +1098,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 });
                 break;
             case R.id.ai_show_photo:
-//                if(isShow){
-//                    isShow=false;
-//                }else {
                 photoPopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, 0);
-//                    isShow=true;
-//
-//                }
                 break;
         }
     }
 
-    @Override
     public void updateTitleTvTxt(String title) {
         ThreadHelper.runOnUiThread(() -> viewBinding.topStateView.setStatusText(title));
     }
@@ -1255,7 +1157,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         ThreadHelper.runOnUiThread(() -> Toast.makeText(this, str, Toast.LENGTH_SHORT).show());
     }
 
-    private Handler handler1 = new Handler(Looper.getMainLooper());
 
     public void show(TextView textView, final String toast) {
         if (toast == null) {
@@ -1277,3 +1178,16 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         viewModel.stopTarget((byte) 0x02, GlobalVariable.mCurrentLightType);
     }
 }
+
+//    private void setupExternalDisplay() {
+//        DisplayManager displayManager = (DisplayManager) getSystemService(DISPLAY_SERVICE);
+//        Display[] displays = displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION);
+//        Log.d("setupExternalDisplay", "setupExternalDisplay: "+displays.length);
+//        if (displays != null && displays.length > 0) {
+//            // 简单起见，使用第一个外接显示设备
+//            Display externalDisplay = displays[0];
+//            mPresentation = new ExternalDisplayPresentation(this, externalDisplay);
+//            mPresentation.show();
+//        }
+//    }
+
