@@ -1,12 +1,14 @@
 package com.gdu.demo;
 
 import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.content.Context;
 import android.hardware.display.DisplayManager;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -21,6 +23,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,6 +37,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.gdu.AlgorithmMark;
 import com.gdu.beans.WarnBean;
+import com.gdu.camera.StorageState;
 import com.gdu.common.error.GDUError;
 import com.gdu.config.ConnStateEnum;
 import com.gdu.config.GlobalVariable;
@@ -54,6 +58,7 @@ import com.gdu.demo.viewmodel.FlightViewModel;
 import com.gdu.demo.views.ExternalDisplayPresentation;
 import com.gdu.demo.views.ImageAdapter;
 import com.gdu.demo.views.ImageItem;
+import com.gdu.demo.views.ImageStorageManager;
 import com.gdu.demo.views.PaintView;
 import com.gdu.demo.widget.TopStateView;
 import com.gdu.demo.widget.zoomView.S220CustomSizeFocusHelper;
@@ -63,6 +68,8 @@ import com.gdu.drone.TargetMode;
 import com.gdu.gimbal.GimbalState;
 import com.gdu.radar.ObstaclePoint;
 import com.gdu.radar.PerceptionInformation;
+import com.gdu.sdk.camera.GDUCamera;
+import com.gdu.sdk.camera.SystemState;
 import com.gdu.sdk.camera.VideoFeeder;
 import com.gdu.sdk.codec.GDUCodecManager;
 import com.gdu.sdk.codec.ImageProcessingManager;
@@ -92,7 +99,7 @@ import java.util.Objects;
 public class FlightActivity extends FragmentActivity implements TextureView.SurfaceTextureListener, MsgBoxViewCallBack, View.OnClickListener {
 
     private ActivityFlightBinding viewBinding;
-    private ourGDUCodecManager codecManager;
+    private ourGDUCodecManager codecManager=null;
     private Context mContext;
     private VideoFeeder.VideoDataListener videoDataListener;
     private GDUFlightController mGDUFlightController;
@@ -126,6 +133,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private ArrayAdapter<String> adapter;
     private List<String> dataList;
     private ImageAdapter adapter1;
+    private ImageView mYUVImageView;
 
 
     // 定义一个 Runnable 任务，用于更新 AI 状态
@@ -138,6 +146,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
 
     private GDUGimbal mGDUGimbal;
+    private GDUCamera mGDUCamera;
 
     private ourGDUVision mGduVision;
     List<ImageItem> imageItems = new ArrayList<>();
@@ -145,6 +154,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private ExternalDisplayPresentation mPresentation;
 
     private ImageProcessingManager mImageProcessingManager;
+    private ImageStorageManager storageManager;
+    private int lastSavedNumber = 0;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -157,6 +168,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         initData();
         initBackgroundThread();
         initListener();
+        storageManager = new ImageStorageManager(this);
 //        setupExternalDisplay();
     }
 
@@ -233,6 +245,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw1));
             });
         }
+
 
         viewModel.getToastLiveData().observe(this, data -> {
             if (data != 0) {
@@ -350,6 +363,26 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         viewBinding.buttonGimbalRotate.setOnClickListener(this);
         viewBinding.buttonGimbalReset.setOnClickListener(this);
         setPhotoShow(3);
+        mYUVImageView = findViewById(R.id.test_imageview);
+    }
+    private void initCamera(){
+        mGDUCamera = (GDUCamera) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getCamera();
+        if (mGDUCamera != null) {
+            mGDUCamera.setSystemStateCallback(new SystemState.Callback() {
+                @Override
+                public void onUpdate(SystemState systemState) {
+
+                }
+            });
+            mGDUCamera.setStorageStateCallBack(new StorageState.Callback() {
+                @Override
+                public void onUpdate(StorageState state) {
+
+                }
+            });
+
+        }
+//        codecManager.enabledYuvData(true);
     }
 
 
@@ -389,6 +422,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             }
         });
         showUnknownNUm();
+        initCamera();
     }
 
     public void setPhotoShow(int temp){
@@ -445,6 +479,16 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         mGDUGimbal.startCalibration(error -> {
 
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 101) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                mGduPlayView.beginRecord("/mnt/sdcard/gdu","ron.mp4");
+            }
+        }
     }
 
     @Override
@@ -554,7 +598,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 spinner.setSelection(0);
-                showToast(""+latestModelID);
                 return;
             }
 
@@ -562,7 +605,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 spinner.setSelection(0);
-                showToast(""+latestModelID);
+//                showToast(""+latestModelID);
                 // 当没有选项被选中时调用
             }
         });
@@ -712,7 +755,16 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 break;
             case R.id.ai_recognize_imageview:
 //                viewModel.switchAIRecognize();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    codecManager.enabledYuvData(true);
+                }
                 updateSpinnerData(0);
+//                Bitmap bitmap = generateSampleBitmap(); // 生成测试Bitmap
+//                int savedNumber = storageManager.saveImage(bitmap);
+//                if (savedNumber > 0) {
+//                    lastSavedNumber = savedNumber;
+//                    Toast.makeText(this, "保存成功，编号: " + savedNumber, Toast.LENGTH_SHORT).show();
+//                }
                 AIRecognize.setEnabled(false);
                 try {
                     // 开启检测
@@ -867,33 +919,62 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 });
                 break;
             case R.id.button_start_incremental:
-                if(unkonwNum < 10){
-                    showToast("未知类别数目过少，请收集更多未知类别");
-                }else{
-                    if (mGduVision != null) {
-                        mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(GDUError var1) {
-                                if (var1 == null) {
-                                    showToast("开始增量");
-                                    List<ImageItem> newItems = new ArrayList<>();
-                                    newItems.add(new ImageItem("images/image1.png", "标签9"));
-                                    newItems.add(new ImageItem("images/image2.png", "标签10"));
-                                    newItems.add(new ImageItem("images/image3.png", "标签11"));
-//                                    RecyclerView recyclerView = findViewById(R.id.recyclerView);
-                                    GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-//                                  int spanCount = layoutManager.getSpanCount(); // 应该是3
-                                    adapter1.addNewItems(newItems, layoutManager);
-                                } else {
-                                    showToast("开始增量失败");
-                                }
-                            }
-                        });
-                    } else {
-                        showToast("请检查初始化是否成功");
+                byte[] yuvData = codecManager.getYuvData();;
+                if(yuvData==null){
+                    showToast("codecManager为空");
+                }else {
+                    Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+                    Bitmap bitmap2=Bitmap.createBitmap(bitmap,100,100,100,50);
+//                    mYUVImageView.setImageBitmap(bitmap2);
+                    int savedNumber = storageManager.saveImage(bitmap2);
+                    if (savedNumber > 0) {
+                        lastSavedNumber = savedNumber;
+                        Toast.makeText(this, "保存成功，编号: " + savedNumber, Toast.LENGTH_SHORT).show();
                     }
+//                    if (lastSavedNumber > 0) {
+//                        storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
+//                    } else {
+//                        Toast.makeText(this, "请先保存图片", Toast.LENGTH_SHORT).show();
+//                    }
+                    String picture1=storageManager.getImageAbsolutePath(lastSavedNumber);
+                    showToast(picture1);
+                    List<ImageItem> newItems = new ArrayList<>();
+                    storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
+                    newItems.add(new ImageItem(picture1, "标签9"));
+                    newItems.add(new ImageItem("images/image2.png", "标签10"));
+                    newItems.add(new ImageItem("images/image3.png", "标签11"));
+//                                    RecyclerView recyclerView = findViewById(R.id.recyclerView);
+                    GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+//                                  int spanCount = layoutManager.getSpanCount(); // 应该是3
+                    adapter1.addNewItems(newItems, layoutManager);
                 }
-                updateSpinnerData(tempModelID);
+//                if(unkonwNum < 10){
+//                    showToast("未知类别数目过少，请收集更多未知类别");
+//                }else{
+//                    if (mGduVision != null) {
+//                        mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, new CommonCallbacks.CompletionCallback() {
+//                            @Override
+//                            public void onResult(GDUError var1) {
+//                                if (var1 == null) {
+//                                    showToast("开始增量");
+//                                    List<ImageItem> newItems = new ArrayList<>();
+//                                    newItems.add(new ImageItem("images/image1.png", "标签9"));
+//                                    newItems.add(new ImageItem("images/image2.png", "标签10"));
+//                                    newItems.add(new ImageItem("images/image3.png", "标签11"));
+////                                    RecyclerView recyclerView = findViewById(R.id.recyclerView);
+//                                    GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+////                                  int spanCount = layoutManager.getSpanCount(); // 应该是3
+//                                    adapter1.addNewItems(newItems, layoutManager);
+//                                } else {
+//                                    showToast("开始增量失败");
+//                                }
+//                            }
+//                        });
+//                    } else {
+//                        showToast("请检查初始化是否成功");
+//                    }
+//                }
+//                updateSpinnerData(tempModelID);
                 break;
 
             case R.id.btn_take_off:

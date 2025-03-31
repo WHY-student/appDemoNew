@@ -381,5 +381,16 @@
         android:layout_marginBottom="150dp"
         />
 
+    <ImageView
+        android:id="@+id/test_imageview"
+        android:layout_width="384dp"
+        android:layout_height="216dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="100dp"
+        android:layout_marginTop="28dp"
+        app:layout_constraintLeft_toRightOf="@id/zoom_seek_bar"
+        app:layout_constraintTop_toBottomOf="@id/ai_recognize_imageview" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
