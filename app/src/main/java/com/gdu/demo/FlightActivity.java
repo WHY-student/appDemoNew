@@ -150,111 +150,12 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
         initView();
         initData();
+        initGduVision();
         initBackgroundThread();
         initListener();
         initAttributeDialog();
         initPhotoDialog();
-
     }
-
-    public void initAttributeDialog() {
-        attributePopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.layout_popup_attribute, null);
-        // 创建PopupWindow实例
-        attributePopupWindow = new PopupWindow(
-                attributePopupView,
-                1100,
-                670,
-                true
-        );
-        // 设置背景（避免点击外部无法关闭）
-        attributePopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        attributePopupWindow.setOutsideTouchable(true);
-    }
-    public void initPhotoDialog() {
-        photoPopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.popup_layout, null);
-        // 创建PopupWindow实例
-        photoPopupWindow = new PopupWindow(
-                photoPopupView,
-                1100,
-                670,
-                true
-        );
-        // 设置背景（避免点击外部无法关闭）
-        photoPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        photoPopupWindow.setOutsideTouchable(true);
-        setPhotoShow(4);
-    }
-
-
-    private void initListener() {
-        mGDUFlightController = Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getFlightController();
-        if (mGDUFlightController != null) {
-            mGDUFlightController.setStateCallback(flightControllerState -> {
-                //航向
-                float yaw = (float) flightControllerState.getAttitude().yaw;
-                float roll = (float) flightControllerState.getAttitude().roll;
-                LocationCoordinate3D aircraftLocation = flightControllerState.getAircraftLocation();
-                double uavLon = aircraftLocation.getLongitude();
-                double uavLat = aircraftLocation.getLatitude();
-                LocationCoordinate2D homeLocation = flightControllerState.getHomeLocation();
-                double homeLon = homeLocation.getLongitude();
-                double homeLat = homeLocation.getLatitude();
-                int distance = (int) GisUtil.calculateDistance(uavLon, uavLat, homeLon, homeLat);
-                runOnUiThread(() -> {
-                    if (yaw >= -180 && yaw < 0) {
-//                        yaw1=yaw + 360;
-                        viewBinding.fpvRv.setHeadingAngle(yaw + 360);
-                    } else {
-                        viewBinding.fpvRv.setHeadingAngle(yaw);
-                    }
-                    viewBinding.fpvRv.setHorizontalDipAngle(roll);
-                    if (homeLon == 0 && homeLat == 0) {
-                        viewBinding.fpvRv.setReturnDistance(GlobalVariable.flyDistance + "m");
-                    } else {
-                        viewBinding.fpvRv.setReturnDistance(distance + "m");
-                    }
-                });
-            });
-        }
-
-        GDURadar radar = (GDURadar) SdkDemoApplication.getAircraftInstance().getRadar();
-        if (radar != null) {
-            radar.setRadarPerceptionInformationCallback(new CommonCallbacks.CompletionCallbackWith<PerceptionInformation>() {
-                @Override
-                public void onSuccess(PerceptionInformation information) {
-                    List<ObstaclePoint> pointList = information.getObstaclePoints();
-                    List<ObstaclePoint> showPointList = new ArrayList<>();
-                    for (ObstaclePoint point : pointList) {
-                        if (point.getDirection() <= 4) {
-                            showPointList.add(point);
-                        }
-
-                    }
-                    runOnUiThread(() -> viewBinding.fpvRv.setObstacle(showPointList, 300));
-                }
-
-                @Override
-                public void onFailure(GDUError var1) {
-                }
-            });
-        }
-        GDUGimbal gimbal = (GDUGimbal) SdkDemoApplication.getAircraftInstance().getGimbal();
-        if (gimbal != null) {
-            gimbal.setStateCallback(state -> {
-                float yaw = (float) state.getAttitudeInDegrees().yaw;
-                float yaw1;
-                yaw1 = (yaw % 180) / 10.0f;
-                runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw1));
-            });
-        }
-
-        viewModel.getToastLiveData().observe(this, data -> {
-            if (data != 0) {
-                showToast(getResources().getString(data));
-            }
-        });
-    }
-
 
     private void initView() {
         viewBinding.topStateView.setViewClickListener(new TopStateView.OnClickCallBack() {
@@ -364,10 +265,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         viewBinding.buttonGimbalReset.setOnClickListener(this);
     }
 
-
     private void initData() {
         new MsgBoxManager(this, 1, this);
         VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(videoDataListener);
+        showUnknownNUm();
+    }
+
+    public void initGduVision(){
         mGduVision = ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGduVision();
         mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
             //                    long startTime=System.currentTimeMillis();
@@ -406,8 +310,113 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
             }
         });
-        showUnknownNUm();
     }
+    private HandlerThread backgroundThread;
+    private Handler backgroundHandler;
+
+    private void initBackgroundThread() {
+        backgroundThread = new HandlerThread("ModelUpdateThread");
+        backgroundThread.start();
+        backgroundHandler = new Handler(backgroundThread.getLooper());
+    }
+    public void initAttributeDialog() {
+        attributePopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.layout_popup_attribute, null);
+        // 创建PopupWindow实例
+        attributePopupWindow = new PopupWindow(
+                attributePopupView,
+                1100,
+                670,
+                true
+        );
+        // 设置背景（避免点击外部无法关闭）
+        attributePopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        attributePopupWindow.setOutsideTouchable(true);
+    }
+    public void initPhotoDialog() {
+        photoPopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.popup_layout, null);
+        // 创建PopupWindow实例
+        photoPopupWindow = new PopupWindow(
+                photoPopupView,
+                1100,
+                670,
+                true
+        );
+        // 设置背景（避免点击外部无法关闭）
+        photoPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        photoPopupWindow.setOutsideTouchable(true);
+        setPhotoShow(4);
+    }
+
+
+    private void initListener() {
+        mGDUFlightController = Objects.requireNonNull(SdkDemoApplication.getAircraftInstance()).getFlightController();
+        if (mGDUFlightController != null) {
+            mGDUFlightController.setStateCallback(flightControllerState -> {
+                //航向
+                float yaw = (float) flightControllerState.getAttitude().yaw;
+                float roll = (float) flightControllerState.getAttitude().roll;
+                LocationCoordinate3D aircraftLocation = flightControllerState.getAircraftLocation();
+                double uavLon = aircraftLocation.getLongitude();
+                double uavLat = aircraftLocation.getLatitude();
+                LocationCoordinate2D homeLocation = flightControllerState.getHomeLocation();
+                double homeLon = homeLocation.getLongitude();
+                double homeLat = homeLocation.getLatitude();
+                int distance = (int) GisUtil.calculateDistance(uavLon, uavLat, homeLon, homeLat);
+                runOnUiThread(() -> {
+                    if (yaw >= -180 && yaw < 0) {
+//                        yaw1=yaw + 360;
+                        viewBinding.fpvRv.setHeadingAngle(yaw + 360);
+                    } else {
+                        viewBinding.fpvRv.setHeadingAngle(yaw);
+                    }
+                    viewBinding.fpvRv.setHorizontalDipAngle(roll);
+                    if (homeLon == 0 && homeLat == 0) {
+                        viewBinding.fpvRv.setReturnDistance(GlobalVariable.flyDistance + "m");
+                    } else {
+                        viewBinding.fpvRv.setReturnDistance(distance + "m");
+                    }
+                });
+            });
+        }
+
+        GDURadar radar = (GDURadar) SdkDemoApplication.getAircraftInstance().getRadar();
+        if (radar != null) {
+            radar.setRadarPerceptionInformationCallback(new CommonCallbacks.CompletionCallbackWith<PerceptionInformation>() {
+                @Override
+                public void onSuccess(PerceptionInformation information) {
+                    List<ObstaclePoint> pointList = information.getObstaclePoints();
+                    List<ObstaclePoint> showPointList = new ArrayList<>();
+                    for (ObstaclePoint point : pointList) {
+                        if (point.getDirection() <= 4) {
+                            showPointList.add(point);
+                        }
+
+                    }
+                    runOnUiThread(() -> viewBinding.fpvRv.setObstacle(showPointList, 300));
+                }
+
+                @Override
+                public void onFailure(GDUError var1) {
+                }
+            });
+        }
+        GDUGimbal gimbal = (GDUGimbal) SdkDemoApplication.getAircraftInstance().getGimbal();
+        if (gimbal != null) {
+            gimbal.setStateCallback(state -> {
+                float yaw = (float) state.getAttitudeInDegrees().yaw;
+                float yaw1;
+                yaw1 = (yaw % 180) / 10.0f;
+                runOnUiThread(() -> viewBinding.fpvRv.setGimbalAngle(yaw1));
+            });
+        }
+
+        viewModel.getToastLiveData().observe(this, data -> {
+            if (data != 0) {
+                showToast(getResources().getString(data));
+            }
+        });
+    }
+
 
     public void setPhotoShow(int temp){
         imageItems.clear();
@@ -646,14 +655,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
     }
 
-    private HandlerThread backgroundThread;
-    private Handler backgroundHandler;
 
-    private void initBackgroundThread() {
-        backgroundThread = new HandlerThread("ModelUpdateThread");
-        backgroundThread.start();
-        backgroundHandler = new Handler(backgroundThread.getLooper());
-    }
 
     private void stopBackgroundThread() {
         if (backgroundThread != null) {
