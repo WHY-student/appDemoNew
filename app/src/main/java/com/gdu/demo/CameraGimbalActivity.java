@@ -22,6 +22,7 @@ import com.gdu.camera.StorageState;
 import com.gdu.common.error.GDUError;
 import com.gdu.config.GduConfig;
 import com.gdu.demo.ourgdu.ourGDUAircraft;
+import com.gdu.demo.ourgdu.ourGDUCodecManager;
 import com.gdu.gimbal.GimbalState;
 import com.gdu.gimbal.Rotation;
 import com.gdu.gimbal.RotationMode;
@@ -49,7 +50,7 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
 
     private final String OUTPATH = Environment.getExternalStorageDirectory() + "/gdu/sdk/local/";//本地副本的保存路径
     private VideoFeeder.VideoDataListener videoDataListener = null;
-    private GDUCodecManager codecManager = null;
+    private ourGDUCodecManager codecManager = null;
 
     private TextureView mGduPlayView;
     private TextView mInfoTextView;
@@ -417,10 +418,14 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
 
             case R.id.btn_get_yuv_data:
                 byte[] yuvData =  codecManager.getYuvData();
+                if(yuvData==null){
+                    toast("codecManager为空");
+                }
                 Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
 //                Bitmap bitmap = mFastYUVtoRGB.test(yuvData, 1920, 1080);
+                Bitmap bitmap2=Bitmap.createBitmap(bitmap,100,100,500,100);
                 if (bitmap != null) {
-                    mYUVImageView.setImageBitmap(bitmap);
+                    mYUVImageView.setImageBitmap(bitmap2);
                 }
                 break;
             case R.id.btn_get_rgba_data:
@@ -558,7 +563,7 @@ public class CameraGimbalActivity extends Activity implements TextureView.Surfac
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         if (codecManager == null) {
-            codecManager = new GDUCodecManager(mContext, mGduPlayView, width, height);
+            codecManager = new ourGDUCodecManager(mContext, mGduPlayView, width, height);
         }
     }
 
