@@ -80,12 +80,12 @@
         android:id="@+id/ai_show_photo"
         android:layout_width="@dimen/dp_26"
         android:layout_height="250dp"
-        android:layout_marginLeft="820dp"
-        android:layout_marginTop="88dp"
+        android:layout_marginRight="20dp"
         android:src="@drawable/picture_2"
         android:visibility="visible"
-        app:layout_constraintLeft_toRightOf="@id/iv_msgBoxLabel"
-        app:layout_constraintTop_toTopOf="@id/iv_msgBoxLabel" />
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
     <com.noober.background.view.BLTextView
         android:id="@+id/tv_msgBoxNum"
@@ -244,9 +244,9 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="410dp"
+        android:layout_marginBottom="75dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <!-- 一键返航按钮 -->
         <Button
@@ -254,8 +254,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="一键降落"
-            android:padding="8dp"
-            android:textColor="@color/black"
+            android:padding="16dp"
+            android:textColor="@color/btn_return_home_text_color"
             android:onClick="onClick"
             android:layout_marginBottom="8dp"/>
         <!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
@@ -383,16 +383,16 @@
         android:layout_marginBottom="150dp"
         />
 
-    <ImageView
-        android:id="@+id/test_imageview"
-        android:layout_width="384dp"
-        android:layout_height="216dp"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginLeft="100dp"
-        android:layout_marginTop="28dp"
-        app:layout_constraintLeft_toRightOf="@id/zoom_seek_bar"
-        app:layout_constraintTop_toBottomOf="@id/ai_recognize_imageview" />
+<!--    <ImageView-->
+<!--        android:id="@+id/test_imageview"-->
+<!--        android:layout_width="384dp"-->
+<!--        android:layout_height="216dp"-->
+<!--        android:layout_alignParentRight="true"-->
+<!--        android:layout_alignParentBottom="true"-->
+<!--        android:layout_marginLeft="100dp"-->
+<!--        android:layout_marginTop="28dp"-->
+<!--        app:layout_constraintLeft_toRightOf="@id/zoom_seek_bar"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/ai_recognize_imageview" />-->
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

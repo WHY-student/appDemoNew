@@ -304,16 +304,16 @@ public class PaintView extends AppCompatImageView {
 
         // 绘制逻辑 1920*1080      1920*1152      1920*1200        1080-》1200
         for (TargetMode detection : this.detectionBox) {
-            int x = (int)(detection.getLeftX());
-            int y = (int)(detection.getLeftY() * 1200.0 / 1080.0);
-            int maxX = (int)((detection.getLeftX() + detection.getWidth()));
-            int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0);
+            int x = (int)(detection.getLeftX()/1.5);
+            int y = (int)(detection.getLeftY() * 1200.0 / 1080.0/1.5);
+            int maxX = (int)((detection.getLeftX() + detection.getWidth())/1.5);
+            int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0/1.5);
 //            aiState =detection.getId();
             String label = null;
             if (label == null) {
 
                 int labelIndex = detection.getTargetType() % 16;
-                if (labelIndex == -1) {
+                if (labelIndex == -1 || labelIndex == 6) {
                     label = "unknown";
                 } else if (labelIndex > 9) {
                     label = "test";
@@ -363,10 +363,10 @@ public class PaintView extends AppCompatImageView {
 
     public TargetMode getTargetModebyXY(int clickX, int clickY){
         for (TargetMode detection : this.detectionBox) {
-            int x = (int) (detection.getLeftX());
-            int y = (int) (detection.getLeftY() * 1200.0 / 1080.0);
-            int maxX = (int) ((detection.getLeftX() + detection.getWidth()));
-            int maxY = (int) ((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0);
+            int x = (int) (detection.getLeftX()/1.5);
+            int y = (int) (detection.getLeftY() * 1200.0 / 1080.0/1.5);
+            int maxX = (int) ((detection.getLeftX() + detection.getWidth())/1.5);
+            int maxY = (int) ((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0/1.5);
             if(clickX>=x && clickX<= maxX && clickY>=y && clickY<=maxY){
                 return detection;
             }

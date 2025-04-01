@@ -29,7 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ourGDUVision {
     private GduCommunication3 mGduCommunication3 = GduSocketManager.getInstance().getGduCommunication();
-    private OnTargetDetectListener targetDetectListener;
+    private OnOurTargetDetectListener targetDetectListener;
     private OnTargetTrackListener targetTrackListener;
     private OnTargetDetectModelListener targetDetectModelListener;
     private final List<TargetMode> mTargetModeList = new ArrayList();
@@ -118,7 +118,7 @@ public class ourGDUVision {
         this.mGduCommunication3.addCycleACKCB(42205239, this.targetDetectModelsCallback);
     }
 
-    public void setOnTargetDetectListener(OnTargetDetectListener listener) {
+    public void setOnTargetDetectListener(OnOurTargetDetectListener listener) {
         this.targetDetectListener = listener;
         this.aiBoxManager.setOnTargetDetectListener(listener);
     }

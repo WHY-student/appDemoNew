@@ -8,6 +8,7 @@ import android.widget.Toast;
 import com.gdu.AlgorithmMark;
 import com.gdu.config.GlobalVariable;
 import com.gdu.demo.SdkDemoApplication;
+import com.gdu.demo.ourgdu.OnOurTargetDetectListener;
 import com.gdu.drone.TargetMode;
 import com.gdu.util.logger.MyLogUtils;
 
@@ -155,7 +156,12 @@ public class TargetDetectHelper {
      */
     private void addTargetDetectACK() {
         MyLogUtils.i("addTargetDetectACK()");
-        SdkDemoApplication.getAircraftInstance().getGduVision().setOnTargetDetectListener(new com.gdu.sdk.vision.OnTargetDetectListener() {
+        SdkDemoApplication.getAircraftInstance().getGduVision().setOnTargetDetectListener(new OnOurTargetDetectListener() {
+            @Override
+            public void onTargetDetectingNew(List<TargetMode> var1, int val2, long val3) {
+
+            }
+
             @Override
             public void onTargetDetecting(List<TargetMode> list) {
                 if (list == null){

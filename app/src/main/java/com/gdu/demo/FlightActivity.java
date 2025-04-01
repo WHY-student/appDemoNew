@@ -26,6 +26,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.FragmentActivity;
@@ -46,6 +47,7 @@ import com.gdu.demo.flight.msgbox.MsgBoxManager;
 import com.gdu.demo.flight.msgbox.MsgBoxPopView;
 import com.gdu.demo.flight.msgbox.MsgBoxViewCallBack;
 import com.gdu.demo.flight.setting.fragment.SettingDialogFragment;
+import com.gdu.demo.ourgdu.OnOurTargetDetectListener;
 import com.gdu.demo.ourgdu.ourGDUAircraft;
 import com.gdu.demo.ourgdu.ourGDUCodecManager;
 import com.gdu.demo.ourgdu.ourGDUVision;
@@ -72,7 +74,6 @@ import com.gdu.sdk.flightcontroller.GDUFlightController;
 import com.gdu.sdk.gimbal.GDUGimbal;
 import com.gdu.sdk.radar.GDURadar;
 import com.gdu.sdk.util.CommonCallbacks;
-import com.gdu.sdk.vision.OnTargetDetectListener;
 import com.gdu.util.CollectionUtils;
 import com.gdu.util.StringUtils;
 import com.gdu.util.ThreadHelper;
@@ -120,7 +121,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private ArrayAdapter<String> adapter;
     private List<String> dataList = new ArrayList<>();
     private ImageAdapter adapter1;
-    private ImageView mYUVImageView;
+//    private ImageView mYUVImageView;
 
 
     // 定义一个 Runnable 任务，用于更新 AI 状态
@@ -146,6 +147,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     PopupWindow photoPopupWindow;
 
     View photoPopupView;
+    int savedID=-1;
 
 
     @Override
@@ -158,9 +160,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         initData();
         initGduVision(true);
         initCamera();
-        initBackgroundThread();
+//        initBackgroundThread();
         initListener();
-        storageManager = new ImageStorageManager(this);
 //        setupExternalDisplay();
         initAttributeDialog();
         initPhotoDialog();
@@ -288,7 +289,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        云台向下及回正
         viewBinding.buttonGimbalRotate.setOnClickListener(this);
         viewBinding.buttonGimbalReset.setOnClickListener(this);
-        mYUVImageView = findViewById(R.id.test_imageview);
+//        mYUVImageView = findViewById(R.id.test_imageview);
     }
 
     private void initData() {
@@ -302,7 +303,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         mGduVision = ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGduVision();
         if(flag){
             // true的话就打开
-            mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
+            mGduVision.setOnTargetDetectListener(new OnOurTargetDetectListener() {
                 //                    long startTime=System.currentTimeMillis();
                 @Override
                 public void onTargetDetecting(List<TargetMode> targetModes) {
@@ -318,13 +319,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
                 @Override
                 public void onTargetDetectFailed(int i) {
-                    if(i!=-1){
-                        tempModelID=i;
-                        updateModel(tempModelID);
-                        updateSpinnerData(tempModelID);
-                    }else {
-                        showToast("检测失败");
-                    }
+                    showToast("检测失败");
                 }
 
                 @Override
@@ -338,11 +333,52 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     showToast("识别结束");
 
                 }
+
+                @Override
+                public void onTargetDetectingNew(List<TargetMode> targetModes, int modelID, long savedID){
+                    if (targetModes != null && !targetModes.isEmpty()) {
+                        GlobalVariable.isTargetDetectMode = true;
+                        mTargetDetectHelper.startShowTarget();
+                        viewBinding.aiPaintView.setRectParams(targetModes);
+                        GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
+                        for (TargetMode targetMode:targetModes){
+                            if(targetMode.getTargetType()%16==6){
+                                Log.d("saveImage", "saveImage");
+                                byte[] yuvData = codecManager.getYuvData();
+                                backgroundHandler.post(() -> {
+                                    savedImage(targetMode, yuvData);
+                                });
+                                break;
+                            }
+                        }
+                    }
+                    // modelID
+                    tempModelID=modelID;
+                    updateModel(tempModelID);
+                    updateSpinnerData(tempModelID);
+
+//                    Log.d("savedID", "onTargetDetectingNew: "+ savedID);
+                    // savedID
+                    if(savedID!=0 && FlightActivity.this.savedID!=savedID){
+                        FlightActivity.this.savedID = (int) savedID;
+                        Log.d("savedID:success", "success"+ savedID);
+                        int firstImageID = (int) savedID / 10000;
+                        int tempSavedID = (int) savedID % 10000;
+                        int secondImageID = (int) tempSavedID / 100;
+                        int thirdImageID = (int) tempSavedID % 100;
+                        updatedPhotoList(firstImageID, secondImageID, thirdImageID);
+                    }
+
+                }
             });
         }else{
             // false就关掉
-            mGduVision.setOnTargetDetectListener(new OnTargetDetectListener() {
-                //                    long startTime=System.currentTimeMillis();
+            mGduVision.setOnTargetDetectListener(new OnOurTargetDetectListener() {
+                @Override
+                public void onTargetDetectingNew(List<TargetMode> var1, int val2, long val3) {
+
+                }
+
                 @Override
                 public void onTargetDetecting(List<TargetMode> targetModes) {
                 }
@@ -466,6 +502,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         });
     }
 
+    @SuppressLint("InflateParams")
     public void initAttributeDialog() {
         attributePopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.layout_popup_attribute, null);
         // 创建PopupWindow实例
@@ -479,6 +516,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         attributePopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         attributePopupWindow.setOutsideTouchable(true);
     }
+    @SuppressLint("InflateParams")
     public void initPhotoDialog() {
         photoPopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.popup_layout, null);
         // 创建PopupWindow实例
@@ -512,6 +550,58 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         recyclerView.setAdapter(adapter1);
     }
 
+    public Bitmap cropImage(TargetMode clickBox, byte[] yuvData) {
+
+        if (yuvData != null) {
+            Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX()/1.5), (int) (clickBox.getLeftY() /1.5), (int) (clickBox.getWidth()/1.5), (int) (clickBox.getHeight() /1.5));
+            bitmap.recycle();
+            return bitmap2;
+        }else {
+            showToast("yuvData为空");
+            return null;
+        }
+    }
+
+    public void savedImage(TargetMode clickBox, byte[] yuvData) {
+        Bitmap bitmap2 = cropImage(clickBox, yuvData);
+        if(bitmap2!=null){
+            int savedNumber = storageManager.saveImage(bitmap2);
+            if (savedNumber > 0) {
+                lastSavedNumber = savedNumber;
+//                showToast("保存成功，编号: " + lastSavedNumber);
+            }else{
+                showToast("保存失败");
+            }
+        }else {
+            showToast("获取图像为空");
+        }
+
+    }
+    public void updatedPhotoList(int firstImageID, int secondImageID, int thirdImageID){
+//                    if (lastSavedNumber > 0) {
+//                        storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
+//                    } else {
+//                        Toast.makeText(this, "请先保存图片", Toast.LENGTH_SHORT).show();
+//                    }
+            if(thirdImageID==0){
+                thirdImageID = 1;
+            }
+            String picture1=storageManager.getImageAbsolutePath(firstImageID);
+            String picture2=storageManager.getImageAbsolutePath(secondImageID);
+            String picture3=storageManager.getImageAbsolutePath(thirdImageID);
+            Log.d("picture", picture1);
+            Log.d("picture", picture2);
+            Log.d("picture", picture3);
+            List<ImageItem> newItems = new ArrayList<>();
+//            storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
+            newItems.add(new ImageItem(picture1, "标签9"));
+            newItems.add(new ImageItem(picture2, "标签10"));
+            newItems.add(new ImageItem(picture3, "标签11"));
+            GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+            assert layoutManager != null;
+            adapter1.addNewItems(newItems, layoutManager);
+    }
     public void showNineGridShow(boolean show) {
         viewBinding.nightGridView.setVisibility(show ? View.VISIBLE : View.GONE);
     }
@@ -520,9 +610,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     public void beginCheckCloud() {
         showSuccess = false;
         mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
-        if (mGDUGimbal == null) {
-            return;
-        }
+        if (mGDUGimbal == null) { return; }
         LoadingDialogUtils.createLoadDialog(this, getString(R.string.clound_checking), false);
 
         mGDUGimbal.setStateCallback(new GimbalState.Callback() {
@@ -551,7 +639,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 101) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -594,11 +682,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         if (codecManager == null) {
             codecManager = new ourGDUCodecManager(FlightActivity.this, surface, width, height);
             // 设置为true后才能获取到图像
-            codecManager.enabledYuvData(true);
+//            codecManager.enabledYuvData(true);
 //            codecManager = mPresentation.getCodecManager();
         }
 
-
+        storageManager = new ImageStorageManager(this);
         mImageProcessingManager = new ImageProcessingManager(FlightActivity.this);
         viewBinding.textureView.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -635,16 +723,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         int maxWidthPx = (int) (400 * density); // 500dp -> 像素
         int maxHeightPx = (int) (200 * density); // 200dp -> 像素
         byte[] yuvData = codecManager.getYuvData();
-        if(yuvData==null){
-            Log.d("yuvData", "yuvData null");
-        }
-        Bitmap fullBitmap = mImageProcessingManager.convertYUVtoRGB(yuvData,
-                codecManager.getVideoWidth(), codecManager.getVideoHeight());
-        if(fullBitmap==null){
-            Log.d("fullBitmap", "fullBitmap null");
-        }
-        Bitmap croppedBitmap = Bitmap.createBitmap(fullBitmap, clickBox.getLeftX(), clickBox.getLeftY(), clickBox.getWidth(), clickBox.getHeight());
-        fullBitmap.recycle(); // 释放原图内存
+        Bitmap croppedBitmap = cropImage(clickBox, yuvData);
         float widthRatio = (float) maxWidthPx / croppedBitmap.getWidth();
         float heightRatio = (float) maxHeightPx / croppedBitmap.getHeight();
         // 取最小值以保证两个方向都不超限
@@ -660,6 +739,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
         // 显示里面对应的各条属性，目前仅展示class
         String class_label = viewBinding.aiPaintView.getClassLabel().get(clickBox.getTargetType()%16);
+        if(Objects.equals(class_label, "saved")){
+            class_label="unknown";
+        }
         show(attributePopupView.findViewById(R.id.target_label_name), "类别："+class_label);
         int coarseIndex = clickBox.getTargetType() / 16;
         List<String> attributeList;
@@ -913,7 +995,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 codecManager.enabledYuvData(true);
                 updateSpinnerData(0);
                 AIRecognize.setEnabled(false);
+                storageManager.clearAllImages();
                 try {
+                    initBackgroundThread();
                     // 开启检测
                     initGduVision(true);
                     mGduVision.startTargetDetect(new CommonCallbacks.CompletionCallback() {
@@ -1029,34 +1113,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 } else {
                     showToast("请检查初始化是否成功");
                 }
-                byte[] yuvData = codecManager.getYuvData();
-                if(yuvData!=null){
-                    Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
-                    Bitmap bitmap2=Bitmap.createBitmap(bitmap,100,100,100,50);
-                    bitmap.recycle();
-                    int savedNumber = storageManager.saveImage(bitmap2);
-                    if (savedNumber > 0) {
-                        lastSavedNumber = savedNumber;
-                        showToast("保存成功，编号: " + savedNumber);
-                    }
-//                    if (lastSavedNumber > 0) {
-//                        storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
-//                    } else {
-//                        Toast.makeText(this, "请先保存图片", Toast.LENGTH_SHORT).show();
-//                    }
-                    String picture1=storageManager.getImageAbsolutePath(lastSavedNumber);
-                    showToast(picture1);
-                    Log.d("picture", picture1);
-                    List<ImageItem> newItems = new ArrayList<>();
-                    storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
-                    newItems.add(new ImageItem(picture1, "标签9"));
-                    newItems.add(new ImageItem("images/image2.png", "标签10"));
-                    newItems.add(new ImageItem("images/image3.png", "标签11"));
-                    GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-                    adapter1.addNewItems(newItems, layoutManager);
-                }else {
-                    showToast("yuvData为空");
-                }
+//                updatedPhotoList(1,5,9);
                 break;
             case R.id.btn_take_off:
                 mGDUFlightController.startLanding(new CommonCallbacks.CompletionCallback() {
