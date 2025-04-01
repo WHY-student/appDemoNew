@@ -69,11 +69,12 @@ public class ImageStorageManager {
 
 
     // 清除所有图片
-    public void clearAllImages(ImageView... imageViews) {
+    public void clearAllImages() {
+//    public void clearAllImages(ImageView... imageViews) {
         // 清空ImageView
-        for (ImageView iv : imageViews) {
-            iv.setImageDrawable(null);
-        }
+//        for (ImageView iv : imageViews) {
+//            iv.setImageDrawable(null);
+//        }
 
         // 删除文件
         File dir = new File(context.getFilesDir(), IMAGE_DIR);

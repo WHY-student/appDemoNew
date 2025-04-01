@@ -133,12 +133,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private GDUGimbal mGDUGimbal;
     private GDUCamera mGDUCamera;
-
+    private List<TargetMode> detectionBox = new ArrayList<>();
     private ourGDUVision mGduVision;
     List<ImageItem> imageItems = new ArrayList<>();
     private ImageProcessingManager mImageProcessingManager;
     private ImageStorageManager storageManager;
     private int lastSavedNumber = 0;
+    private int SavedNumber=0;
     PopupWindow attributePopupWindow;
 
     View attributePopupView;
@@ -146,6 +147,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     PopupWindow photoPopupWindow;
 
     View photoPopupView;
+    List<String> class_label = new ArrayList<>();
+    {
+        class_label.add("bus");
+        class_label.add("car");
+        class_label.add("SUV");
+        class_label.add("pickup");
+        class_label.add("new1");
+        class_label.add("new2");
+        class_label.add("saved");
+        class_label.add("unknown");
+    }
 
 
     @Override
@@ -310,9 +322,60 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         GlobalVariable.isTargetDetectMode = true;
                         mTargetDetectHelper.startShowTarget();
                         viewBinding.aiPaintView.setRectParams(targetModes);
-//                    tempModelID=viewBinding.aiPaintView.getModelID();
+//                        tempModelID=viewBinding.aiPaintView.getModelID();
 //                    updateModel(viewBinding.aiPaintView.getModelID());
                         GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
+                        int temp = tempModelID % 100000000;
+                        int temp2 = temp / 1000000;
+                        if(SavedNumber!=temp2){
+                            for(TargetMode targets:targetModes){
+                                String label = null;
+                                if (label == null) {
+
+                                    int labelIndex = targets.getTargetType() % 16;
+                                    if (labelIndex == -1) {
+                                        label = "unknown";
+                                    } else if (labelIndex > 9) {
+                                        label = "test";
+                                    } else {
+                                        label = class_label.get(labelIndex);
+                                    }
+                                }
+                                if (label.equals("saved")){
+                                    detectionBox.add(targets);
+                                    byte[] yuvData = codecManager.getYuvData();
+                                    if(yuvData!=null){
+                                        Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+                                        Bitmap bitmap2=Bitmap.createBitmap(bitmap,targets.getLeftX(),targets.getLeftY(),targets.getWidth(),targets.getHeight());
+                                        bitmap.recycle();
+                                        int savedNumber = storageManager.saveImage(bitmap2);
+                                        if (savedNumber > 0) {
+                                            lastSavedNumber = savedNumber;
+                                            showToast("保存成功，编号: " + SavedNumber+"temp2"+temp2);
+                                        }
+                                    }else {
+                                        showToast("yuvData为空");
+                                    }
+                                }
+                            }
+                            SavedNumber=temp2;
+                        }
+//                        byte[] yuvData = codecManager.getYuvData();
+//                        if(yuvData!=null){
+//                            for(TargetMode Box:detectionBox){
+//                                Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+//                                Bitmap bitmap2=Bitmap.createBitmap(bitmap,Box.getLeftX(),Box.getLeftY(),Box.getWidth(),Box.getHeight());
+//                                bitmap.recycle();
+//                                int savedNumber = storageManager.saveImage(bitmap2);
+//                                if (savedNumber > 0) {
+//                                    lastSavedNumber = savedNumber;
+//                                    showToast("保存成功，编号: " + savedNumber);
+//                                }
+//                            }
+//
+//                        }else {
+//                            showToast("yuvData为空");
+//                        }
                     }
                 }
 
@@ -941,6 +1004,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             case R.id.button_quit_ai:
                 codecManager.enabledYuvData(false);
                 quitAIRecognize.setEnabled(false);
+                //清空存储的列表，清空存储的文件和初始化图片标号
+                this.detectionBox=new ArrayList<>();
+                storageManager.clearAllImages();
+                lastSavedNumber = 0;
                 try{
                     // 移除所有未执行的任务
                     if (resetStateTask != null) {
@@ -1002,6 +1069,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 });
                 break;
             case R.id.button_start_incremental:
+                showToast(""+tempModelID);
 //                if(unkonwNum < 10){
 //                    showToast("未知类别数目过少，请收集更多未知类别");
 //                    break;
@@ -1012,7 +1080,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         @Override
                         public void onResult(GDUError var1) {
                             if (var1 == null) {
-                                showToast("开始增量");
+//                                showToast("开始增量");
 //                                imageItems.add(new ImageItem("images/image1.png", "标签9"));
 //                                imageItems.add(new ImageItem("images/image2.png", "标签10"));
 //                                imageItems.add(new ImageItem("images/image3.png", "标签11"));
@@ -1022,41 +1090,39 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //                                recyclerView.setAdapter(adapter);
 //                                adapter1.notifyDataSetChanged();
                             } else {
-                                showToast("开始增量失败");
+//                                showToast("开始增量失败");
                             }
                         }
                     });
                 } else {
-                    showToast("请检查初始化是否成功");
+//                    showToast("请检查初始化是否成功");
                 }
-                byte[] yuvData = codecManager.getYuvData();
-                if(yuvData!=null){
-                    Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
-                    Bitmap bitmap2=Bitmap.createBitmap(bitmap,100,100,100,50);
-                    bitmap.recycle();
-                    int savedNumber = storageManager.saveImage(bitmap2);
-                    if (savedNumber > 0) {
-                        lastSavedNumber = savedNumber;
-                        showToast("保存成功，编号: " + savedNumber);
-                    }
-//                    if (lastSavedNumber > 0) {
-//                        storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
-//                    } else {
-//                        Toast.makeText(this, "请先保存图片", Toast.LENGTH_SHORT).show();
-//                    }
-                    String picture1=storageManager.getImageAbsolutePath(lastSavedNumber);
-                    showToast(picture1);
-                    Log.d("picture", picture1);
-                    List<ImageItem> newItems = new ArrayList<>();
-                    storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
-                    newItems.add(new ImageItem(picture1, "标签9"));
-                    newItems.add(new ImageItem("images/image2.png", "标签10"));
-                    newItems.add(new ImageItem("images/image3.png", "标签11"));
-                    GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-                    adapter1.addNewItems(newItems, layoutManager);
-                }else {
-                    showToast("yuvData为空");
+                //获取图片，并显示，这里latestModelID可能是增量值之前的，得到的part1和part2part3可能为0
+                int lastSixDigits = latestModelID% 1000000;
+                int part1 = (lastSixDigits / 10000) % 100;
+                int part2 = (lastSixDigits / 100) % 100;
+                int part3 = lastSixDigits % 100;
+                String picture1,picture2;
+                if (part1 == 0) {
+                    showToast("part1为0");
+                    picture1=storageManager.getImageAbsolutePath(1);
+                }else{
+                    picture1=storageManager.getImageAbsolutePath(1);
                 }
+                if (part2 == 0) {
+                    showToast("part2为0");
+                    picture2=storageManager.getImageAbsolutePath(2);
+                }else{
+                    picture2=storageManager.getImageAbsolutePath(part2);
+                }
+                Log.d("picture", picture1);
+                List<ImageItem> newItems = new ArrayList<>();
+//                storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
+                newItems.add(new ImageItem(picture1, "标签9"));
+                newItems.add(new ImageItem(picture2, "标签10"));
+                newItems.add(new ImageItem(picture1, "标签11"));
+                GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+                adapter1.addNewItems(newItems, layoutManager);
                 break;
             case R.id.btn_take_off:
                 mGDUFlightController.startLanding(new CommonCallbacks.CompletionCallback() {
