@@ -122,8 +122,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
             notifyItemRangeInserted(oldSize, remainingSpace);
         }
 
-        int newStartPos = imageItems.size();
-        imageItems.addAll(newItems);
-        notifyItemRangeInserted(newStartPos, newItems.size());
+//        int newStartPos = imageItems.size();
+        imageItems.addAll(0, newItems);
+        notifyItemRangeInserted(0, newItems.size());
     }
 }

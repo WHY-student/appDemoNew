@@ -2,6 +2,7 @@ package com.gdu.demo;
 
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -149,6 +150,94 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     View photoPopupView;
     int savedID=-1;
 
+    List<String> car_attribute_labels = new ArrayList<>();
+//    {
+//        car_attribute_labels.add("Public Transport");
+//        car_attribute_labels.add("Private Transport");
+//        car_attribute_labels.add("Multipurpose");
+//        car_attribute_labels.add("Cargo Transport");
+//        car_attribute_labels.add("Large Capacity");
+//        car_attribute_labels.add("Small Capacity");
+//        car_attribute_labels.add("Medium Capacity");
+//        car_attribute_labels.add("Comfortable Driving");
+//        car_attribute_labels.add("Off-Road Driving");
+//        car_attribute_labels.add("High-Speed Driving");
+//        car_attribute_labels.add("City Driving Adaptability");
+//        car_attribute_labels.add("Complex Terrain Adaptability");
+//        car_attribute_labels.add("High Payload Capacity");
+//        car_attribute_labels.add("Low Payload Capacity");
+//        car_attribute_labels.add("Family-Friendly");
+//        car_attribute_labels.add("Long-Distance Travel");
+//        car_attribute_labels.add("Low Fuel Consumption");
+//        car_attribute_labels.add("High Fuel Consumption");
+//        car_attribute_labels.add("Electric Option");
+//        car_attribute_labels.add("High Environmental Impact");
+//        car_attribute_labels.add("Large Parking Space Requirement");
+//        car_attribute_labels.add("Small Parking Space Requirement");
+//        car_attribute_labels.add("High Cost");
+//        car_attribute_labels.add("Low Cost");
+//        car_attribute_labels.add("Low Maneuverability");
+//        car_attribute_labels.add("High Maneuverability");
+//        car_attribute_labels.add("High Comfort");
+//        car_attribute_labels.add("Low Comfort");
+//        car_attribute_labels.add("Fast Driving");
+//        car_attribute_labels.add("Slow Driving");
+//        car_attribute_labels.add("City Street Suitability");
+//        car_attribute_labels.add("Construction/Transport Suitability");
+//        car_attribute_labels.add("Outdoor Driving");
+//        car_attribute_labels.add("City & Off-Road Suitability");
+//        car_attribute_labels.add("High Off-Road Ability");
+//        car_attribute_labels.add("Low Off-Road Ability");
+//        car_attribute_labels.add("Single Function");
+//        car_attribute_labels.add("Multifunction");
+//        car_attribute_labels.add("Off-Road Capability");
+//        car_attribute_labels.add("City Commuting Suitability");
+//    }
+    {
+        car_attribute_labels.add("公共交通工具");
+        car_attribute_labels.add("私人交通工具");
+        car_attribute_labels.add("多用途");
+        car_attribute_labels.add("货物运输");
+        car_attribute_labels.add("大容量");
+        car_attribute_labels.add("小容量");
+        car_attribute_labels.add("中容量");
+        car_attribute_labels.add("舒适驾驶");
+        car_attribute_labels.add("越野驾驶");
+        car_attribute_labels.add("高速驾驶");
+        car_attribute_labels.add("城市驾驶适应性");
+        car_attribute_labels.add("复杂地形适应性");
+        car_attribute_labels.add("高载重能力");
+        car_attribute_labels.add("低载重能力");
+        car_attribute_labels.add("家庭友好型");
+        car_attribute_labels.add("长途旅行");
+        car_attribute_labels.add("低油耗");
+        car_attribute_labels.add("高油耗");
+        car_attribute_labels.add("电动选项");
+        car_attribute_labels.add("高环境影响");
+        car_attribute_labels.add("大停车位需求");
+        car_attribute_labels.add("小停车位需求");
+        car_attribute_labels.add("高成本");
+        car_attribute_labels.add("低成本");
+        car_attribute_labels.add("低操控性");
+        car_attribute_labels.add("高操控性");
+        car_attribute_labels.add("高舒适性");
+        car_attribute_labels.add("低舒适性");
+        car_attribute_labels.add("快速驾驶");
+        car_attribute_labels.add("慢速驾驶");
+        car_attribute_labels.add("城市街道适用性");
+        car_attribute_labels.add("建筑运输适用性");
+        car_attribute_labels.add("户外驾驶");
+        car_attribute_labels.add("城市与越野适用性");
+        car_attribute_labels.add("高越野能力");
+        car_attribute_labels.add("低越野能力");
+        car_attribute_labels.add("单一功能");
+        car_attribute_labels.add("多功能");
+        car_attribute_labels.add("越野能力");
+        car_attribute_labels.add("城市通勤适用性");
+    }
+
+    private final boolean photoIsDialog=false;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -164,7 +253,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         initListener();
 //        setupExternalDisplay();
         initAttributeDialog();
-        initPhotoDialog();
+        if(photoIsDialog){
+            initPhotoDialog();
+        }else{
+            setPhotoShow(1);
+        }
     }
 
 
@@ -234,7 +327,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         viewBinding.fpvRv.setObstacleMax(40);
         viewBinding.ivMsgBoxLabel.setOnClickListener(this);
         viewBinding.aiRecognizeImageview.setOnClickListener(this);
-        viewBinding.aiShowPhoto.setOnClickListener(this);
+//        viewBinding.aiShowPhoto.setOnClickListener(this);
         ViewUtils.setViewShowOrHide(viewBinding.aiRecognizeImageview, viewModel.isShowAiBox());
 
         SettingDao settingDao = SettingDao.getSingle();
@@ -366,7 +459,12 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         int tempSavedID = (int) savedID % 10000;
                         int secondImageID = (int) tempSavedID / 100;
                         int thirdImageID = (int) tempSavedID % 100;
-                        updatedPhotoList(firstImageID, secondImageID, thirdImageID);
+                        runOnUiThread(() -> {
+                            updatedPhotoList(firstImageID, secondImageID, thirdImageID);
+                        });
+                        runOnUiThread(() -> {
+                            spinner.performClick();
+                        });
                     }
 
                 }
@@ -508,8 +606,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         // 创建PopupWindow实例
         attributePopupWindow = new PopupWindow(
                 attributePopupView,
-                1100,
-                670,
+                720,
+                600,
                 true
         );
         // 设置背景（避免点击外部无法关闭）
@@ -544,7 +642,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         imageItems.add(new ImageItem("images/image8.png", "标签8"));
 
         // 初始化 RecyclerView
-        recyclerView = photoPopupView.findViewById(R.id.recyclerView);
+        if(photoIsDialog){
+            recyclerView = photoPopupView.findViewById(R.id.recyclerView);
+        } else{
+            recyclerView = findViewById(R.id.photo_recyclerView);
+        }
         recyclerView.setLayoutManager(new GridLayoutManager(this, temp)); // 每排 3 个
         adapter1 = new ImageAdapter(imageItems, this);
         recyclerView.setAdapter(adapter1);
@@ -590,9 +692,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             String picture1=storageManager.getImageAbsolutePath(firstImageID);
             String picture2=storageManager.getImageAbsolutePath(secondImageID);
             String picture3=storageManager.getImageAbsolutePath(thirdImageID);
-            Log.d("picture", picture1);
-            Log.d("picture", picture2);
-            Log.d("picture", picture3);
+//            Log.d("picture", picture1);
+//            Log.d("picture", picture2);
+//            Log.d("picture", picture3);
             List<ImageItem> newItems = new ArrayList<>();
 //            storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
             newItems.add(new ImageItem(picture1, "标签9"));
@@ -601,6 +703,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
             assert layoutManager != null;
             adapter1.addNewItems(newItems, layoutManager);
+            handler1.postDelayed(()->{
+                    recyclerView.smoothScrollToPosition(0);
+            },500);
+
+//            recyclerView.postDelayed(() -> {
+//                layoutManager.scrollToPositionWithOffset(adapter1.getItemCount()-1, 0);
+//            }, 200);
     }
     public void showNineGridShow(boolean show) {
         viewBinding.nightGridView.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -742,7 +851,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         if(Objects.equals(class_label, "saved")){
             class_label="unknown";
         }
-        show(attributePopupView.findViewById(R.id.target_label_name), "类别："+class_label);
+        show(attributePopupView.findViewById(R.id.target_label_name), class_label);
         int coarseIndex = clickBox.getTargetType() / 16;
         List<String> attributeList;
         switch (coarseIndex){
@@ -760,6 +869,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 Log.d("attribute", "大类没有index");
 //                return;
         }
+        attributeList = car_attribute_labels;
 
         // 1. 将byte转换为8位二进制字符串（补前导零）
         String byteBinary = String.format("%8s", Integer.toBinaryString(clickBox.getTargetConfidence() & 0xFF))
@@ -768,7 +878,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         // 2. 将int转换为32位二进制字符串（补前导零）
 //        String intBinary = String.format("%32s", Integer.toBinaryString(clickBox.getId()))
 //                .replace(' ', '0');
-        String intBinary = String.format("%32s", Integer.toBinaryString(501))
+        String intBinary = String.format("%32s", Integer.toBinaryString(clickBox.getId()))
                 .replace(' ', '0');
 
         // 3. 拼接成40位二进制字符串
@@ -785,7 +895,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         String attribute_labels = result.toString();
         show(attributePopupView.findViewById(R.id.target_attribute), attribute_labels);
 
-        attributePopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, 0);
+        attributePopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, -20);
     }
 
     @Override
@@ -848,7 +958,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //    }
 
     private void updateSpinnerData(int modelID) {
-        if(modelID!=0 && modelID == latestModelID) return;
+        // 如果更新过快的话会造成dataList的notifyDataSetChanged()的时候刚好dataList.clear();，就会导致异常
+        if(!dataList.isEmpty() && modelID == latestModelID) return;
+        if(modelID/1000000000==2 && modelID/100000000 % 10 == 0){
+            Log.d("增量中", "updateSpinnerData: ");
+            return;
+        }
+        latestModelID = modelID;
 
         runOnUiThread(() -> {
             dataList.clear();
@@ -866,19 +982,22 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             unkonwNum = temp2;
 
             // 重新设置适配器以确保更新
-//            if(adapter == null) {
-//                adapter = new ArrayAdapter<>(this, R.layout.spinner_item_white, dataList);
-//                adapter.setDropDownViewResource(R.layout.spinner_item_white);
-//                spinner.setAdapter(adapter);
-//            } else {
-//                adapter.notifyDataSetChanged();
-//            }
-            adapter = new ArrayAdapter<>(this, R.layout.spinner_item_white, dataList);
-            adapter.setDropDownViewResource(R.layout.spinner_item_white);
-            spinner.setAdapter(adapter);
-            adapter.notifyDataSetChanged();
-
-            latestModelID = modelID;
+            if(adapter == null) {
+                adapter = new ArrayAdapter<>(this, R.layout.spinner_item_white, dataList);
+                adapter.setDropDownViewResource(R.layout.spinner_item_white);
+                adapter.registerDataSetObserver(new DataSetObserver() {
+                    @Override
+                    public void onChanged() {
+                        Log.d("spinner", "Changed");
+                        spinner.setSelection(0, false); // 自动选中第0项
+                    }
+                });
+                spinner.setAdapter(adapter);
+            } else {
+                Log.d("增量", ""+modelID);
+                adapter.notifyDataSetChanged();
+//                spinner.setSelection(0); // 重新设置选中位置
+            }
         });
     }
 //    private void updateKnowNum(int modelID) {
@@ -910,7 +1029,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             if(secondNum==0){
                 show(aiState, "AI状态：增量" + incState + "中");
             }else {
-                show(aiState, "AI状态：增量" + incState + "完成");
+//                show(aiState, "AI状态：增量" + incState + "完成");
+                show(aiState, "AI状态：增量完成");
             }
         }
 //        updateSpinnerData(modelID);
@@ -997,6 +1117,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 AIRecognize.setEnabled(false);
                 storageManager.clearAllImages();
                 try {
+                    FlightActivity.this.savedID=-1;
                     initBackgroundThread();
                     // 开启检测
                     initGduVision(true);
@@ -1055,7 +1176,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     startIncremental.setEnabled(false);
                     AIRecognize.setImageResource(R.drawable.ai_recognize);
                     findViewById(R.id.all_ai_state).setVisibility(View.GONE);
-                    setPhotoShow(4);
+                    if(photoIsDialog){
+                        setPhotoShow(4);
+                    }else{
+                        setPhotoShow(1);
+                    }
                 }catch(Exception e){
                     quitAIRecognize.setEnabled(true);
                 }
@@ -1113,6 +1238,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 } else {
                     showToast("请检查初始化是否成功");
                 }
+
 //                updatedPhotoList(1,5,9);
                 break;
             case R.id.btn_take_off:
@@ -1146,7 +1272,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     @Override
                     public boolean onTouch(View v, MotionEvent event) {
                         if (event.getAction() == MotionEvent.ACTION_UP) {
-
                             updateSpinnerData(latestModelID);
                             showToast(""+latestModelID);
                         }
@@ -1154,9 +1279,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     }
                 });
                 break;
-            case R.id.ai_show_photo:
-                photoPopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, 0);
-                break;
+//            case R.id.ai_show_photo:
+//                photoPopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, 0);
+//                break;
         }
     }
 
