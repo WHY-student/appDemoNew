@@ -24,12 +24,12 @@
                    android:layout_width="wrap_content"
                    android:layout_height="wrap_content"/>
 
-               <Button
-                   android:layout_width="wrap_content"
-                   android:text="加载任务"
-                   android:id="@+id/load_waypoint_button"
-                   android:onClick="onClick"
-                   android:layout_height="wrap_content" />
+<!--               <Button-->
+<!--                   android:layout_width="wrap_content"-->
+<!--                   android:text="加载任务"-->
+<!--                   android:id="@+id/load_waypoint_button"-->
+<!--                   android:onClick="onClick"-->
+<!--                   android:layout_height="wrap_content" />-->
 
                <Button
                    android:layout_width="wrap_content"

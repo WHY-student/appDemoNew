@@ -51,6 +51,10 @@ import com.gdu.sdk.mission.waypoint.WaypointMissionOperatorListener;
 import com.gdu.sdk.products.GDUAircraft;
 import com.gdu.sdk.simulator.InitializationData;
 import com.gdu.sdk.util.CommonCallbacks;
+import com.gdu.socket.GduCommunication3;
+import com.gdu.socket.GduFrame3;
+import com.gdu.socket.GduSocketManager;
+import com.gdu.socket.SocketCallBack3;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -141,8 +145,15 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
         try{
             AssetManager assetManager=getAssets();
             String[] xml_arr = assetManager.list("waypoints");
+            // 删除存在的.xml
+            for (int i = 0; i < xml_arr.length; i++) {
+                String str = xml_arr[i];
+                if (str != null && str.endsWith(".xml")) {
+                    xml_arr[i] = str.substring(0, str.length() - 5);
+                }
+            }
             // 然后的话创建一个我们的一个数组适配器并且的话这个数组适配器使我们的字符串类型的
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item,xml_arr);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, xml_arr);
             // 设置我们的数组下拉时的选项的样式
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             // 将我们的适配器和我们的下拉列表框关联起来
@@ -153,7 +164,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
                     // TODO Auto-generated method stub
                     // 将所选mySpinner 的值带入myTextView 中
                     cleanWaypointMission();
-                    mission = createWaypointMission(adapter.getItem(arg2));
+                    mission = createWaypointMission(adapter.getItem(arg2) + ".xml");
                     addPolyline(mission);
                     waypointMissionOperator.loadMission(mission);
                 }
@@ -297,7 +308,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
                 @Override
                 public void onResult(GDUError gduError) {
                     if (gduError == null) {
-
+                        toast("模拟飞行开启");
                     }
                 }
             });
@@ -310,13 +321,13 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
             case R.id.simulator_button:
                 startSimulator();
                 break;
-            case R.id.load_waypoint_button:
-                cleanWaypointMission();
-                mission = createWaypointMission("已知类别海面目标.xml");
-                toast(""+mission.getWaypointList().size());
-                addPolyline(mission);
-                waypointMissionOperator.loadMission(mission);
-                break;
+//            case R.id.load_waypoint_button:
+//                cleanWaypointMission();
+//                mission = createWaypointMission("已知类别海面目标.xml");
+//                toast(""+mission.getWaypointList().size());
+//                addPolyline(mission);
+//                waypointMissionOperator.loadMission(mission);
+//                break;
             case R.id.upload_waypoint_button:
                 waypointMissionOperator.uploadMission(new CommonCallbacks.CompletionCallback() {
                     @Override
@@ -341,6 +352,8 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
                             }
                         }
                     });
+                }else {
+                    toast(waypointMissionOperator.getCurrentState().getName());
                 }
                 break;
             case R.id.resume_waypoint_button:
