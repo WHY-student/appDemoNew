@@ -1,17 +1,24 @@
 package com.gdu.demo;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicYuvToRGB;
+import android.renderscript.Type;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -122,6 +129,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private ArrayAdapter<String> adapter;
     private List<String> dataList = new ArrayList<>();
     private ImageAdapter adapter1;
+    private Context mContext;
+    private  String IMAGE_DIR = "cropped_images";
+    private   String LOAD_DIR="load_images";
 //    private ImageView mYUVImageView;
 
 
@@ -242,6 +252,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mContext = this;
         viewBinding = ActivityFlightBinding.inflate(getLayoutInflater());
         setContentView(viewBinding.getRoot());
         viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
@@ -439,7 +450,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                 Log.d("saveImage", "saveImage");
                                 byte[] yuvData = codecManager.getYuvData();
                                 backgroundHandler.post(() -> {
-                                    savedImage(targetMode, yuvData);
+                                    savedImage(targetMode, yuvData,IMAGE_DIR);
                                 });
                                 break;
                             }
@@ -665,10 +676,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
     }
 
-    public void savedImage(TargetMode clickBox, byte[] yuvData) {
+    public void savedImage(TargetMode clickBox, byte[] yuvData,String temp) {
         Bitmap bitmap2 = cropImage(clickBox, yuvData);
         if(bitmap2!=null){
-            int savedNumber = storageManager.saveImage(bitmap2);
+            int savedNumber = storageManager.saveImage(bitmap2,temp);
             if (savedNumber > 0) {
                 lastSavedNumber = savedNumber;
 //                showToast("保存成功，编号: " + lastSavedNumber);
@@ -680,6 +691,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
 
     }
+
     public void updatedPhotoList(int firstImageID, int secondImageID, int thirdImageID){
 //                    if (lastSavedNumber > 0) {
 //                        storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
@@ -689,9 +701,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             if(thirdImageID==0){
                 thirdImageID = 1;
             }
-            String picture1=storageManager.getImageAbsolutePath(firstImageID);
-            String picture2=storageManager.getImageAbsolutePath(secondImageID);
-            String picture3=storageManager.getImageAbsolutePath(thirdImageID);
+            String picture1=storageManager.getAbsolutePath(IMAGE_DIR,firstImageID);
+            String picture2=storageManager.getAbsolutePath(IMAGE_DIR,secondImageID);
+            String picture3=storageManager.getAbsolutePath(IMAGE_DIR,thirdImageID);
 //            Log.d("picture", picture1);
 //            Log.d("picture", picture2);
 //            Log.d("picture", picture3);
@@ -832,19 +844,35 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         int maxWidthPx = (int) (400 * density); // 500dp -> 像素
         int maxHeightPx = (int) (200 * density); // 200dp -> 像素
         byte[] yuvData = codecManager.getYuvData();
-        Bitmap croppedBitmap = cropImage(clickBox, yuvData);
-        float widthRatio = (float) maxWidthPx / croppedBitmap.getWidth();
-        float heightRatio = (float) maxHeightPx / croppedBitmap.getHeight();
-        // 取最小值以保证两个方向都不超限
-        float scaleFactor = Math.min(widthRatio, heightRatio);
-        Matrix matrix = new Matrix();
-        matrix.postScale(scaleFactor, scaleFactor);
+        long time1=System.currentTimeMillis();
+        savedImage(clickBox,yuvData,LOAD_DIR);
 
-        Bitmap scaledBitmap = Bitmap.createBitmap(
-                croppedBitmap, 0, 0, croppedBitmap.getWidth(), croppedBitmap.getHeight(), matrix, true
-        );
+        // 创建RenderScript实例
+//        byte[] croppedI420 = cropI420(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight(), clickBox);
+//        Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
+//        Bitmap bitmap=i420ToRgbWithRenderScript(yuvData,codecManager.getVideoWidth(),codecManager.getVideoHeight(),mContext);
+//        Bitmap croppedBitmap = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX()/1.5), (int) (clickBox.getLeftY() /1.5), (int) (clickBox.getWidth()/1.5), (int) (clickBox.getHeight() /1.5));
+//        bitmap.recycle();
+////        Bitmap croppedBitmap = cropImage(clickBox, yuvData);
+//        long time4=System.currentTimeMillis();
+//        Log.d("sysTime3",""+(time1-time4));
+//        float widthRatio = (float) maxWidthPx / croppedBitmap.getWidth();
+//        float heightRatio = (float) maxHeightPx / croppedBitmap.getHeight();
+//        // 取最小值以保证两个方向都不超限
+//        float scaleFactor = Math.min(widthRatio, heightRatio);
+//        Matrix matrix = new Matrix();
+//        matrix.postScale(scaleFactor, scaleFactor);
+//        long time3=System.currentTimeMillis();
+//        Log.d("sysTime1",""+(time1-time3));
+//        Bitmap scaledBitmap = Bitmap.createBitmap(
+//                croppedBitmap, 0, 0, croppedBitmap.getWidth(), croppedBitmap.getHeight(), matrix, true
+//        );
+//        long time2=System.currentTimeMillis();
+//        Log.d("sysTime2",""+(time1-time2));
         ImageView instanceImageView = attributePopupView.findViewById(R.id.target_image);
-        instanceImageView.setImageBitmap(scaledBitmap);
+//        instanceImageView.setImageBitmap(scaledBitmap);
+        storageManager.loadImageToView(LOAD_DIR,lastSavedNumber,instanceImageView);
+        storageManager.clearDirectory(LOAD_DIR);
 
         // 显示里面对应的各条属性，目前仅展示class
         String class_label = viewBinding.aiPaintView.getClassLabel().get(clickBox.getTargetType()%16);
@@ -956,6 +984,65 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        // 设置 Spinner 的选项选择监听器
 //
 //    }
+public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, Context context) {
+    // 1. 验证I420数据长度 (Y: width×height, U+V: width×height/2)
+    if (i420Data == null || i420Data.length != width * height * 3 / 2) {
+        throw new IllegalArgumentException("Invalid I420 data size");
+    }
+
+    RenderScript rs = RenderScript.create(context);
+    Bitmap bitmap = null;
+
+    try {
+        // 2. 将I420手动转换为NV21（因为RenderScript只支持NV21）
+        byte[] nv21Data = I420ToNv21(i420Data, width, height);
+
+        // 3. 创建YUV转RGB脚本
+        ScriptIntrinsicYuvToRGB yuvToRgb = ScriptIntrinsicYuvToRGB.create(rs, Element.U8_4(rs));
+
+        // 4. 创建输入Allocation（NV21格式）
+        Type yuvType = new Type.Builder(rs, Element.U8(rs))
+                .setX(nv21Data.length)
+                .create();
+        Allocation input = Allocation.createTyped(rs, yuvType);
+        input.copyFrom(nv21Data);
+
+        // 5. 创建输出Allocation（RGBA）
+        Type rgbaType = new Type.Builder(rs, Element.RGBA_8888(rs))
+                .setX(width)
+                .setY(height)
+                .create();
+        Allocation output = Allocation.createTyped(rs, rgbaType);
+
+        // 6. 执行转换
+        yuvToRgb.setInput(input);
+        yuvToRgb.forEach(output);
+
+        // 7. 生成Bitmap
+        bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        output.copyTo(bitmap);
+
+    } finally {
+        rs.destroy();
+    }
+    return bitmap;
+}
+    private byte[] I420ToNv21(byte[] i420bytes, int width, int height) {
+        byte[] nv21bytes = new byte[i420bytes.length];
+        int y_len = width * height;
+        int uv_len = y_len / 4;
+        System.arraycopy(i420bytes, 0, nv21bytes, 0, y_len);
+
+        for(int i = 0; i < uv_len; ++i) {
+            byte u = i420bytes[y_len + i];
+            byte v = i420bytes[y_len + uv_len + i];
+            nv21bytes[y_len + i * 2] = v;
+            nv21bytes[y_len + i * 2 + 1] = u;
+        }
+
+        return nv21bytes;
+    }
+
 
     private void updateSpinnerData(int modelID) {
         // 如果更新过快的话会造成dataList的notifyDataSetChanged()的时候刚好dataList.clear();，就会导致异常
@@ -1115,7 +1202,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 codecManager.enabledYuvData(true);
                 updateSpinnerData(0);
                 AIRecognize.setEnabled(false);
-                storageManager.clearAllImages();
+                storageManager.clearDirectory(IMAGE_DIR);
                 try {
                     FlightActivity.this.savedID=-1;
                     initBackgroundThread();
@@ -1338,7 +1425,69 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     public void showToast(String str) {
         ThreadHelper.runOnUiThread(() -> Toast.makeText(this, str, Toast.LENGTH_SHORT).show());
     }
-
+    public int changeNum(int num){
+        if(num<0){
+            num=0;
+        }
+        if(num%2==0){
+            return num;
+        }else{
+            return num-1;
+        }
+    }
+//    public  byte[] cropI420(byte[] srcI420, int srcWidth, int srcHeight, TargetMode cropRect) {
+//        // 参数校验
+//        int left=changeNum(cropRect.getLeftY());
+//        int top=changeNum(cropRect.getLeftX());
+//        int cropWidth = changeNum(cropRect.getWidth());
+//        int cropHeight = changeNum(cropRect.getHeight());
+////        left&=~1;
+////        top&=~1;
+//
+//        if (left % 2 != 0 || top % 2 != 0 ||
+//                cropWidth% 2 != 0 || cropHeight % 2 != 0) {
+//            throw new IllegalArgumentException("Crop rect must have even coordinates/sizes");
+//        }
+//        byte[] dstI420 = new byte[cropWidth * cropHeight * 3 / 2]; // I420大小公式
+//
+//        // 1. 计算各平面起始指针
+//        final int srcYSize = srcWidth * srcHeight;
+//        final int srcUVSize = srcYSize / 4;
+//        final int dstYSize = cropWidth * cropHeight;
+//        final int dstUVSize = dstYSize / 4;
+//
+//        // 2. 裁剪Y平面（全分辨率）
+//        cropPlane(srcI420, 0, srcWidth, srcHeight,
+//                new Rect(left,top,Math.min(left+cropHeight,codecManager.getVideoHeight()),Math.min(top+cropWidth,codecManager.getVideoWidth())), dstI420, 0, cropWidth);
+//
+//        // 3. 裁剪U平面（1/2分辨率）
+//        cropPlane(srcI420, srcYSize, srcWidth / 2, srcHeight / 2,
+//                new Rect(left / 2, top / 2,
+//                        (left+cropHeight)/ 2, (top+cropWidth) / 2),
+//                dstI420, dstYSize, cropWidth / 2);
+//
+//        // 4. 裁剪V平面（1/2分辨率）
+//        cropPlane(srcI420, srcYSize + srcUVSize, srcWidth / 2, srcHeight / 2,
+//                new Rect(left / 2, top / 2,
+//                        (left+cropHeight)/ 2, (top+cropWidth) / 2),
+//                dstI420, dstYSize + dstUVSize, cropWidth / 2);
+//
+//        return dstI420;
+//    }
+//    private static void cropPlane(
+//            byte[] src, int srcOffset, int srcStride, int srcHeight,
+//            Rect cropRect, byte[] dst, int dstOffset, int dstStride
+//    ) {
+//        for (int y = 0; y < cropRect.height(); y++) {
+//            int srcLineStart = srcOffset + (y + cropRect.top) * srcStride + cropRect.left;
+//            int dstLineStart = dstOffset + y * dstStride;
+//            System.arraycopy(
+//                    src, srcLineStart,
+//                    dst, dstLineStart,
+//                    cropRect.width()
+//            );
+//        }
+//    }
 
     public void show(TextView textView, final String toast) {
         if (toast == null) {
