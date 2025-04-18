@@ -860,13 +860,13 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
             case R.id.simulator_button:
                 startSimulator();
                 break;
-//            case R.id.load_waypoint_button:
+            case R.id.load_waypoint_button:
 //                cleanWaypointMission();
-//                mission = createWaypointMission("已知类别海面目标.xml");
+                mission = createWaypointMission();
 //                toast(""+mission.getWaypointList().size());
-//                addPolyline(mission);
-//                waypointMissionOperator.loadMission(mission);
-//                break;
+                addPolyline(mission);
+                waypointMissionOperator.loadMission(mission);
+                break;
             case R.id.upload_waypoint_button:
                 waypointMissionOperator.uploadMission(new CommonCallbacks.CompletionCallback() {
                     @Override

@@ -341,6 +341,7 @@ public class PaintView extends AppCompatImageView {
     }
 
     public void setRectParams(List<TargetMode> detectionBox) {
+        Log.d("interval time", "setRectParams: "+(System.currentTimeMillis()-lastTime));
         lastTime = System.currentTimeMillis();
         if (detectionBox == null || detectionBox.isEmpty()) {
             // 如果没有目标，清空 detectionBox

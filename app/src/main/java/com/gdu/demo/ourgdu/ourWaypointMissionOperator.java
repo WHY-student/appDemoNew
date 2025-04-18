@@ -1,6 +1,8 @@
 package com.gdu.demo.ourgdu;
 
 
+import android.util.Log;
+
 import com.gdu.api.RoutePlanning.EnumPointAction;
 import com.gdu.api.RoutePlanning.EnumRoutePlanningErrStatus;
 import com.gdu.api.RoutePlanning.EnumRoutePlanningOrder;
@@ -119,6 +121,7 @@ public class ourWaypointMissionOperator {
                         if (!com.gdu.demo.ourgdu.ourWaypointMissionOperator.this.isExecutionStarting) {
                             com.gdu.demo.ourgdu.ourWaypointMissionOperator.this.isExecutionStarting = true;
                             GlobalVariable.isWaypointDoing = true;
+                            Log.d("onRoutePlanningRunningStatus", "onRoutePlanningRunningStatus: onExecutionStart");
                             waypointMissionOperatorListener.onExecutionStart();
                         } else if (status == EnumRoutePlanningRunningStatus.FINISH) {
                             GlobalVariable.isWaypointDoing = false;

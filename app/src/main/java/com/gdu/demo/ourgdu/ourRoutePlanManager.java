@@ -104,8 +104,8 @@ public class ourRoutePlanManager {
         this.in = null;
         this.runningStatus = new SocketCallBack3() {
             public void callBack(int code, GduFrame3 bean) {
+                Log.d("testPlane","测试加载任务");
                 if (bean != null && bean.frameContent != null && bean.frameContent.length >= 17) {
-                    Log.d("testPlane","测试加载任务");
                     if (com.gdu.demo.ourgdu.ourRoutePlanManager.this.onRoutePlanListener != null) {
                         byte[] taskNum = new byte[14];
                         int index = 0;
@@ -229,9 +229,11 @@ public class ourRoutePlanManager {
                         com.gdu.demo.ourgdu.ourRoutePlanManager.this.routePlanningErr(EnumRoutePlanningErrStatus.sendRoutePlanning2DroneFail);
                         break;
                     case 3:
+                        Log.d("handleMessage", "handleMessage: 3");
                         com.gdu.demo.ourgdu.ourRoutePlanManager.this.UploadFileToPlane((Boolean)msg.obj);
                         break;
                     case 5:
+                        Log.d("handleMessage", "handleMessage: 5");
                         if (com.gdu.demo.ourgdu.ourRoutePlanManager.this.onRoutePlanListener != null) {
                             com.gdu.demo.ourgdu.ourRoutePlanManager.this.isUploadFinished = true;
                             com.gdu.demo.ourgdu.ourRoutePlanManager.this.onRoutePlanListener.sendRoutePlane2DroneSuccess(true);
@@ -275,7 +277,8 @@ public class ourRoutePlanManager {
             }
 
             public void uploadProgress(float progress) {
-                RonLog.LogD(new String[]{"mUploadFileTool uploadProgress() progress = " + progress});
+                Log.d("uploadProgress: ", "mUploadFileTool uploadProgress() progress = " + progress);
+//                RonLog.LogD(new String[]{"mUploadFileTool uploadProgress() progress = " + progress});
                 if (com.gdu.demo.ourgdu.ourRoutePlanManager.this.onRoutePlanListener != null) {
                     com.gdu.demo.ourgdu.ourRoutePlanManager.this.onRoutePlanListener.progressOfSendRoutePlanning2Drone(progress);
                 }
@@ -283,6 +286,7 @@ public class ourRoutePlanManager {
             }
 
             public void success() {
+                Log.d("uploadProgress: ", "mUploadFileTool uploadProgress() progress = success");
                 RonLog.LogD(new String[]{"mUploadFileTool success()"});
                 if (com.gdu.demo.ourgdu.ourRoutePlanManager.this.onRoutePlanListener != null) {
                     com.gdu.demo.ourgdu.ourRoutePlanManager.this.onRoutePlanListener.sendRoutePlane2DroneSuccess(true);
@@ -428,6 +432,7 @@ public class ourRoutePlanManager {
         }
 
         if (this.gduCommunication != null) {
+            Log.d("updateSeniorPlanning2Drone", "updateSeniorPlanning2Drone: True");
             this.gduCommunication.addCycleACKCB(17694730, this.runningStatus);
         }
 
@@ -435,6 +440,7 @@ public class ourRoutePlanManager {
         if (!isSuccess) {
             this.routePlanningErr(EnumRoutePlanningErrStatus.createRoutePlanningFail);
         } else {
+            Log.d("PlanTask", "PlanTask: True");
             (new com.gdu.demo.ourgdu.ourRoutePlanManager.PlanTask()).execute(new RoutePlanBean[]{routePlanBean});
         }
     }
@@ -707,6 +713,7 @@ public class ourRoutePlanManager {
             if (!xmlFile.exists()) {
                 this.routePlanningErr(EnumRoutePlanningErrStatus.RoutePlanningNotExit);
             } else {
+                Log.d("updateTask2Drone", "updateTask2Drone: "+xmlPath);
                 this.mCurrentTaskXmlPath = xmlPath;
                 this.mCurrentTaskNum = taskNum;
                 if (this.onRoutePlanListener != null) {
@@ -834,6 +841,7 @@ public class ourRoutePlanManager {
             if (cmd == EnumRoutePlanningOrder.TASK_END) {
                 this.isSendStopWaypoint = true;
             } else {
+                Log.d("sendTaskStartCmd", "sendTaskStartCmd: ");
                 this.isSendStopWaypoint = false;
             }
 
