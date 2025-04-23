@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>知识图谱</title>
+    <script src="d3/d3.v7.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #graph-container {
+            width: 100%;
+            height: 100vh;
+        }
+        .node {
+            stroke: #fff;
+            stroke-width: 1.5px;
+            cursor: pointer;
+        }
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+        .node text {
+            pointer-events: none;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .relationship {
+            font-size: 10px;
+            fill: #666;
+        }
+    </style>
+</head>
+<body>
+<div id="graph-container"></div>
+
+<script>
+    // 初始化变量
+    let graphData = {
+        nodes: [
+            { id: 1, name: "Android", group: 1, color: "#3cba54" },
+            { id: 2, name: "Kotlin", group: 2, color: "#f4c20d" },
+            { id: 3, name: "Java", group: 2, color: "#db3236" },
+            { id: 4, name: "XML", group: 3, color: "#4885ed" }
+        ],
+        links: [
+            { source: 1, target: 2, relation: "开发语言", value: 1 },
+            { source: 1, target: 3, relation: "开发语言", value: 1 },
+            { source: 1, target: 4, relation: "布局", value: 1 },
+            { source: 2, target: 3, relation: "互操作", value: 2 }
+        ]
+    };
+
+    // 获取容器尺寸
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    // 创建SVG画布
+    const svg = d3.select("#graph-container")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    // 创建力导向图模拟
+    const simulation = d3.forceSimulation(graphData.nodes)
+        .force("link", d3.forceLink(graphData.links)
+            .id(d => d.id)
+            .distance(100)
+        )
+        .force("charge", d3.forceManyBody().strength(-300))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(40));
+
+    // 绘制连线
+    const link = svg.append("g")
+        .selectAll("line")
+        .data(graphData.links)
+        .enter().append("line")
+        .attr("class", "link")
+        .attr("stroke-width", d => Math.sqrt(d.value));
+
+    // 绘制关系文本
+    const linkText = svg.append("g")
+        .selectAll("text")
+        .data(graphData.links)
+        .enter().append("text")
+        .attr("class", "relationship")
+        .attr("dy", -5)
+        .text(d => d.relation);
+
+    // 创建节点组
+    const node = svg.append("g")
+        .selectAll("g")
+        .data(graphData.nodes)
+        .enter().append("g")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended))
+        .on("click", function(event, d) {
+            // 节点点击事件
+            Android.onNodeClicked(d.id, d.name);
+        });
+
+    // 添加节点圆形
+    node.append("circle")
+        .attr("class", "node")
+        .attr("r", 20)
+        .attr("fill", d => d.color);
+
+    // 添加节点文本
+    node.append("text")
+        .attr("dy", 4)
+        .text(d => d.name);
+
+    // 更新力导向图位置
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        linkText
+            .attr("x", d => (d.source.x + d.target.x) / 2)
+            .attr("y", d => (d.source.y + d.target.y) / 2);
+
+        node.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+
+    // 拖拽函数
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+
+    // 更新图谱数据的方法
+    function updateGraph(newData) {
+        // 更新数据
+        graphData = newData;
+
+        // 重新绑定数据
+        const nodes = graphData.nodes;
+        const links = graphData.links;
+
+        // 更新节点
+        const nodeUpdate = svg.selectAll("g")
+            .data(nodes, d => d.id);
+
+        // 移除不再需要的节点
+        nodeUpdate.exit().remove();
+
+        // 添加新节点
+        const newNode = nodeUpdate.enter()
+            .append("g")
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended))
+            .on("click", function(event, d) {
+                Android.onNodeClicked(d.id, d.name);
+            });
+
+        newNode.append("circle")
+            .attr("class", "node")
+            .attr("r", 20)
+            .attr("fill", d => d.color);
+
+        newNode.append("text")
+            .attr("dy", 4)
+            .text(d => d.name);
+
+        // 更新连线
+        const linkUpdate = svg.selectAll("line")
+            .data(links, d => d.source.id + "-" + d.target.id);
+
+        linkUpdate.exit().remove();
+
+        linkUpdate.enter()
+            .append("line")
+            .attr("class", "link")
+            .attr("stroke-width", d => Math.sqrt(d.value))
+            .merge(linkUpdate);
+
+        // 更新关系文本
+        const linkTextUpdate = svg.selectAll("text.relationship")
+            .data(links, d => d.source.id + "-" + d.target.id);
+
+        linkTextUpdate.exit().remove();
+
+        linkTextUpdate.enter()
+            .append("text")
+            .attr("class", "relationship")
+            .attr("dy", -5)
+            .text(d => d.relation)
+            .merge(linkTextUpdate);
+
+        // 重新启动力导向模拟
+        simulation.nodes(nodes);
+        simulation.force("link").links(links);
+        simulation.alpha(1).restart();
+    }
+
+    // 暴露给Android调用的方法
+    window.updateGraphData = function(jsonData) {
+        updateGraph(JSON.parse(jsonData));
+    };
+</script>
+</body>
+</html>

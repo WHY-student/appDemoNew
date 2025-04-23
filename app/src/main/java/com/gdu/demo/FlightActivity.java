@@ -33,6 +33,7 @@ import android.widget.PopupWindow;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -57,6 +58,7 @@ import com.gdu.demo.flight.msgbox.MsgBoxViewCallBack;
 import com.gdu.demo.flight.setting.fragment.SettingDialogFragment;
 import com.gdu.demo.ourgdu.OnOurTargetDetectListener;
 import com.gdu.demo.ourgdu.ourGDUAircraft;
+import com.gdu.demo.views.IncrementalStateManager;
 import com.gdu.demo.ourgdu.ourGDUCodecManager;
 import com.gdu.demo.ourgdu.ourGDUVision;
 import com.gdu.demo.utils.GisUtil;
@@ -101,6 +103,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private ActivityFlightBinding viewBinding;
     private ourGDUCodecManager codecManager=null;
     private VideoFeeder.VideoDataListener videoDataListener;
+    private IncrementalStateManager IncState;
     private GDUFlightController mGDUFlightController;
 
     private boolean showSuccess = false;
@@ -116,6 +119,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private RecyclerView recyclerView;
     private AppCompatImageView AIRecognize;
     private Spinner spinner;
+    private ImageView imageView;
+    private Button knowlageGrape;
+    private int clickCount = 0; // 点击计数器
+    private final int[] imageRes = {R.drawable.knowgrape1, R.drawable.knowgrap2};
 
     private Runnable resetStateTask; // 用于重置状态的任务
     private Runnable completeTask;
@@ -126,6 +133,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private int latestModelID = 0;
     private int tempModelID=0;
     private int modelID = 0;
+    private boolean isIncrementalMode = false;
     private ArrayAdapter<String> adapter;
     private List<String> dataList = new ArrayList<>();
     private ImageAdapter adapter1;
@@ -317,6 +325,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         aiState = findViewById(R.id.ai_state);
         AIRecognize = findViewById(R.id.ai_recognize_imageview);
         spinner = findViewById(R.id.spinner);
+        imageView=findViewById(R.id.imageView);
+        knowlageGrape=findViewById(R.id.btnToggle);
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -663,6 +673,30 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         recyclerView.setAdapter(adapter1);
     }
 
+    // 更新显示/隐藏状态
+    private void updateImageVisibility() {
+        if (clickCount % 2 == 1) { // 奇数次点击显示
+            imageView.setVisibility(View.VISIBLE);
+            updateImageDisplay();
+        } else { // 偶数次点击隐藏
+            imageView.setVisibility(View.GONE);
+        }
+    }
+
+    // 根据增量状态更新图片
+    private void updateImageDisplay() {
+        int resId = isIncrementalMode ? imageRes[1] : imageRes[0];
+        imageView.setImageResource(resId);
+
+        // 可选：添加切换动画
+//        imageView.animate()
+//                .alpha(0).setDuration(100)
+//                .withEndAction(() -> {
+//                    imageView.setAlpha(1);
+//                    imageView.setImageResource(resId);
+//                }).start();
+    }
+
     public Bitmap cropImage(TargetMode clickBox, byte[] yuvData) {
 
         if (yuvData != null) {
@@ -950,7 +984,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
         final boolean isShow = viewBinding.ivMsgBoxLabel.isSelected();
         mMsgBoxPopWin.setOnDismissListener(() -> ThreadHelper.runOnUiThreadDelayed(()
-                -> viewBinding.ivMsgBoxLabel.setSelected(false), 500));
+                -> viewBinding.ivMsgBoxLabel.setSelected(false), 650));
         if (isShow) {
             mMsgBoxPopWin.dismiss();
         } else {
@@ -1268,8 +1302,12 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
                     }else{
                         setPhotoShow(1);
                     }
+                    isIncrementalMode=false;
+//                    IncrementalStateManager.getInstance().setIncremental(false);
                 }catch(Exception e){
                     quitAIRecognize.setEnabled(true);
+                    isIncrementalMode=true;
+//                    IncrementalStateManager.getInstance().setIncremental(true);
                 }
                 break;
             case R.id.button_gimbal_rotate:
@@ -1317,13 +1355,21 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
 //                                ImageAdapter adapter = new ImageAdapter(imageItems, FlightActivity.this);
 //                                recyclerView.setAdapter(adapter);
 //                                adapter1.notifyDataSetChanged();
+                                isIncrementalMode=true;
                             } else {
                                 showToast("开始增量失败");
+                                isIncrementalMode=false;
+//                                IncrementalStateManager.getInstance().setIncremental(false);
                             }
                         }
                     });
                 } else {
                     showToast("请检查初始化是否成功");
+                    isIncrementalMode=false;
+//                    IncrementalStateManager.getInstance().setIncremental(false);
+                }
+                if (imageView.getVisibility() == View.VISIBLE) {
+                    updateImageDisplay();
                 }
 
 //                updatedPhotoList(1,5,9);
@@ -1351,6 +1397,10 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
                         }
                     }
                 });
+                break;
+            case R.id.btnToggle:
+                clickCount++;
+                updateImageVisibility();
                 break;
             case R.id.spinner:
                 // 添加新数据
