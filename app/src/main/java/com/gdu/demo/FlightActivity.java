@@ -897,7 +897,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 Log.d("attribute", "大类没有index");
 //                return;
         }
-        attributeList = car_attribute_labels;
+//        attributeList = car_attribute_labels;
+        attributeList = viewBinding.aiPaintView.getAttributeLabel2();
 
         // 1. 将byte转换为8位二进制字符串（补前导零）
         String byteBinary = String.format("%8s", Integer.toBinaryString(clickBox.getTargetConfidence() & 0xFF))
@@ -911,6 +912,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
         // 3. 拼接成40位二进制字符串
         String combined = intBinary + byteBinary;
+        combined = "01000110001100010010100000";
         int len = attributeList.size();
 
         StringBuilder result = new StringBuilder();
