@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>关系图</title>
+</head>
+
+<body>
+    <div id="main" style="width: 1920px; height: 1080px"></div>
+    <div id="ss"></div>
+    <script src="build/echarts.js"></script>
+    <script type="text/javascript">
+        require.config({
+            paths: {
+                echarts: 'build'
+            }
+        });
+        require(["echarts", "echarts/chart/force"], function(ec) {
+            var fine_2_coarse = [];
+            var cls_2_fine = [];
+            var cls_att = [];
+
+            function load(name) {
+                let xhr = new XMLHttpRequest(),
+                okStatus = document.location.protocol === "file:" ? 0 : 200;
+                xhr.open('GET', name, false);
+                xhr.overrideMimeType("text/html;charset=utf-8");//默认为utf-8
+                xhr.send(null);
+                return xhr.status === okStatus ? xhr.responseText : null;
+            }
+
+            var coarse_name = load('coarse_name.txt').split('\r\n')
+            var fine_name = load('fine_name.txt').split('\r\n')
+            var cls_name = load('cls_name.txt').split('\r\n')
+            var att_name = load('att_name.txt').split('\r\n')
+            var fine_2_coarse = load('fine2coarse.txt').split('\r\n')
+            var cls_2_fine = load('cls2fine.txt').split('\r\n')
+            var cls_att = load('attribute.txt').split('\r\n')
+            var temp = []
+            for (var i=0;i<cls_att.length;i++){
+                temp[i] = cls_att[i].split(',').map(Number);
+            }
+            cls_att = temp
+
+            var myChart = ec.init(document.getElementById('main'), 'macarons');
+
+            var node_num = coarse_name.length + fine_name.length + cls_name.length + 1;
+            var node = [];
+            var link = [];
+            for (var i=0; i<node_num; i++){
+                if (i<1){
+                    node[i] = {
+                        id: i,
+                        category: 0,
+                        name: i.toString(),
+                        label: 'js目标',
+                        symbolSize: 40,
+                        ignore: false,
+                        flag: true
+                    }
+                }
+                else if (i<coarse_name.length + 1){
+                    node[i] = {
+                        id: i,
+                        category: 1,
+                        name: i.toString(),
+                        label: coarse_name[i-1],
+                        symbolSize: 30,
+                        ignore: true,
+                        flag: true
+                    }
+                }
+                else if (i<coarse_name.length+fine_name.length+1){
+                    node[i] = {
+                        id: i,
+                        category: 2,
+                        name: i.toString(),
+                        label: fine_name[i-coarse_name.length-1],
+                        symbolSize: 20,
+                        ignore: true,
+                        flag: true
+                    }
+                }
+                else {
+                    node[i] = {
+                        id: i,
+                        category: 3,
+                        name: i.toString(),
+                        label: cls_name[i-coarse_name.length-fine_name.length-1],
+                        symbolSize: 20,
+                        ignore: true,
+                        flag: true
+                    }
+                }
+            }
+            var k=0;
+            for(var i=0; i<cls_name.length; i++) {
+                for (var j = 0; j < att_name.length; j++) {
+                    if (cls_att[i][j] > 0.5) {
+                        if (cls_att[i][j] < 1.1) {
+                            node[node_num + k] = {
+                                id: node_num + k,
+                                category: 4,
+                                name: (node_num + k).toString(),
+                                label: att_name[j],
+                                symbolSize: 10,
+                                ignore: true,
+                                flag: true
+                            }
+                        } else {
+                            node[node_num + k] = {
+                                id: node_num + k,
+                                category: 4,
+                                name: (node_num + k).toString(),
+                                label: att_name[j] + ':' + cls_att[i][j].toString(),
+                                symbolSize: 10,
+                                ignore: true,
+                                flag: true
+                            }
+                        }
+                        k++;
+                    }
+                }
+            }
+
+            for (var i=0; i<coarse_name.length; i++){
+                link[i] = {
+                        source: i+1,
+                        target: 0
+                    }
+            }
+            for (var i=0; i<fine_name.length; i++){
+                for (var j=0; j<fine_2_coarse.length; j++){
+                    if (fine_2_coarse[j].includes(fine_name[i])){
+                        link[i+coarse_name.length] = {
+                                source: i+coarse_name.length + 1,
+                                target: j+1
+                        }
+                    }
+                }
+            }
+
+            for (var i=0; i<cls_name.length; i++){
+                for (var j=0; j<cls_2_fine.length; j++){
+                    if (cls_2_fine[j].includes(cls_name[i])){
+                        link[i+coarse_name.length+fine_name.length] = {
+                                source: i+coarse_name.length+fine_name.length+1,
+                                target: j+coarse_name.length+1
+                        }
+                    }
+                }
+            }
+
+            var m=0
+            var k = coarse_name.length+fine_name.length+cls_name.length;
+            for(var i=0; i<cls_name.length; i++){
+                for (var j=0; j<att_name.length; j++){
+                    if (cls_att[i][j] > 0.5){
+                        link[k] = {
+                        source: coarse_name.length+fine_name.length+cls_name.length+1+m,
+                        target: i+coarse_name.length+fine_name.length+1
+                        }
+                        k++;
+                        m++;
+                    }
+                }
+            }
+
+
+            var option = {
+                backgroundColor:'#000', //rgba设置透明度0.1
+                textStyle:'#000', //rgba设置透明度0.1
+                tooltip: {
+                    show: false
+                },
+                series: [{
+                    type: 'force',
+                    name: "Force tree",
+                    textStyle: {
+                        color: '#ff0000' // 设置节点文字颜色为红色
+                    },
+                    itemStyle: {
+                        normal: {
+                            label: {
+                                show: true
+                            },
+                            nodeStyle: {
+                                brushType: 'both',
+                                borderColor: 'rgba(0,215,0,0.4)',
+                                borderWidth: 1,
+                            },
+
+                        }
+                    },
+                    force: {
+                        repulsion: 25000,
+                        gravity : 0.001,
+                        edgeLength: 10,
+                        layoutAnimation : false
+
+                    },
+
+                    categories: [{
+                        name: '总体'
+                    }, {
+                        name: '粗类'
+                    }, {
+                        name: '细类'
+                    }, {
+                        name: '型号'
+                    }, {
+                        name: '属性'
+                    }],
+                    nodes: node,
+                    links: link
+                },
+                ]
+            };
+            myChart.setOption(option);
+            var ecConfig = require('echarts/config');
+
+            function openOrFold(param) {
+                var option = myChart.getOption();
+                var nodesOption = option.series[0].nodes;
+                var linksOption = option.series[0].links;
+                var data = param.data;
+                var linksNodes = [];
+
+                var categoryLength = option.series[0].categories.length;
+
+                if (data != null && data != undefined) {
+                    if (data.flag) {
+
+                        for (var m in linksOption) {
+
+                            if (linksOption[m].target == data.id) {
+                                linksNodes.push(linksOption[m].source);
+                            }
+                        }
+                        if (linksNodes != null && linksNodes != undefined) {
+                            for (var p in linksNodes) {
+                                nodesOption[linksNodes[p]].ignore = false;
+                                nodesOption[linksNodes[p]].flag = true;
+                            }
+                        }
+                        nodesOption[data.id].flag = false;
+                        myChart.setOption(option);
+                    } else {
+
+                        for (var m in linksOption) {
+
+                            if (linksOption[m].target == data.id) {
+                                linksNodes.push(linksOption[m].source);
+                            }
+                            if (linksNodes != null && linksNodes != undefined) {
+                                for (var n in linksNodes) {
+                                    if (linksOption[m].target == linksNodes[n]) {
+                                        linksNodes.push(linksOption[m].source);
+                                    }
+                                }
+                            }
+                        }
+                        if (linksNodes != null && linksNodes != undefined) {
+                            for (var p in linksNodes) {
+                                nodesOption[linksNodes[p]].ignore = true;
+                                nodesOption[linksNodes[p]].flag = true;
+                            }
+                        }
+                        nodesOption[data.id].flag = true;
+                        myChart.setOption(option);
+                    }
+                }
+            }
+            myChart.on(ecConfig.EVENT.CLICK, openOrFold);
+
+        });
+    </script>
+
+</body>
+
+</html>

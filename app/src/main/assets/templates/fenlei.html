@@ -1,0 +1,412 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #main {
+            width: 100vw;  /* 视口宽度单位 */
+            height: 100vh; /* 视口高度单位 */
+        }
+    </style>
+    <title>关系图</title>
+</head>
+<body>
+<!--    <div id='our'></div>-->
+    <div id="main"></div>
+<!--    style="width: 1331px; height: 981px"-->
+    <div id="ss"></div>
+    <script src="build/echarts.js"></script>
+    <script type="text/javascript">
+        var fine_2_coarse = [];
+        var cls_2_fine = [];
+        var cls_att = [];
+        var coarse_name = [];
+        var fine_name = [];
+        var cls_name = [];
+        var att_name = [];
+        var myChart;
+        var isDataReady=false;
+
+        function resizeMainDiv(width, height) {
+            var mainDiv = document.getElementById('main');
+            mainDiv.style.width = width + 'px';
+            mainDiv.style.height = height + 'px';
+        }
+
+        function receiveFiles(coarseName, fineName, clsName, attName, fine2Coarse, cls2Fine, attribute) {
+            try {
+                coarse_name = coarseName.split('\n');
+                fine_name = fineName.split('\n');
+                cls_name = clsName.split('\n');
+                att_name = attName.split('\n');
+                fine_2_coarse = fine2Coarse.split('\n');
+                cls_2_fine = cls2Fine.split('\n');
+                cls_att = attribute.split('\n');
+                var temp = [];
+                for (var i = 0; i < cls_att.length; i++) {
+                    temp[i] = cls_att[i].split(',').map(Number);
+                }
+                cls_att = temp;
+                isDataReady = true;
+                console.log('数据加载完成:--------------------------')
+                return 'success';
+                } catch (error) {
+                  console.error('receiveFiles 函数执行出错:', error);
+                  return 'error';
+            }
+        }
+
+
+        function filterByModel(modelNames) {
+                console.warn('方法入参为'+modelNames);
+
+                var option = myChart.getOption();
+                var allNodes = option.series[0].nodes;
+                var allLinks = option.series[0].links;
+
+                console.log("Nodes:"+allNodes);
+
+                // 收集所有需要显示的节点ID
+                var visibleNodeIds = new Set();
+                var queue = [];
+
+                // 1. 找到所有目标型号节点
+                modelNames.forEach(function(modelName) {
+                console.warn('modelName'+modelName)
+                    var targetNode = allNodes.find(function(node) {
+                        return node.label === modelName && node.category === 3; // 3对应"型号"类别
+                    });
+
+                    if (targetNode) {
+                        visibleNodeIds.add(targetNode.id);
+                        queue.push(targetNode.id);
+                    } else {
+                        console.warn('未找到型号为"' + modelName + '"的节点');
+                    }
+                });
+
+                if (queue.length === 0) return;
+
+                // 2. 向上追溯共同祖先（型号→细类→粗类→总体）
+                var upwardVisited = new Set();
+                while (queue.length > 0) {
+                    var currentId = queue.shift();
+
+                 // 查找所有指向当前节点的边（父节点）
+                    allLinks.forEach(function(link) {
+                       if (link.target == currentId && !upwardVisited.has(link.source)) {
+                          upwardVisited.add(link.source);
+                          visibleNodeIds.add(link.source);
+                          queue.push(link.source);
+                        }
+                    });
+                }
+
+                // 3. 向下追溯所有子节点（型号→属性）
+                queue = Array.from(visibleNodeIds).filter(function(id) {
+                    return allNodes[id].category === 3; // 只从型号节点开始向下
+                });
+
+                var downwardVisited = new Set();
+                while (queue.length > 0) {
+                    var currentId = queue.shift();
+
+                    // 查找所有从当前节点出发的边（子节点）
+                    allLinks.forEach(function(link) {
+                        if (link.source == currentId && !downwardVisited.has(link.target)) {
+                            downwardVisited.add(link.target);
+                            visibleNodeIds.add(link.target);
+                            queue.push(link.target);
+                        }
+                    });
+                }
+
+                // 4. 更新节点显示状态
+                allNodes.forEach(function(node) {
+                   node.ignore = !visibleNodeIds.has(node.id);
+                });
+
+                // 5. 过滤边，只保留可见节点之间的连接
+                var visibleLinks = allLinks.filter(function(link) {
+                    return visibleNodeIds.has(link.source) && visibleNodeIds.has(link.target);
+                });
+
+                // 6. 应用更新
+                myChart.setOption({
+                   series: [{
+                   nodes: allNodes,
+                   links: visibleLinks
+                   }]
+                });
+        }
+
+
+        function initAndNotify(){
+           require.config({
+                paths: {
+                    echarts: 'build'
+                }
+            });
+
+           require(["echarts", "echarts/chart/force"], function(ec) {
+                myChart = ec.init(document.getElementById('main'), 'macarons');
+                // 添加就绪检查
+                if (!myChart) {
+                    console.error('ECharts实例未初始化成功');
+                    return;
+                }
+
+
+                var node_num = coarse_name.length + fine_name.length + cls_name.length + 1;
+                console.warn('node num',node_num)
+                var node = [];
+                var link = [];
+            for (var i=0; i<node_num; i++){
+                if (i<1){
+                    node[i] = {
+                        id: i,
+                        category: 0,
+                        name: i.toString(),
+                        label: 'js目标',
+                        symbolSize: 30,
+                        ignore: false,
+                        flag: true
+                    }
+                }
+                else if (i<coarse_name.length + 1){
+                    node[i] = {
+                        id: i,
+                        category: 1,
+                        name: i.toString(),
+                        label: coarse_name[i-1],
+                        symbolSize: 20,
+                        ignore: true,
+                        flag: true
+                    }
+                }
+                else if (i<coarse_name.length+fine_name.length+1){
+                    node[i] = {
+                        id: i,
+                        category: 2,
+                        name: i.toString(),
+                        label: fine_name[i-coarse_name.length-1],
+                        symbolSize: 10,
+                        ignore: true,
+                        flag: true
+                    }
+                }
+                else {
+                    node[i] = {
+                        id: i,
+                        category: 3,
+                        name: i.toString(),
+                        label: cls_name[i-coarse_name.length-fine_name.length-1],
+                        symbolSize: 10,
+                        ignore: true,
+                        flag: true
+                    }
+                }
+            }
+            var k=0;
+            for(var i=0; i<cls_name.length; i++) {
+                for (var j = 0; j < att_name.length; j++) {
+                    if (cls_att[i][j] > 0.5) {
+                        if (cls_att[i][j] < 1.1) {
+                            node[node_num + k] = {
+                                id: node_num + k,
+                                category: 4,
+                                name: (node_num + k).toString(),
+                                label: att_name[j],
+                                symbolSize: 10,
+                                ignore: true,
+                                flag: true
+                            }
+                        } else {
+                            node[node_num + k] = {
+                                id: node_num + k,
+                                category: 4,
+                                name: (node_num + k).toString(),
+                                label: att_name[j] + ':' + cls_att[i][j].toString(),
+                                symbolSize: 10,
+                                ignore: true,
+                                flag: true
+                            }
+                        }
+                        k++;
+                    }
+                }
+            }
+
+            for (var i=0; i<coarse_name.length; i++){
+                link[i] = {
+                        source: i+1,
+                        target: 0
+                    }
+            }
+            for (var i=0; i<fine_name.length; i++){
+                for (var j=0; j<fine_2_coarse.length; j++){
+                    if (fine_2_coarse[j].includes(fine_name[i])){
+                        link[i+coarse_name.length] = {
+                                source: i+coarse_name.length + 1,
+                                target: j+1
+                        }
+                    }
+                }
+            }
+
+            for (var i=0; i<cls_name.length; i++){
+                for (var j=0; j<cls_2_fine.length; j++){
+                    if (cls_2_fine[j].includes(cls_name[i])){
+                        link[i+coarse_name.length+fine_name.length] = {
+                                source: i+coarse_name.length+fine_name.length+1,
+                                target: j+coarse_name.length+1
+                        }
+                    }
+                }
+            }
+
+            var m=0
+            var k = coarse_name.length+fine_name.length+cls_name.length;
+            for(var i=0; i<cls_name.length; i++){
+                for (var j=0; j<att_name.length; j++){
+                    if (cls_att[i][j] > 0.5){
+                        link[k] = {
+                        source: coarse_name.length+fine_name.length+cls_name.length+1+m,
+                        target: i+coarse_name.length+fine_name.length+1
+                        }
+                        k++;
+                        m++;
+                    }
+                }
+            }
+
+
+            var option = {
+                backgroundColor:'#000', //rgba设置透明度0.1
+                textStyle:{
+                    color: '#000',
+                    fontsize: '5'
+                }, //rgba设置透明度0.1
+                tooltip: {
+                    show: false
+                },
+                series: [{
+                    type: 'force',
+                    name: "Force tree",
+                    textStyle: {
+                        color: '#ff0000' // 设置节点文字颜色为红色
+                    },
+                    itemStyle: {
+                        normal: {
+                            label: {
+                                show: true
+                            },
+                            nodeStyle: {
+                                brushType: 'both',
+                                borderColor: 'rgba(0,215,0,0.4)',
+                                borderWidth: 1,
+                            },
+
+                        }
+                    },
+                    force: {
+                        repulsion: 25000,
+                        gravity : 0.001,
+                        edgeLength: 10,
+                        layoutAnimation : false
+
+                    },
+
+                    categories: [{
+                        name: '总体'
+                    }, {
+                        name: '粗类'
+                    }, {
+                        name: '细类'
+                    }, {
+                        name: '型号'
+                    }, {
+                        name: '属性'
+                    }],
+                    nodes: node,
+                    links: link
+                },
+                ]
+            };
+            myChart.setOption(option);
+            var ecConfig = require('echarts/config');
+
+            function openOrFold(param) {
+                var option = myChart.getOption();
+                var nodesOption = option.series[0].nodes;
+                var linksOption = option.series[0].links;
+                var data = param.data;
+                var linksNodes = [];
+
+                var categoryLength = option.series[0].categories.length;
+
+                if (data != null && data != undefined) {
+                    if (data.flag) {
+
+                        for (var m in linksOption) {
+
+                            if (linksOption[m].target == data.id) {
+                                linksNodes.push(linksOption[m].source);
+                            }
+                        }
+                        if (linksNodes != null && linksNodes != undefined) {
+                            for (var p in linksNodes) {
+                                nodesOption[linksNodes[p]].ignore = false;
+                                nodesOption[linksNodes[p]].flag = true;
+                            }
+                        }
+                        nodesOption[data.id].flag = false;
+                        myChart.setOption(option);
+                    } else {
+
+                        for (var m in linksOption) {
+
+                            if (linksOption[m].target == data.id) {
+                                linksNodes.push(linksOption[m].source);
+                            }
+                            if (linksNodes != null && linksNodes != undefined) {
+                                for (var n in linksNodes) {
+                                    if (linksOption[m].target == linksNodes[n]) {
+                                        linksNodes.push(linksOption[m].source);
+                                    }
+                                }
+                            }
+                        }
+                        if (linksNodes != null && linksNodes != undefined) {
+                            for (var p in linksNodes) {
+                                nodesOption[linksNodes[p]].ignore = true;
+                                nodesOption[linksNodes[p]].flag = true;
+                            }
+                        }
+                        nodesOption[data.id].flag = true;
+                        myChart.setOption(option);
+                    }
+                }
+            }
+
+            myChart.on(ecConfig.EVENT.CLICK, openOrFold);
+            // 通知 Android 代码可以调用函数
+            window.Android.onJsReady();
+          });
+        }
+        // 页面加载完成后调用初始化函数
+        window.onload = initAndNotify;
+    </script>
+
+</body>
+
+</html>
