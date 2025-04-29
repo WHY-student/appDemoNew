@@ -1,13 +1,27 @@
 package com.gdu.demo;
 
+import static com.gdu.util.RectUtil.getScreenHeight;
+import static com.gdu.util.RectUtil.getScreenWidth;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Rect;
+import android.net.Uri;
+import android.util.DisplayMetrics;
+import android.view.ViewGroup;
+import android.webkit.ConsoleMessage;
+import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebSettings;
+import android.webkit.WebViewClient;
+
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -25,6 +39,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -33,7 +48,6 @@ import android.widget.PopupWindow;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -92,7 +106,12 @@ import com.gdu.util.logger.MyLogUtils;
 import com.gdu.gimbal.Rotation;
 import com.gdu.gimbal.RotationMode;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +140,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private Spinner spinner;
     private ImageView imageView;
     private Button knowlageGrape;
+
+    private Button knowledgeGraphButton;
+    private WebView webView;
+    private PopupWindow popupWindow;
+    private List<String> recognizedModels = Arrays.asList("B-1B", "BMP-2");
     private int clickCount = 0; // 点击计数器
     private final int[] imageRes = {R.drawable.knowgrape1, R.drawable.knowgrap2};
 
@@ -263,6 +287,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         mContext = this;
         viewBinding = ActivityFlightBinding.inflate(getLayoutInflater());
         setContentView(viewBinding.getRoot());
+//        setContentView(R.layout.knowledge_graph);
         viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
         initView();
         initData();
@@ -272,6 +297,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         initListener();
 //        setupExternalDisplay();
         initAttributeDialog();
+        //initKnowLedgeGraph();
         if(photoIsDialog){
             initPhotoDialog();
         }else{
@@ -327,6 +353,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         spinner = findViewById(R.id.spinner);
         imageView=findViewById(R.id.imageView);
         knowlageGrape=findViewById(R.id.btnToggle);
+        //know graph button
+        knowledgeGraphButton=findViewById(R.id.button_know_graph);
+        knowledgeGraphButton.setOnClickListener(this); // 设置点击监听器
+        //webView = findViewById(R.id.webview);
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -635,6 +665,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         attributePopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         attributePopupWindow.setOutsideTouchable(true);
     }
+
+//    @SuppressLint("InflateParams")
+//    public void initKnowLedgeGraph(){
+//        LayoutInflater.from(FlightActivity.this).inflate(R.layout.knowledge_graph, null);
+//    }
     @SuppressLint("InflateParams")
     public void initPhotoDialog() {
         photoPopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.popup_layout, null);
@@ -1402,6 +1437,9 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
                 clickCount++;
                 updateImageVisibility();
                 break;
+            case R.id.button_know_graph:
+                showKnowledgeGraphPopup();
+                break;
             case R.id.spinner:
                 // 添加新数据
                 spinner.setOnTouchListener(new View.OnTouchListener() {
@@ -1420,6 +1458,177 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
 //                photoPopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, 0);
 //                break;
         }
+    }
+    private void showKnowledgeGraphPopup() {
+        // 加载弹出窗口布局
+        View popupView = getLayoutInflater().inflate(R.layout.webview_popup, null);
+
+        // 初始化WebView
+        WebView[] webView2 = {popupView.findViewById(R.id.webView)};
+        webView=webView2[0];
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true); // 启用 JavaScript
+        webSettings.setDomStorageEnabled(true); // 启用 DOM 存储
+        webSettings.setAllowFileAccess(true); // 允许访问文件系统
+        webSettings.setUseWideViewPort(true);  // 启用宽视口
+        webSettings.setLoadWithOverviewMode(true);  // 缩放至屏幕宽度
+        webSettings.setBuiltInZoomControls(true);  // 启用缩放控件
+        webSettings.setDisplayZoomControls(false);  // 隐藏原生缩放按钮
+        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        webView.loadUrl("file:///android_asset/templates/fenlei2.html");
+        webView.addJavascriptInterface(new AndroidInterface(), "Android");
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                // 在 PopupWindow 显示后获取其大小并传递给 HTML 页面
+//                popupWindow.getContentView().post(() -> {
+//                    int width = popupWindow.getWidth();
+//                    int height = popupWindow.getHeight();
+//                    view.loadUrl("javascript:resizeMainDiv(" + width + ", " + height + ")");
+//                });
+            }
+        });
+
+
+        // 创建PopupWindow
+        popupWindow = new PopupWindow(
+                popupView,
+                (int) (getScreenWidth() * 0.7),  // 屏幕宽度的80%
+                (int) (getScreenHeight() * 0.6),
+                true
+        );
+        // 设置关闭按钮
+        Button closeButton = popupView.findViewById(R.id.closeButton);
+        closeButton.setOnClickListener(v -> {
+            if (popupWindow != null && popupWindow.isShowing()) {
+                popupWindow.dismiss();
+            }
+        });
+
+        popupWindow.setOutsideTouchable(true);
+        popupWindow.setFocusable(true);
+        // 设置背景和动画
+        popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        //popupWindow.setAnimationStyle(R.style.PopupAnimation);
+
+        // 显示在屏幕中央
+        popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+
+        // 设置PopupWindow消失时的监听
+        popupWindow.setOnDismissListener(() -> {
+            if (webView != null) {
+                webView.destroy();
+                webView = null;
+            }
+        });
+
+    }
+
+    // 获取屏幕宽度
+    private int getScreenWidth() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        return metrics.widthPixels;
+    }
+
+    // 获取屏幕高度
+    private int getScreenHeight() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        return metrics.heightPixels;
+    }
+
+    //todo read .txt file then send html
+    class AndroidInterface {
+        @android.webkit.JavascriptInterface
+        public void onJsReady() {
+            runOnUiThread(new Runnable(){
+                @Override
+                public void run(){
+                    try {
+                        String coarseName = readFileFromAssets("templates/coarse_name_temp.txt");
+                        String fineName = readFileFromAssets("templates/fine_name_temp.txt");
+                        String clsName = readFileFromAssets("templates/cls_name_temp.txt");
+                        String attName = readFileFromAssets("templates/att_name.txt");
+                        String fine2Coarse = readFileFromAssets("templates/fine2coarse_temp.txt");
+                        String cls2Fine = readFileFromAssets("templates/cls2fine_temp.txt");
+                        String attribute = readFileFromAssets("templates/attribute_temp.txt");
+
+                        // 使用 evaluateJavascript 调用 JavaScript 方法传入txt文件内容
+                        String jsCode = "receiveFiles('" + escapeJavaScript(coarseName) + "','"
+                                + escapeJavaScript(fineName) + "','" + escapeJavaScript(clsName) + "','"
+                                + escapeJavaScript(attName) + "','" + escapeJavaScript(fine2Coarse) + "','"
+                                + escapeJavaScript(cls2Fine) + "','" + escapeJavaScript(attribute) + "')";
+                        Log.d("jscode",jsCode);
+                        webView.setWebChromeClient(new WebChromeClient() {
+                            @Override
+                            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                                Log.d("WebViewConsole", consoleMessage.message() + " -- From line "
+                                        + consoleMessage.lineNumber() + " of "
+                                        + consoleMessage.sourceId());
+                                return super.onConsoleMessage(consoleMessage);
+                            }
+                        });
+                        //"javascript:"+"console.log('hello world');"
+                       webView.evaluateJavascript(jsCode, new ValueCallback<String>() {
+                            @Override
+                            public void onReceiveValue(String value) {
+                                Log.d("WebViewJS", "JavaScript 执行结果: " + value);
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+        }
+
+        @android.webkit.JavascriptInterface
+        public void onChartReady(){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d("chartReady","begin filter");
+                    // 图表准备好后调用 filterByModel 函数
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("filterByModel([");
+                    for (int i = 0; i < recognizedModels.size(); i++) {
+                        sb.append("'").append(recognizedModels.get(i)).append("'");
+                        if (i < recognizedModels.size() - 1) {
+                            sb.append(",");
+                        }
+                    }
+                    sb.append("])");
+                    webView.evaluateJavascript(sb.toString(), new ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String value) {
+                            Log.d("WebViewJS", "JavaScript 执行结果: " + value);
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    private String readFileFromAssets(String fileName) {
+        String result = "";
+        try {
+            InputStream is = getAssets().open(fileName);
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            result = new String(buffer, "UTF-8");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    private String escapeJavaScript(String input) {
+        return input.replace("'", "\\'").replace("\r\n", "\\n").trim();//.replace("\n", "\\n")
     }
 
     public void updateTitleTvTxt(String title) {

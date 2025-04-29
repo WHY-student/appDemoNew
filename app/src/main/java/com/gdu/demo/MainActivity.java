@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
         mPairingButton = findViewById(R.id.pairing_button);
         tvConnectState = findViewById(R.id.tv_connect_state);
         tv_gimbal_type = findViewById(R.id.tv_gimbal_type);
-        mOpenButton.setEnabled(false);
+        mOpenButton.setEnabled(true);
         ((TextView) findViewById(R.id.version_textview)).setText(getResources().getString(R.string.sdk_version,
                 ourGDUSDKManager.getInstance().getSDKVersion(mContext)));
     }
@@ -103,7 +103,7 @@ public class MainActivity extends Activity {
                 != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,}, 1);
-                return false;
+                return true;
         }
         return true;
     }
@@ -166,11 +166,11 @@ public class MainActivity extends Activity {
                     if (mProduct.isConnected()) {
                         tvConnectState.setText("飞行器已连接 型号：" + model.name());
                         mOpenButton.setEnabled(true);
-                        mPairingButton.setEnabled(false);
+                        mPairingButton.setEnabled(true);
 
                     } else {
                         tvConnectState.setText("飞行器未连接");
-                        mOpenButton.setEnabled(false);
+                        mOpenButton.setEnabled(true);
                     }
                 }
             });
