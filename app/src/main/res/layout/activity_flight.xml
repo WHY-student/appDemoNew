@@ -197,11 +197,11 @@
             android:layout_gravity="center"
             android:onClick="onClick"
             android:text="知识图谱2"/>
-        <WebView
-            android:id="@+id/webview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:ignore="WebViewLayout" />
+<!--        <WebView-->
+<!--            android:id="@+id/webview"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            tools:ignore="WebViewLayout" />-->
 
         <!--        <Button-->
         <!--            android:id="@+id/btn_take_off"-->

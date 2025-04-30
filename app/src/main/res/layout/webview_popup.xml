@@ -3,11 +3,11 @@
     android:id="@+id/popupLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#80000000"> <!-- 半透明背景 -->
+    android:background="#80FFFFFF"> <!-- 半透明背景 -->
 
     <WebView
         android:id="@+id/webView"
-        android:layout_width="300dp"
+        android:layout_width="500dp"
         android:layout_height="400dp"
         android:layout_centerInParent="true" />
 
