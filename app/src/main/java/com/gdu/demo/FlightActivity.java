@@ -139,11 +139,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private AppCompatImageView AIRecognize;
     private Spinner spinner;
     private ImageView imageView;
-    private Button knowlageGrape;
 
     private Button knowledgeGraphButton;
     private WebView webView;
-    private PopupWindow popupWindow;
+    private PopupWindow KnowledgeGraphPopupWindow;
     private List<String> recognizedModels = Arrays.asList("B-1B", "BMP-2");
     private int clickCount = 0; // 点击计数器
     private final int[] imageRes = {R.drawable.knowgrape1, R.drawable.knowgrap2};
@@ -164,10 +163,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private Context mContext;
     private  String IMAGE_DIR = "cropped_images";
     private   String LOAD_DIR="load_images";
-//    private ImageView mYUVImageView;
-
-
-    // 定义一个 Runnable 任务，用于更新 AI 状态
 
     private Handler mHandler = new Handler(Looper.getMainLooper());
     private Handler handler1 = new Handler(Looper.getMainLooper());
@@ -179,130 +174,58 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private GDUCamera mGDUCamera;
 
     private ourGDUVision mGduVision;
-    List<ImageItem> imageItems = new ArrayList<>();
+    private List<ImageItem> imageItems = new ArrayList<>();
     private ImageProcessingManager mImageProcessingManager;
     private ImageStorageManager storageManager;
     private int lastSavedNumber = 0;
-    PopupWindow attributePopupWindow;
+    private PopupWindow attributePopupWindow;
+    private View attributePopupView;
+    private PopupWindow photoPopupWindow;
 
-    View attributePopupView;
+    private View photoPopupView;
+    private int savedID=-1;
 
-    PopupWindow photoPopupWindow;
-
-    View photoPopupView;
-    int savedID=-1;
-
-    List<String> car_attribute_labels = new ArrayList<>();
-//    {
-//        car_attribute_labels.add("Public Transport");
-//        car_attribute_labels.add("Private Transport");
-//        car_attribute_labels.add("Multipurpose");
-//        car_attribute_labels.add("Cargo Transport");
-//        car_attribute_labels.add("Large Capacity");
-//        car_attribute_labels.add("Small Capacity");
-//        car_attribute_labels.add("Medium Capacity");
-//        car_attribute_labels.add("Comfortable Driving");
-//        car_attribute_labels.add("Off-Road Driving");
-//        car_attribute_labels.add("High-Speed Driving");
-//        car_attribute_labels.add("City Driving Adaptability");
-//        car_attribute_labels.add("Complex Terrain Adaptability");
-//        car_attribute_labels.add("High Payload Capacity");
-//        car_attribute_labels.add("Low Payload Capacity");
-//        car_attribute_labels.add("Family-Friendly");
-//        car_attribute_labels.add("Long-Distance Travel");
-//        car_attribute_labels.add("Low Fuel Consumption");
-//        car_attribute_labels.add("High Fuel Consumption");
-//        car_attribute_labels.add("Electric Option");
-//        car_attribute_labels.add("High Environmental Impact");
-//        car_attribute_labels.add("Large Parking Space Requirement");
-//        car_attribute_labels.add("Small Parking Space Requirement");
-//        car_attribute_labels.add("High Cost");
-//        car_attribute_labels.add("Low Cost");
-//        car_attribute_labels.add("Low Maneuverability");
-//        car_attribute_labels.add("High Maneuverability");
-//        car_attribute_labels.add("High Comfort");
-//        car_attribute_labels.add("Low Comfort");
-//        car_attribute_labels.add("Fast Driving");
-//        car_attribute_labels.add("Slow Driving");
-//        car_attribute_labels.add("City Street Suitability");
-//        car_attribute_labels.add("Construction/Transport Suitability");
-//        car_attribute_labels.add("Outdoor Driving");
-//        car_attribute_labels.add("City & Off-Road Suitability");
-//        car_attribute_labels.add("High Off-Road Ability");
-//        car_attribute_labels.add("Low Off-Road Ability");
-//        car_attribute_labels.add("Single Function");
-//        car_attribute_labels.add("Multifunction");
-//        car_attribute_labels.add("Off-Road Capability");
-//        car_attribute_labels.add("City Commuting Suitability");
-//    }
+    private List<String> object_labels = new ArrayList<>();
     {
-        car_attribute_labels.add("公共交通工具");
-        car_attribute_labels.add("私人交通工具");
-        car_attribute_labels.add("多用途");
-        car_attribute_labels.add("货物运输");
-        car_attribute_labels.add("大容量");
-        car_attribute_labels.add("小容量");
-        car_attribute_labels.add("中容量");
-        car_attribute_labels.add("舒适驾驶");
-        car_attribute_labels.add("越野驾驶");
-        car_attribute_labels.add("高速驾驶");
-        car_attribute_labels.add("城市驾驶适应性");
-        car_attribute_labels.add("复杂地形适应性");
-        car_attribute_labels.add("高载重能力");
-        car_attribute_labels.add("低载重能力");
-        car_attribute_labels.add("家庭友好型");
-        car_attribute_labels.add("长途旅行");
-        car_attribute_labels.add("低油耗");
-        car_attribute_labels.add("高油耗");
-        car_attribute_labels.add("电动选项");
-        car_attribute_labels.add("高环境影响");
-        car_attribute_labels.add("大停车位需求");
-        car_attribute_labels.add("小停车位需求");
-        car_attribute_labels.add("高成本");
-        car_attribute_labels.add("低成本");
-        car_attribute_labels.add("低操控性");
-        car_attribute_labels.add("高操控性");
-        car_attribute_labels.add("高舒适性");
-        car_attribute_labels.add("低舒适性");
-        car_attribute_labels.add("快速驾驶");
-        car_attribute_labels.add("慢速驾驶");
-        car_attribute_labels.add("城市街道适用性");
-        car_attribute_labels.add("建筑运输适用性");
-        car_attribute_labels.add("户外驾驶");
-        car_attribute_labels.add("城市与越野适用性");
-        car_attribute_labels.add("高越野能力");
-        car_attribute_labels.add("低越野能力");
-        car_attribute_labels.add("单一功能");
-        car_attribute_labels.add("多功能");
-        car_attribute_labels.add("越野能力");
-        car_attribute_labels.add("城市通勤适用性");
+        object_labels.add("标签1");
+        object_labels.add("标签2");
+        object_labels.add("标签3");
+        object_labels.add("标签4");
+        object_labels.add("标签5");
+        object_labels.add("标签6");
+        object_labels.add("标签7");
+        object_labels.add("标签8");
+        object_labels.add("new1");
+        object_labels.add("new2");
+        object_labels.add("new3");
     }
-
     private final boolean photoIsDialog=false;
 
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        // 功能：1.展示检测结果  涉及到的变量
+        // 2. 保存增量的新图片
+        // 3. 展示增量状态
+        // 4. 展示增量后的图片
+        // 5. 展示增量前后的知识图谱
         super.onCreate(savedInstanceState);
         mContext = this;
         viewBinding = ActivityFlightBinding.inflate(getLayoutInflater());
         setContentView(viewBinding.getRoot());
-//        setContentView(R.layout.knowledge_graph);
         viewModel = new ViewModelProvider(this).get(FlightViewModel.class);
         initView();
         initData();
         initGduVision(true);
         initCamera();
-//        initBackgroundThread();
         initListener();
-//        setupExternalDisplay();
         initAttributeDialog();
-        //initKnowLedgeGraph();
         if(photoIsDialog){
             initPhotoDialog();
         }else{
             setPhotoShow(1);
         }
+        initKnownledgeGraph();
     }
 
 
@@ -327,16 +250,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         @Override
                         public void run() {
                             codecManager.sendDataToDecoder(bytes, size);
-                            // 延迟后执行的操作
-                            // 这种直接通过yuvData复制的操作排除掉，因为这种操作会加重CPU的消耗，导致视频信号不畅
-//                            byte[] yuvData =  codecManager.getYuvData();
-//                            if(yuvData==null){
-//                                Log.d("run ", "run: ");
-//                            }
-//                            Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
-//                            if(bitmap!=null){
-//                                mPresentation.setBitMap(bitmap);
-//                            }
                         }
                     }, 550);
                 }
@@ -344,34 +257,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         };
         quitAIRecognize = findViewById(R.id.button_quit_ai);
         quitAIRecognize.setEnabled(false);
-//        paintView = findViewById(R.id.ai_paint_view);
         startIncremental = findViewById(R.id.button_start_incremental);
         startIncremental.setEnabled(false);
-//        unKnownum = findViewById(R.id.unknown_num);
         aiState = findViewById(R.id.ai_state);
         AIRecognize = findViewById(R.id.ai_recognize_imageview);
         spinner = findViewById(R.id.spinner);
         imageView=findViewById(R.id.imageView);
-        knowlageGrape=findViewById(R.id.btnToggle);
         //know graph button
         knowledgeGraphButton=findViewById(R.id.button_know_graph);
         knowledgeGraphButton.setOnClickListener(this); // 设置点击监听器
         //webView = findViewById(R.id.webview);
 
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                spinner.setSelection(0);
-                return;
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                spinner.setSelection(0);
-//                showToast(""+latestModelID);
-                // 当没有选项被选中时调用
-            }
-        });
         findViewById(R.id.all_ai_state).setVisibility(View.GONE);
 
         viewBinding.fpvRv.setShowObstacleOFF(!GlobalVariable.obstacleIsOpen);
@@ -387,48 +283,48 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
         mCustomSizeFocusHelper = new S220CustomSizeFocusHelper(viewBinding.zoomSeekBar);
 
-        mTargetDetectHelper = TargetDetectHelper.getInstance();
-        mTargetDetectHelper.init(this);
-        mTargetDetectHelper.setOnTargetDetectListener(new TargetDetectHelper.OnTargetDetectListener() {
-            @Override
-            public void onTargetDetect(boolean isSuccess, List<TargetMode> targetModes) {
-                LoadingDialogUtils.cancelLoadingDialog();
-                //视频是主界面时，在视频上画框
-                if (isSuccess && targetModes != null && !targetModes.isEmpty()) {
-                    GlobalVariable.isTargetDetectMode = true;
-                    mTargetDetectHelper.startShowTarget();
-                    GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
-                }
-            }
-
-            @Override
-            public void onTargetDetectSend(boolean isSuccess) {
-                MyLogUtils.d("mTargetDetectHelper onTargetDetectSend() isSuccess = " + isSuccess);
-                if (isSuccess) {
-                    GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
-                    GlobalVariable.discernIsOpen = true;
-                    GlobalVariable.isTargetDetectMode = true;
-                } else {
-                    GlobalVariable.isTargetDetectMode = false;
-                }
-            }
-
-            @Override
-            public void onTargetLocateSend(boolean isSuccess) {
-                MyLogUtils.d("mTargetDetectHelper onTargetLocateSend() isSuccess = " + isSuccess);
-            }
-
-            @Override
-            public void onTargetLocate(boolean isSuccess, TargetMode targetMode) {
-                MyLogUtils.d("mTargetDetectHelper onTargetLocate() isSuccess = " + isSuccess);
-//                DialogUtils.cancelLoadDialog();
-            }
-
-            @Override
-            public void onDetectClosed() {
-                //收到关闭目标识别成功回调后再次重置状态，防止部分极端场景本地重置状态到发送关闭中间时间段又收到周期回调，将状态还原导致无法退出的问题
-            }
-        });
+//        mTargetDetectHelper = TargetDetectHelper.getInstance();
+//        mTargetDetectHelper.init(this);
+//        mTargetDetectHelper.setOnTargetDetectListener(new TargetDetectHelper.OnTargetDetectListener() {
+//            @Override
+//            public void onTargetDetect(boolean isSuccess, List<TargetMode> targetModes) {
+//                LoadingDialogUtils.cancelLoadingDialog();
+//                //视频是主界面时，在视频上画框
+//                if (isSuccess && targetModes != null && !targetModes.isEmpty()) {
+//                    GlobalVariable.isTargetDetectMode = true;
+//                    mTargetDetectHelper.startShowTarget();
+//                    GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
+//                }
+//            }
+//
+//            @Override
+//            public void onTargetDetectSend(boolean isSuccess) {
+//                MyLogUtils.d("mTargetDetectHelper onTargetDetectSend() isSuccess = " + isSuccess);
+//                if (isSuccess) {
+//                    GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
+//                    GlobalVariable.discernIsOpen = true;
+//                    GlobalVariable.isTargetDetectMode = true;
+//                } else {
+//                    GlobalVariable.isTargetDetectMode = false;
+//                }
+//            }
+//
+//            @Override
+//            public void onTargetLocateSend(boolean isSuccess) {
+//                MyLogUtils.d("mTargetDetectHelper onTargetLocateSend() isSuccess = " + isSuccess);
+//            }
+//
+//            @Override
+//            public void onTargetLocate(boolean isSuccess, TargetMode targetMode) {
+//                MyLogUtils.d("mTargetDetectHelper onTargetLocate() isSuccess = " + isSuccess);
+////                DialogUtils.cancelLoadDialog();
+//            }
+//
+//            @Override
+//            public void onDetectClosed() {
+//                //收到关闭目标识别成功回调后再次重置状态，防止部分极端场景本地重置状态到发送关闭中间时间段又收到周期回调，将状态还原导致无法退出的问题
+//            }
+//        });
 
 //        云台向下及回正
         viewBinding.buttonGimbalRotate.setOnClickListener(this);
@@ -453,10 +349,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 public void onTargetDetecting(List<TargetMode> targetModes) {
                     if (targetModes != null && !targetModes.isEmpty()) {
                         GlobalVariable.isTargetDetectMode = true;
-                        mTargetDetectHelper.startShowTarget();
                         viewBinding.aiPaintView.setRectParams(targetModes);
-//                    tempModelID=viewBinding.aiPaintView.getModelID();
-//                    updateModel(viewBinding.aiPaintView.getModelID());
                         GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
                     }
                 }
@@ -482,7 +375,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 public void onTargetDetectingNew(List<TargetMode> targetModes, int modelID, long savedID){
                     if (targetModes != null && !targetModes.isEmpty()) {
                         GlobalVariable.isTargetDetectMode = true;
-                        mTargetDetectHelper.startShowTarget();
                         viewBinding.aiPaintView.setRectParams(targetModes);
                         GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
                         for (TargetMode targetMode:targetModes){
@@ -490,7 +382,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                 Log.d("saveImage", "saveImage");
                                 byte[] yuvData = codecManager.getYuvData();
                                 backgroundHandler.post(() -> {
-                                    savedImage(targetMode, yuvData,IMAGE_DIR);
+                                    savedImage(targetMode, yuvData, IMAGE_DIR);
                                 });
                                 break;
                             }
@@ -649,6 +541,19 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 showToast(getResources().getString(data));
             }
         });
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                spinner.setSelection(0);
+                return;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                spinner.setSelection(0);
+            }
+        });
     }
 
     @SuppressLint("InflateParams")
@@ -688,14 +593,14 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     public void setPhotoShow(int temp){
         imageItems.clear();
-        imageItems.add(new ImageItem("images/image1.png", "标签1"));
-        imageItems.add(new ImageItem("images/image2.png", "标签2"));
-        imageItems.add(new ImageItem("images/image3.png", "标签3"));
-        imageItems.add(new ImageItem("images/image4.png", "标签4"));
-        imageItems.add(new ImageItem("images/image5.png", "标签5"));
-        imageItems.add(new ImageItem("images/image6.png", "标签6"));
-        imageItems.add(new ImageItem("images/image7.png", "标签7"));
-        imageItems.add(new ImageItem("images/image8.png", "标签8"));
+        imageItems.add(new ImageItem("images/image1.png", object_labels.get(0)));
+        imageItems.add(new ImageItem("images/image2.png", object_labels.get(1)));
+        imageItems.add(new ImageItem("images/image3.png", object_labels.get(2)));
+        imageItems.add(new ImageItem("images/image4.png", object_labels.get(3)));
+        imageItems.add(new ImageItem("images/image5.png", object_labels.get(4)));
+        imageItems.add(new ImageItem("images/image6.png", object_labels.get(5)));
+        imageItems.add(new ImageItem("images/image7.png", object_labels.get(6)));
+        imageItems.add(new ImageItem("images/image8.png", object_labels.get(7)));
 
         // 初始化 RecyclerView
         if(photoIsDialog){
@@ -703,9 +608,55 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         } else{
             recyclerView = findViewById(R.id.photo_recyclerView);
         }
-        recyclerView.setLayoutManager(new GridLayoutManager(this, temp)); // 每排 3 个
+        recyclerView.setLayoutManager(new GridLayoutManager(this, temp)); // 每排 temp 个
         adapter1 = new ImageAdapter(imageItems, this);
         recyclerView.setAdapter(adapter1);
+    }
+
+    public void initKnownledgeGraph(){
+        // 加载弹出窗口布局
+        View popupView = getLayoutInflater().inflate(R.layout.webview_popup, null);
+
+        // 初始化WebView
+        webView=popupView.findViewById(R.id.knowledge_graph_webView);
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true); // 启用 JavaScript
+        webSettings.setDomStorageEnabled(true); // 启用 DOM 存储
+        webSettings.setAllowFileAccess(true); // 允许访问文件系统
+        webSettings.setUseWideViewPort(true);  // 启用宽视口
+        webSettings.setLoadWithOverviewMode(true);  // 缩放至屏幕宽度
+        webSettings.setBuiltInZoomControls(true);  // 启用缩放控件
+        webSettings.setDisplayZoomControls(false);  // 隐藏原生缩放按钮
+        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        webView.loadUrl("file:///android_asset/templates/fenlei2.html");
+        webView.addJavascriptInterface(new AndroidInterface(), "Android");
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+            }
+        });
+
+
+        // 创建PopupWindow
+        KnowledgeGraphPopupWindow = new PopupWindow(
+                popupView,
+                (int) (getScreenWidth() * 0.7),  // 屏幕宽度的占比
+                (int) (getScreenHeight() * 0.6),
+                true
+        );
+        // 设置关闭按钮
+        Button closeButton = popupView.findViewById(R.id.closeButton);
+        closeButton.setOnClickListener(v -> {
+            if (KnowledgeGraphPopupWindow != null && KnowledgeGraphPopupWindow.isShowing()) {
+                KnowledgeGraphPopupWindow.dismiss();
+            }
+        });
+
+        KnowledgeGraphPopupWindow.setOutsideTouchable(true);
+        KnowledgeGraphPopupWindow.setFocusable(true);
+        // 设置背景和动画
+        KnowledgeGraphPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
     }
 
     // 更新显示/隐藏状态
@@ -722,21 +673,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private void updateImageDisplay() {
         int resId = isIncrementalMode ? imageRes[1] : imageRes[0];
         imageView.setImageResource(resId);
-
-        // 可选：添加切换动画
-//        imageView.animate()
-//                .alpha(0).setDuration(100)
-//                .withEndAction(() -> {
-//                    imageView.setAlpha(1);
-//                    imageView.setImageResource(resId);
-//                }).start();
     }
 
     public Bitmap cropImage(TargetMode clickBox, byte[] yuvData) {
 
         if (yuvData != null) {
             Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
-            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX()/1.5), (int) (clickBox.getLeftY() /1.5), (int) (clickBox.getWidth()/1.5), (int) (clickBox.getHeight() /1.5));
+            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX()  /1.5), (int) (clickBox.getLeftY() * 1200.0 / 1080.0 /1.5), (int) (clickBox.getWidth()/1.5), (int) (clickBox.getHeight() * 1200.0 / 1080.0 /1.5));
             bitmap.recycle();
             return bitmap2;
         }else {
@@ -755,6 +698,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             }else{
                 showToast("保存失败");
             }
+            bitmap2.recycle();
         }else {
             showToast("获取图像为空");
         }
@@ -773,24 +717,17 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             String picture1=storageManager.getAbsolutePath(IMAGE_DIR,firstImageID);
             String picture2=storageManager.getAbsolutePath(IMAGE_DIR,secondImageID);
             String picture3=storageManager.getAbsolutePath(IMAGE_DIR,thirdImageID);
-//            Log.d("picture", picture1);
-//            Log.d("picture", picture2);
-//            Log.d("picture", picture3);
             List<ImageItem> newItems = new ArrayList<>();
 //            storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
-            newItems.add(new ImageItem(picture1, "标签9"));
-            newItems.add(new ImageItem(picture2, "标签10"));
-            newItems.add(new ImageItem(picture3, "标签11"));
+            newItems.add(new ImageItem(picture1, object_labels.get(8)));
+            newItems.add(new ImageItem(picture2, object_labels.get(9)));
+            newItems.add(new ImageItem(picture3, object_labels.get(10)));
             GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
             assert layoutManager != null;
             adapter1.addNewItems(newItems, layoutManager);
             handler1.postDelayed(()->{
                     recyclerView.smoothScrollToPosition(0);
             },500);
-
-//            recyclerView.postDelayed(() -> {
-//                layoutManager.scrollToPositionWithOffset(adapter1.getItemCount()-1, 0);
-//            }, 200);
     }
     public void showNineGridShow(boolean show) {
         viewBinding.nightGridView.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -916,28 +853,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         long time1=System.currentTimeMillis();
         savedImage(clickBox,yuvData,LOAD_DIR);
 
-        // 创建RenderScript实例
-//        byte[] croppedI420 = cropI420(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight(), clickBox);
-//        Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
-//        Bitmap bitmap=i420ToRgbWithRenderScript(yuvData,codecManager.getVideoWidth(),codecManager.getVideoHeight(),mContext);
-//        Bitmap croppedBitmap = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX()/1.5), (int) (clickBox.getLeftY() /1.5), (int) (clickBox.getWidth()/1.5), (int) (clickBox.getHeight() /1.5));
-//        bitmap.recycle();
-////        Bitmap croppedBitmap = cropImage(clickBox, yuvData);
-//        long time4=System.currentTimeMillis();
-//        Log.d("sysTime3",""+(time1-time4));
-//        float widthRatio = (float) maxWidthPx / croppedBitmap.getWidth();
-//        float heightRatio = (float) maxHeightPx / croppedBitmap.getHeight();
-//        // 取最小值以保证两个方向都不超限
-//        float scaleFactor = Math.min(widthRatio, heightRatio);
-//        Matrix matrix = new Matrix();
-//        matrix.postScale(scaleFactor, scaleFactor);
-//        long time3=System.currentTimeMillis();
-//        Log.d("sysTime1",""+(time1-time3));
-//        Bitmap scaledBitmap = Bitmap.createBitmap(
-//                croppedBitmap, 0, 0, croppedBitmap.getWidth(), croppedBitmap.getHeight(), matrix, true
-//        );
-//        long time2=System.currentTimeMillis();
-//        Log.d("sysTime2",""+(time1-time2));
         ImageView instanceImageView = attributePopupView.findViewById(R.id.target_image);
 //        instanceImageView.setImageBitmap(scaledBitmap);
         storageManager.loadImageToView(LOAD_DIR,lastSavedNumber,instanceImageView);
@@ -1021,7 +936,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
         final boolean isShow = viewBinding.ivMsgBoxLabel.isSelected();
         mMsgBoxPopWin.setOnDismissListener(() -> ThreadHelper.runOnUiThreadDelayed(()
-                -> viewBinding.ivMsgBoxLabel.setSelected(false), 650));
+                -> viewBinding.ivMsgBoxLabel.setSelected(false), 500));
         if (isShow) {
             mMsgBoxPopWin.dismiss();
         } else {
@@ -1030,6 +945,22 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     getResources().getDimensionPixelOffset(R.dimen.dp_6),
                     Gravity.BOTTOM);
         }
+    }
+
+    private void showKnowledgeGraphPopup() {
+        //popupWindow.setAnimationStyle(R.style.PopupAnimation);
+
+        // 显示在屏幕中央
+        KnowledgeGraphPopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, 0);
+
+        // 设置PopupWindow消失时的监听
+        KnowledgeGraphPopupWindow.setOnDismissListener(() -> {
+            if (webView != null) {
+                webView.destroy();
+                webView = null;
+            }
+        });
+
     }
 
 
@@ -1041,79 +972,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             backgroundHandler = null;
         }
     }
-
-//    private void showUnknownNUm(){// 结果为 34
-//        dataList = new ArrayList<>();
-//        dataList.add("未知类数量：0"); // 默认文本
-//        dataList.add("新类1数量：0" );
-//        dataList.add("新类2数量：0" );
-//        dataList.add("新类3数量：0" );
-//        adapter = new ArrayAdapter<>(this, R.layout.spinner_item_white, dataList);
-//        adapter.setDropDownViewResource(R.layout.spinner_item_white);
-//        spinner.setAdapter(adapter);
-//
-//        // 设置 Spinner 的选项选择监听器
-//
-//    }
-public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, Context context) {
-    // 1. 验证I420数据长度 (Y: width×height, U+V: width×height/2)
-    if (i420Data == null || i420Data.length != width * height * 3 / 2) {
-        throw new IllegalArgumentException("Invalid I420 data size");
-    }
-
-    RenderScript rs = RenderScript.create(context);
-    Bitmap bitmap = null;
-
-    try {
-        // 2. 将I420手动转换为NV21（因为RenderScript只支持NV21）
-        byte[] nv21Data = I420ToNv21(i420Data, width, height);
-
-        // 3. 创建YUV转RGB脚本
-        ScriptIntrinsicYuvToRGB yuvToRgb = ScriptIntrinsicYuvToRGB.create(rs, Element.U8_4(rs));
-
-        // 4. 创建输入Allocation（NV21格式）
-        Type yuvType = new Type.Builder(rs, Element.U8(rs))
-                .setX(nv21Data.length)
-                .create();
-        Allocation input = Allocation.createTyped(rs, yuvType);
-        input.copyFrom(nv21Data);
-
-        // 5. 创建输出Allocation（RGBA）
-        Type rgbaType = new Type.Builder(rs, Element.RGBA_8888(rs))
-                .setX(width)
-                .setY(height)
-                .create();
-        Allocation output = Allocation.createTyped(rs, rgbaType);
-
-        // 6. 执行转换
-        yuvToRgb.setInput(input);
-        yuvToRgb.forEach(output);
-
-        // 7. 生成Bitmap
-        bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        output.copyTo(bitmap);
-
-    } finally {
-        rs.destroy();
-    }
-    return bitmap;
-}
-    private byte[] I420ToNv21(byte[] i420bytes, int width, int height) {
-        byte[] nv21bytes = new byte[i420bytes.length];
-        int y_len = width * height;
-        int uv_len = y_len / 4;
-        System.arraycopy(i420bytes, 0, nv21bytes, 0, y_len);
-
-        for(int i = 0; i < uv_len; ++i) {
-            byte u = i420bytes[y_len + i];
-            byte v = i420bytes[y_len + uv_len + i];
-            nv21bytes[y_len + i * 2] = v;
-            nv21bytes[y_len + i * 2 + 1] = u;
-        }
-
-        return nv21bytes;
-    }
-
 
     private void updateSpinnerData(int modelID) {
         // 如果更新过快的话会造成dataList的notifyDataSetChanged()的时候刚好dataList.clear();，就会导致异常
@@ -1191,71 +1049,7 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
                 show(aiState, "AI状态：增量完成");
             }
         }
-//        updateSpinnerData(modelID);
-
-        // 如果当前有任务正在运行，直接按照 1077 处理
-//        if (isTaskRunning) {
-//            Log.d("TaskDebug", "Task is running, treating modelID as 1077: " + modelID);
-////            show(aiState, "AI状态：增量" + incState + "中"); // 按照 1077 处理
-//            return;
-//        }
-//
-//        // 如果 modelID 没有变化，直接返回
-//        if (temp == 10) {
-//            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
-//            return;
-//        }
-//
-//        // 确保 backgroundHandler 已初始化
-//        if (backgroundHandler == null) {
-//            initBackgroundThread();
-//        }
-//
-//        // 记录最新的 modelID
-//        latestModelID = firstNum;
-//        Log.d("TaskDebug", "Latest modelID: " + latestModelID);
-//
-//        if (temp == 20 && isProcessRunning) {
-//            // 标记任务开始运行
-//            isTaskRunning = true;
-//
-//            incState = firstNum - 1;
-//            // 显示“增量中”
-//            show(aiState, "AI状态：增量" + incState + "中");
-//            showToast("开始增量");
-//
-//            // 1 秒后显示“增量完成”
-//            backgroundHandler.postDelayed(() -> {
-//                if (!isProcessRunning) {
-//                    Log.d("TaskDebug", "Process is not running, skipping resetStateTask");
-//                    completeTask();
-//                    return; // 如果进程被停止，则不再执行
-//                }
-//                show(aiState, "AI状态：增量" + incState + "完成");
-//                showToast("增量完成");
-//
-//                // 0.5 秒后重新判断状态
-//                backgroundHandler.postDelayed(() -> {
-//                    completeTask();
-//                }, 500); // 延迟 0.5 秒
-//            }, 1000); // 延迟 1 秒
-//        } else if (temp == 21 && isProcessRunning) {
-//            // 如果 modelID 不是 1077，或者进程被停止，直接显示“未增量”
-//            show(aiState, "AI状态：增量" + incState + "完成");
-//        } else if (temp == 10 && isProcessRunning) {
-//            show(aiState, "AI状态：未增量");
-//        }
     }
-
-//    // 完成任务并重置状态
-//    private void completeTask() {
-//        isTaskRunning = false; // 标记任务完成
-////        Log.d("TaskDebug", "Task completed, latest modelID: " + latestModelID);
-//
-//        // 根据最新的 modelID 更新状态
-////        updateModel(latestModelID);
-//    }
-
 
     @SuppressLint("NonConstantResourceId")
     @Override
@@ -1373,37 +1167,22 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
                 });
                 break;
             case R.id.button_start_incremental:
-//                if(unkonwNum < 10){
-//                    showToast("未知类别数目过少，请收集更多未知类别");
-//                    break;
-//                }
-
                 if (mGduVision != null) {
                     mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, new CommonCallbacks.CompletionCallback() {
                         @Override
                         public void onResult(GDUError var1) {
                             if (var1 == null) {
                                 showToast("开始增量");
-//                                imageItems.add(new ImageItem("images/image1.png", "标签9"));
-//                                imageItems.add(new ImageItem("images/image2.png", "标签10"));
-//                                imageItems.add(new ImageItem("images/image3.png", "标签11"));
-//                                recyclerView = photoPopupView.findViewById(R.id.recyclerView);
-//                                recyclerView.setLayoutManager(new GridLayoutManager(FlightActivity.this, 4)); // 每排 3 个
-//                                ImageAdapter adapter = new ImageAdapter(imageItems, FlightActivity.this);
-//                                recyclerView.setAdapter(adapter);
-//                                adapter1.notifyDataSetChanged();
                                 isIncrementalMode=true;
                             } else {
                                 showToast("开始增量失败");
                                 isIncrementalMode=false;
-//                                IncrementalStateManager.getInstance().setIncremental(false);
                             }
                         }
                     });
                 } else {
                     showToast("请检查初始化是否成功");
                     isIncrementalMode=false;
-//                    IncrementalStateManager.getInstance().setIncremental(false);
                 }
                 if (imageView.getVisibility() == View.VISIBLE) {
                     updateImageDisplay();
@@ -1461,87 +1240,8 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
 //                break;
         }
     }
-    private void showKnowledgeGraphPopup() {
-        // 加载弹出窗口布局
-        View popupView = getLayoutInflater().inflate(R.layout.webview_popup, null);
-
-        // 初始化WebView
-        WebView[] webView2 = {popupView.findViewById(R.id.webView)};
-        webView=webView2[0];
-        WebSettings webSettings = webView.getSettings();
-        webSettings.setJavaScriptEnabled(true); // 启用 JavaScript
-        webSettings.setDomStorageEnabled(true); // 启用 DOM 存储
-        webSettings.setAllowFileAccess(true); // 允许访问文件系统
-        webSettings.setUseWideViewPort(true);  // 启用宽视口
-        webSettings.setLoadWithOverviewMode(true);  // 缩放至屏幕宽度
-        webSettings.setBuiltInZoomControls(true);  // 启用缩放控件
-        webSettings.setDisplayZoomControls(false);  // 隐藏原生缩放按钮
-        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        webView.loadUrl("file:///android_asset/templates/fenlei2.html");
-        webView.addJavascriptInterface(new AndroidInterface(), "Android");
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                // 在 PopupWindow 显示后获取其大小并传递给 HTML 页面
-//                popupWindow.getContentView().post(() -> {
-//                    int width = popupWindow.getWidth();
-//                    int height = popupWindow.getHeight();
-//                    view.loadUrl("javascript:resizeMainDiv(" + width + ", " + height + ")");
-//                });
-            }
-        });
 
 
-        // 创建PopupWindow
-        popupWindow = new PopupWindow(
-                popupView,
-                (int) (getScreenWidth() * 0.7),  // 屏幕宽度的占比
-                (int) (getScreenHeight() * 0.6),
-                true
-        );
-        // 设置关闭按钮
-        Button closeButton = popupView.findViewById(R.id.closeButton);
-        closeButton.setOnClickListener(v -> {
-            if (popupWindow != null && popupWindow.isShowing()) {
-                popupWindow.dismiss();
-            }
-        });
-
-        popupWindow.setOutsideTouchable(true);
-        popupWindow.setFocusable(true);
-        // 设置背景和动画
-        popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        //popupWindow.setAnimationStyle(R.style.PopupAnimation);
-
-        // 显示在屏幕中央
-        popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
-
-        // 设置PopupWindow消失时的监听
-        popupWindow.setOnDismissListener(() -> {
-            if (webView != null) {
-                webView.destroy();
-                webView = null;
-            }
-        });
-
-    }
-
-    // 获取屏幕宽度
-    private int getScreenWidth() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        return metrics.widthPixels;
-    }
-
-    // 获取屏幕高度
-    private int getScreenHeight() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        return metrics.heightPixels;
-    }
-
-    //todo read .txt file then send html
     class AndroidInterface {
         @android.webkit.JavascriptInterface
         public void onJsReady() {
@@ -1696,59 +1396,20 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
             return num-1;
         }
     }
-//    public  byte[] cropI420(byte[] srcI420, int srcWidth, int srcHeight, TargetMode cropRect) {
-//        // 参数校验
-//        int left=changeNum(cropRect.getLeftY());
-//        int top=changeNum(cropRect.getLeftX());
-//        int cropWidth = changeNum(cropRect.getWidth());
-//        int cropHeight = changeNum(cropRect.getHeight());
-////        left&=~1;
-////        top&=~1;
-//
-//        if (left % 2 != 0 || top % 2 != 0 ||
-//                cropWidth% 2 != 0 || cropHeight % 2 != 0) {
-//            throw new IllegalArgumentException("Crop rect must have even coordinates/sizes");
-//        }
-//        byte[] dstI420 = new byte[cropWidth * cropHeight * 3 / 2]; // I420大小公式
-//
-//        // 1. 计算各平面起始指针
-//        final int srcYSize = srcWidth * srcHeight;
-//        final int srcUVSize = srcYSize / 4;
-//        final int dstYSize = cropWidth * cropHeight;
-//        final int dstUVSize = dstYSize / 4;
-//
-//        // 2. 裁剪Y平面（全分辨率）
-//        cropPlane(srcI420, 0, srcWidth, srcHeight,
-//                new Rect(left,top,Math.min(left+cropHeight,codecManager.getVideoHeight()),Math.min(top+cropWidth,codecManager.getVideoWidth())), dstI420, 0, cropWidth);
-//
-//        // 3. 裁剪U平面（1/2分辨率）
-//        cropPlane(srcI420, srcYSize, srcWidth / 2, srcHeight / 2,
-//                new Rect(left / 2, top / 2,
-//                        (left+cropHeight)/ 2, (top+cropWidth) / 2),
-//                dstI420, dstYSize, cropWidth / 2);
-//
-//        // 4. 裁剪V平面（1/2分辨率）
-//        cropPlane(srcI420, srcYSize + srcUVSize, srcWidth / 2, srcHeight / 2,
-//                new Rect(left / 2, top / 2,
-//                        (left+cropHeight)/ 2, (top+cropWidth) / 2),
-//                dstI420, dstYSize + dstUVSize, cropWidth / 2);
-//
-//        return dstI420;
-//    }
-//    private static void cropPlane(
-//            byte[] src, int srcOffset, int srcStride, int srcHeight,
-//            Rect cropRect, byte[] dst, int dstOffset, int dstStride
-//    ) {
-//        for (int y = 0; y < cropRect.height(); y++) {
-//            int srcLineStart = srcOffset + (y + cropRect.top) * srcStride + cropRect.left;
-//            int dstLineStart = dstOffset + y * dstStride;
-//            System.arraycopy(
-//                    src, srcLineStart,
-//                    dst, dstLineStart,
-//                    cropRect.width()
-//            );
-//        }
-//    }
+
+    // 获取屏幕宽度
+    private int getScreenWidth() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        return metrics.widthPixels;
+    }
+
+    // 获取屏幕高度
+    private int getScreenHeight() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        return metrics.heightPixels;
+    }
 
     public void show(TextView textView, final String toast) {
         if (toast == null) {
@@ -1770,16 +1431,4 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
         viewModel.stopTarget((byte) 0x02, GlobalVariable.mCurrentLightType);
     }
 }
-
-//    private void setupExternalDisplay() {
-//        DisplayManager displayManager = (DisplayManager) getSystemService(DISPLAY_SERVICE);
-//        Display[] displays = displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION);
-//        Log.d("setupExternalDisplay", "setupExternalDisplay: "+displays.length);
-//        if (displays != null && displays.length > 0) {
-//            // 简单起见，使用第一个外接显示设备
-//            Display externalDisplay = displays[0];
-//            mPresentation = new ExternalDisplayPresentation(this, externalDisplay);
-//            mPresentation.show();
-//        }
-//    }
 
