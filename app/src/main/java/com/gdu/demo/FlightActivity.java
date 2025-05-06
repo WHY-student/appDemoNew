@@ -1496,7 +1496,7 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
         // 创建PopupWindow
         popupWindow = new PopupWindow(
                 popupView,
-                (int) (getScreenWidth() * 0.7),  // 屏幕宽度的80%
+                (int) (getScreenWidth() * 0.7),  // 屏幕宽度的占比
                 (int) (getScreenHeight() * 0.6),
                 true
         );
@@ -1586,7 +1586,7 @@ public Bitmap i420ToRgbWithRenderScript(byte[] i420Data, int width, int height, 
             });
 
         }
-
+        //filter know graph by detect target,need open fenlei2.html onChartReady,such 322
         @android.webkit.JavascriptInterface
         public void onChartReady(){
             runOnUiThread(new Runnable() {
