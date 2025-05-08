@@ -195,9 +195,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         object_labels.add("标签6");
         object_labels.add("标签7");
         object_labels.add("标签8");
-        object_labels.add("new1");
-        object_labels.add("new2");
-        object_labels.add("new3");
+        object_labels.add("新类别1");
+        object_labels.add("新类别2");
+        object_labels.add("新类别3");
     }
     private final boolean photoIsDialog=false;
 
@@ -628,15 +628,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         webSettings.setBuiltInZoomControls(true);  // 启用缩放控件
         webSettings.setDisplayZoomControls(false);  // 隐藏原生缩放按钮
         webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        webView.loadUrl("file:///android_asset/templates/fenlei2.html");
-        webView.addJavascriptInterface(new AndroidInterface(), "Android");
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-            }
-        });
-
 
         // 创建PopupWindow
         KnowledgeGraphPopupWindow = new PopupWindow(
@@ -949,17 +940,18 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private void showKnowledgeGraphPopup() {
         //popupWindow.setAnimationStyle(R.style.PopupAnimation);
+        webView.loadUrl("file:///android_asset/templates/fenlei2.html");
+        webView.addJavascriptInterface(new AndroidInterface(), "Android");
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+            }
+        });
 
         // 显示在屏幕中央
         KnowledgeGraphPopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, 0);
 
-        // 设置PopupWindow消失时的监听
-        KnowledgeGraphPopupWindow.setOnDismissListener(() -> {
-            if (webView != null) {
-                webView.destroy();
-                webView = null;
-            }
-        });
 
     }
 

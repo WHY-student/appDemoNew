@@ -599,8 +599,8 @@ import com.gdu.common.mission.waypoint.WaypointMissionHeadingMode;
 import com.gdu.common.mission.waypoint.WaypointMissionState;
 import com.gdu.common.mission.waypoint.WaypointMissionUploadEvent;
 import com.gdu.demo.ourgdu.ourGDUAircraft;
-import com.gdu.demo.ourgdu.ourMissionControl;
-import com.gdu.demo.ourgdu.ourWaypointMissionOperator;
+//import com.gdu.demo.ourgdu.ourMissionControl;
+//import com.gdu.demo.ourgdu.ourWaypointMissionOperator;
 import com.gdu.drone.LocationCoordinate2D;
 import com.gdu.drone.LocationCoordinate3D;
 import com.gdu.rtk.PositioningSolution;
@@ -643,7 +643,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
 
 
     private GDUFlightController mGDUFlightController;
-    private ourWaypointMissionOperator waypointMissionOperator = null;
+    private WaypointMissionOperator waypointMissionOperator = null;
     private WaypointMission mission = null;
     private WaypointMissionOperatorListener listener;
     private GDUCamera mGDUCamera;
@@ -718,10 +718,10 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
 //                }
     }
 
-    private ourWaypointMissionOperator getWaypointMissionOperator() {
+    private WaypointMissionOperator getWaypointMissionOperator() {
         if (null == waypointMissionOperator) {
-            if (null != ourMissionControl.getInstance()) {
-                return ourMissionControl.getInstance().getWaypointMissionOperator();
+            if (null != MissionControl.getInstance()) {
+                return MissionControl.getInstance().getWaypointMissionOperator();
             }
         }
         return waypointMissionOperator;
@@ -934,13 +934,148 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
         }
     }
 
+//    private WaypointMission createWaypointMission() {
+//        WaypointMission waypointMission = new WaypointMission();
+////        double baseLatitude = 30.471033;
+////        double baseLongitude = 114.4280014;
+////
+////
+////        final float baseAltitude = 30.0f;
+//        waypointMission.setAutoFlightSpeed(5f);
+//        waypointMission.setMaxFlightSpeed(10f);
+//        waypointMission.setResponseLostActionOnRCSignalLost(false);
+//        waypointMission.setFinishedAction(WaypointMissionFinishedAction.GO_HOME);
+//        waypointMission.setHeadingMode(WaypointMissionHeadingMode.AUTO);
+////      builder.gotoFirstWaypointMode(WaypointMissionGotoWaypointMode.SAFELY);  waypointMission.setGotoFirstWaypointMode(WaypointMissionFlightPathMode.NORMAL);
+////      builder.setPointOfInterest(new LocationCoordinate2D(15, 15));
+////      builder.headingMode(WaypointMissionHeadingMode.TOWARD_POINT_OF_INTEREST);
+//        waypointMission.setGimbalPitchRotationEnabled(true);
+//
+//        List<Waypoint> waypointList = new ArrayList<>();
+//
+//        double baseLatitude = 30.510297755488512;
+//        double baseLongitude = 114.40938773071838;
+//
+//
+//        final float baseAltitude = 50.0f;
+//
+//
+//        // Waypoint 0: (0,0)
+//
+//        Waypoint waypoint0 = new Waypoint(baseLatitude, baseLongitude, baseAltitude);
+//        waypoint0.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,720));
+//        waypoint0.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
+//        waypoint0.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -90));
+//        waypoint0.setSpeed(5);
+//        waypoint0.setGimbalPitch(-90);
+//        waypointList.add(waypoint0);
+//
+//
+//        // Waypoint 1: (0,30)
+//        baseLongitude=114.40937030114404;
+//        baseLatitude=30.510077128267262;
+//        Waypoint waypoint1 = new Waypoint(baseLatitude, baseLongitude , baseAltitude);
+//        waypoint1.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
+//        waypoint1.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
+//        waypoint1.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -45));
+//        waypoint1.setSpeed(10);
+//        waypoint1.setGimbalPitch(-45);
+//        waypointList.add(waypoint1);
+//
+//
+//        // Waypoint 2: (30,30)
+//        baseLongitude=114.410590424279;
+//        baseLatitude=30.509974739031247;
+//        Waypoint waypoint2 = new Waypoint(baseLatitude , baseLongitude , baseAltitude);
+//        waypoint2.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
+//        waypoint2.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
+//        waypoint2.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -90));
+//        waypoint2.setSpeed(10);
+//        waypoint2.setGimbalPitch(-90);
+//        waypointList.add(waypoint2);
+//
+//        // Waypoint 3: (30,0)
+//        baseLongitude=114.41067625395226;
+//        baseLatitude=30.5108653410641;
+//        Waypoint waypoint3 = new Waypoint(baseLatitude, baseLongitude, baseAltitude);
+//        waypoint3.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
+//        waypoint3.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
+//        waypoint3.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, 0));
+//        waypoint3.setSpeed(10);
+//        waypoint3.setGimbalPitch(0);
+//        waypointList.add(waypoint3);
+//
+//        // Waypoint 4: (30,0)
+//        baseLongitude=114.40948968094305;
+//        baseLatitude=30.510970045329092;
+//        Waypoint waypoint4 = new Waypoint(baseLatitude, baseLongitude, baseAltitude);
+//        waypoint4.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
+//        waypoint4.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
+//        waypoint4.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, 0));
+//        waypoint4.setSpeed(10);
+//        waypoint4.setGimbalPitch(0);
+//        waypointList.add(waypoint4);
+//
+//        // Waypoint 4: (30,0)
+//        baseLongitude=114.4093863896088;
+//        baseLatitude=30.51028504911789;
+//        Waypoint waypoint5 = new Waypoint(baseLatitude, baseLongitude, baseAltitude);
+//        waypoint5.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
+//        waypoint5.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
+//        waypoint5.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, 0));
+//        waypoint5.setSpeed(10);
+//        waypoint5.setGimbalPitch(0);
+//        waypointList.add(waypoint5);
+//
+//        // Waypoint 0: (0,0)
+////        Waypoint waypoint0 = new Waypoint(baseLatitude, baseLongitude, baseAltitude);
+////        waypoint0.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,0 + calculateTurnAngle()));
+////        waypoint0.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
+////        waypoint0.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -90));
+////        waypoint0.setSpeed(5);
+////        waypoint0.setGimbalPitch(-90);
+////        waypointList.add(waypoint0);
+////
+////        // Waypoint 1: (0,30)
+////        Waypoint waypoint1 = new Waypoint(baseLatitude, baseLongitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseAltitude);
+////        waypoint1.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 0 - calculateTurnAngle()));
+////        waypoint1.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
+////        waypoint1.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -45));
+////        waypoint1.setSpeed(5);
+////        waypoint1.setGimbalPitch(-45);
+////        waypointList.add(waypoint1);
+////
+////        // Waypoint 2: (30,30)
+////        Waypoint waypoint2 = new Waypoint(baseLatitude + VERTICAL_DISTANCE * ONE_METER_OFFSET, baseLongitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseAltitude);
+////        waypoint2.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, -180 + calculateTurnAngle()));
+////        waypoint2.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
+////        waypoint2.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -90));
+////        waypoint2.setSpeed(5);
+////        waypoint2.setGimbalPitch(-90);
+////        waypointList.add(waypoint2);
+////
+////        // Waypoint 3: (30,0)
+////        Waypoint waypoint3 = new Waypoint(baseLatitude + VERTICAL_DISTANCE * ONE_METER_OFFSET, baseLongitude, baseAltitude);
+////        waypoint3.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 180 - calculateTurnAngle()));
+////        waypoint3.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
+////        waypoint3.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, 0));
+////        waypoint3.setSpeed(5);
+////        waypoint3.setGimbalPitch(0);
+////        waypointList.add(waypoint3);
+//
+//        waypointMission.setWaypointCount(waypointList.size());
+//        waypointMission.setWaypointList(waypointList);
+//        return waypointMission;
+//    }
+
+
     private WaypointMission createWaypointMission() {
         WaypointMission waypointMission = new WaypointMission();
-//        double baseLatitude = 30.471033;
-//        double baseLongitude = 114.4280014;
-//
-//
-//        final float baseAltitude = 30.0f;
+        double baseLatitude = 30.471033;
+        double baseLongitude = 114.4280014;
+
+
+        final float baseAltitude = 30.0f;
         waypointMission.setAutoFlightSpeed(5f);
         waypointMission.setMaxFlightSpeed(10f);
         waypointMission.setResponseLostActionOnRCSignalLost(false);
@@ -953,115 +1088,41 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
 
         List<Waypoint> waypointList = new ArrayList<>();
 
-        double baseLatitude = 30.510297755488512;
-        double baseLongitude = 114.40938773071838;
-
-
-        final float baseAltitude = 50.0f;
-
-
         // Waypoint 0: (0,0)
-
         Waypoint waypoint0 = new Waypoint(baseLatitude, baseLongitude, baseAltitude);
-        waypoint0.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,720));
-        waypoint0.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
+//        waypoint0.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,0 + calculateTurnAngle()));
+//        waypoint0.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
         waypoint0.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -90));
         waypoint0.setSpeed(5);
         waypoint0.setGimbalPitch(-90);
         waypointList.add(waypoint0);
 
-
         // Waypoint 1: (0,30)
-        baseLongitude=114.40937030114404;
-        baseLatitude=30.510077128267262;
-        Waypoint waypoint1 = new Waypoint(baseLatitude, baseLongitude , baseAltitude);
-        waypoint1.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
+        Waypoint waypoint1 = new Waypoint(baseLatitude, baseLongitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseAltitude);
+        waypoint1.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 0 - calculateTurnAngle()));
         waypoint1.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
         waypoint1.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -45));
-        waypoint1.setSpeed(10);
+        waypoint1.setSpeed(5);
         waypoint1.setGimbalPitch(-45);
         waypointList.add(waypoint1);
 
-
         // Waypoint 2: (30,30)
-        baseLongitude=114.410590424279;
-        baseLatitude=30.509974739031247;
-        Waypoint waypoint2 = new Waypoint(baseLatitude , baseLongitude , baseAltitude);
-        waypoint2.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
+        Waypoint waypoint2 = new Waypoint(baseLatitude + VERTICAL_DISTANCE * ONE_METER_OFFSET, baseLongitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseAltitude);
+        waypoint2.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, -180 + calculateTurnAngle()));
         waypoint2.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
         waypoint2.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -90));
-        waypoint2.setSpeed(10);
+        waypoint2.setSpeed(5);
         waypoint2.setGimbalPitch(-90);
         waypointList.add(waypoint2);
 
         // Waypoint 3: (30,0)
-        baseLongitude=114.41067625395226;
-        baseLatitude=30.5108653410641;
-        Waypoint waypoint3 = new Waypoint(baseLatitude, baseLongitude, baseAltitude);
-        waypoint3.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
+        Waypoint waypoint3 = new Waypoint(baseLatitude + VERTICAL_DISTANCE * ONE_METER_OFFSET, baseLongitude, baseAltitude);
+        waypoint3.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 180 - calculateTurnAngle()));
         waypoint3.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
         waypoint3.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, 0));
-        waypoint3.setSpeed(10);
+        waypoint3.setSpeed(5);
         waypoint3.setGimbalPitch(0);
         waypointList.add(waypoint3);
-
-        // Waypoint 4: (30,0)
-        baseLongitude=114.40948968094305;
-        baseLatitude=30.510970045329092;
-        Waypoint waypoint4 = new Waypoint(baseLatitude, baseLongitude, baseAltitude);
-        waypoint4.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
-        waypoint4.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
-        waypoint4.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, 0));
-        waypoint4.setSpeed(10);
-        waypoint4.setGimbalPitch(0);
-        waypointList.add(waypoint4);
-
-        // Waypoint 4: (30,0)
-        baseLongitude=114.4093863896088;
-        baseLatitude=30.51028504911789;
-        Waypoint waypoint5 = new Waypoint(baseLatitude, baseLongitude, baseAltitude);
-        waypoint5.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 720));
-        waypoint5.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
-        waypoint5.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, 0));
-        waypoint5.setSpeed(10);
-        waypoint5.setGimbalPitch(0);
-        waypointList.add(waypoint5);
-
-        // Waypoint 0: (0,0)
-//        Waypoint waypoint0 = new Waypoint(baseLatitude, baseLongitude, baseAltitude);
-//        waypoint0.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,0 + calculateTurnAngle()));
-//        waypoint0.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
-//        waypoint0.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -90));
-//        waypoint0.setSpeed(5);
-//        waypoint0.setGimbalPitch(-90);
-//        waypointList.add(waypoint0);
-//
-//        // Waypoint 1: (0,30)
-//        Waypoint waypoint1 = new Waypoint(baseLatitude, baseLongitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseAltitude);
-//        waypoint1.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 0 - calculateTurnAngle()));
-//        waypoint1.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
-//        waypoint1.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -45));
-//        waypoint1.setSpeed(5);
-//        waypoint1.setGimbalPitch(-45);
-//        waypointList.add(waypoint1);
-//
-//        // Waypoint 2: (30,30)
-//        Waypoint waypoint2 = new Waypoint(baseLatitude + VERTICAL_DISTANCE * ONE_METER_OFFSET, baseLongitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseAltitude);
-//        waypoint2.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, -180 + calculateTurnAngle()));
-//        waypoint2.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
-//        waypoint2.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, -90));
-//        waypoint2.setSpeed(5);
-//        waypoint2.setGimbalPitch(-90);
-//        waypointList.add(waypoint2);
-//
-//        // Waypoint 3: (30,0)
-//        Waypoint waypoint3 = new Waypoint(baseLatitude + VERTICAL_DISTANCE * ONE_METER_OFFSET, baseLongitude, baseAltitude);
-//        waypoint3.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 180 - calculateTurnAngle()));
-//        waypoint3.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));
-//        waypoint3.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, 0));
-//        waypoint3.setSpeed(5);
-//        waypoint3.setGimbalPitch(0);
-//        waypointList.add(waypoint3);
 
         waypointMission.setWaypointCount(waypointList.size());
         waypointMission.setWaypointList(waypointList);
