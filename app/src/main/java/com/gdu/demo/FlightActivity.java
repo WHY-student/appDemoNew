@@ -5,6 +5,7 @@ import static com.gdu.util.RectUtil.getScreenWidth;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.database.DataSetObserver;
@@ -136,6 +137,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private TextView aiState;
     private Button startIncremental;
     private RecyclerView recyclerView;
+    private Button btnGoToWaypoint;
     private AppCompatImageView AIRecognize;
     private Spinner spinner;
     private ImageView imageView;
@@ -263,6 +265,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         AIRecognize = findViewById(R.id.ai_recognize_imageview);
         spinner = findViewById(R.id.spinner);
         imageView=findViewById(R.id.imageView);
+        btnGoToWaypoint = findViewById(R.id.btn_go_to_waypoint);
         //know graph button
         knowledgeGraphButton=findViewById(R.id.button_know_graph);
         knowledgeGraphButton.setOnClickListener(this); // 设置点击监听器
@@ -1227,9 +1230,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     }
                 });
                 break;
-//            case R.id.ai_show_photo:
-//                photoPopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, 0);
-//                break;
+            case R.id.btn_go_to_waypoint:
+                Intent intent = new Intent(FlightActivity.this, WaypointMissionOperatorActivity.class);
+                startActivity(intent);
+                break;
         }
     }
 
