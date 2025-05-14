@@ -616,6 +616,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -646,6 +647,7 @@ import com.gdu.common.mission.waypoint.WaypointMissionFinishedAction;
 import com.gdu.common.mission.waypoint.WaypointMissionHeadingMode;
 import com.gdu.common.mission.waypoint.WaypointMissionState;
 import com.gdu.common.mission.waypoint.WaypointMissionUploadEvent;
+import com.gdu.config.GlobalVariable;
 import com.gdu.demo.ourgdu.ourGDUAircraft;
 //import com.gdu.demo.ourgdu.ourMissionControl;
 //import com.gdu.demo.ourgdu.ourWaypointMissionOperator;
@@ -671,6 +673,8 @@ import com.gdu.socket.SocketCallBack3;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.w3c.dom.Document;
@@ -689,7 +693,10 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
     private static final double VERTICAL_DISTANCE = 30;
     private static final double ONE_METER_OFFSET = 0.00000899322;
 
-    private TextView flyInfoView;
+    private static int select_mission_index = 0;
+    private static boolean is_mission = false;
+
+//    private TextView flyInfoView;
     private MapView mMapView;
     private AMap aMap;
     private Marker mPlaneMarker;
@@ -707,12 +714,20 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
     private GDUCamera mGDUCamera;
     private Button btnBackToFlight;
 
+    private static final List<WaypointMissionState> validMissionStartStates = Arrays.asList(
+            WaypointMissionState.READY_TO_EXECUTE,
+            WaypointMissionState.EXECUTING,
+            WaypointMissionState.EXECUTION_PAUSED
+    );
+
+    private boolean is_init_spinner = true;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = this;
         setContentView(R.layout.activity_waypoint_mission);
-        flyInfoView  =(TextView) findViewById(R.id.fly_info_textview);
+//        flyInfoView  =(TextView) findViewById(R.id.fly_info_textview);
         mMapView = findViewById(R.id.map);
         mMissionInfoTextView = findViewById(R.id.mission_info_textview);
         btnBackToFlight = findViewById(R.id.btn_back_to_flight);
@@ -740,7 +755,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
                                 coordinateConverter.coord(latLng);
                                 mPlaneMarker.setPosition(coordinateConverter.convert());
                             }
-                            flyInfoView.setText(flightControllerState.getString());
+//                            flyInfoView.setText(flightControllerState.getString());
                         }
                     });
                 }
@@ -754,25 +769,65 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
         try{
             AssetManager assetManager=getAssets();
             String[] xml_arr = assetManager.list("waypoints");
+            String[] select_xml_arr;
+
+            if(xml_arr != null){
+                select_xml_arr = new String[xml_arr.length + 1];
+
+                // 设置第一个元素为空字符串
+                select_xml_arr[0] = "请选择任务";
+
+                // 复制原数组内容到新数组
+                System.arraycopy(xml_arr, 0, select_xml_arr, 1, xml_arr.length);
+            }else {
+                select_xml_arr = new String[]{"请选择任务"};
+            }
+
             // 然后的话创建一个我们的一个数组适配器并且的话这个数组适配器使我们的字符串类型的
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item,xml_arr);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, select_xml_arr);
             // 设置我们的数组下拉时的选项的样式
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             // 将我们的适配器和我们的下拉列表框关联起来
             spinner.setAdapter(adapter);
+            spinner.setSelection(WaypointMissionOperatorActivity.select_mission_index);
             spinner.setOnItemSelectedListener(new Spinner.OnItemSelectedListener() {//选择item的选择点击监听事件
                 public void onItemSelected(AdapterView<?> arg0, View arg1,
                                            int arg2, long arg3) {
                     // TODO Auto-generated method stub
                     // 将所选mySpinner 的值带入myTextView 中
                     cleanWaypointMission();
-                    mission = createWaypointMission(adapter.getItem(arg2));
-                    addPolyline(mission);
-                    waypointMissionOperator.loadMission(mission);
+                    WaypointMissionOperatorActivity.select_mission_index = arg2;
+                    if(is_init_spinner){
+                        if(arg2!=0){
+                            mission = createWaypointMission(adapter.getItem(arg2));
+                            addPolyline(mission);
+                        }
+                        // 初始化的时候不应该重新加载任务
+                        is_init_spinner = false;
+                        return;
+                    }
+                    if(arg2!=0){
+                        mission = createWaypointMission(adapter.getItem(arg2));
+                        addPolyline(mission);
+                        if(!GlobalVariable.isWaypointDoing) {
+                            waypointMissionOperator.loadMission(mission);
+                            toast("航线加载完成");
+                            waypointMissionOperator.uploadMission(new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(GDUError error) {
+                                    if (error == null) {
+                                        toast("开始上传任务");
+                                    } else {
+                                        toast("上传航迹发送失败");
+                                    }
+                                }
+                            });
+                        }
+                    }
                 }
 
                 public void onNothingSelected(AdapterView<?> arg0) {
-                    // TODO Auto-generated method stub
+
                 }
             });
         } catch (IOException e) {
@@ -800,7 +855,13 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
 //                        && waypointMissionUploadEvent.getProgress().uploadedWaypointIndex == (WAYPOINT_COUNT - 1)) {
 //                    toast("Mission is uploaded successfully");
 //                }
-                show("Mission is uploaded successfully Progress " + waypointMissionUploadEvent.getProgress());
+//                show("Mission is uploaded successfully Progress " + waypointMissionUploadEvent.getProgress());
+                if(waypointMissionUploadEvent.getProgress() <100){
+                    toast("任务上传中，进度：" + waypointMissionUploadEvent.getProgress() + "%");
+                }else {
+                    toast("任务上传完成");
+                }
+
 //                updateWaypointMissionState();
             }
 
@@ -881,7 +942,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
             coordinateConverter.coord(latLng);
             latLngs.add(coordinateConverter.convert());
         }
-        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 16));
+        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 19));
         mPlaneMarkerOptions = new MarkerOptions();
         mPlaneMarkerOptions.position(latLngs.get(0));
 
@@ -925,39 +986,48 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
             case R.id.simulator_button:
                 startSimulator();
                 break;
-            case R.id.load_waypoint_button:
-//                cleanWaypointMission();
-                mission = createWaypointMission("已知类别海面目标.xml");
-//                toast(""+mission.getWaypointList().size());
-                addPolyline(mission);
-                waypointMissionOperator.loadMission(mission);
+            case R.id.get_mission_state:
+                toast(waypointMissionOperator.getCurrentState().getName());
                 break;
-            case R.id.upload_waypoint_button:
-                waypointMissionOperator.uploadMission(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError error) {
-                        if (error == null) {
-                            toast("上传航迹发送成功");
-                        } else {
-                            toast("上传航迹发送失败");
-                        }
-                    }
-                });
-                break;
+
+//            case R.id.load_waypoint_button:
+////                cleanWaypointMission();
+//                mission = createWaypointMission("已知类别海面目标.xml");
+////                toast(""+mission.getWaypointList().size());
+//                addPolyline(mission);
+//                waypointMissionOperator.loadMission(mission);
+//                break;
+//            case R.id.upload_waypoint_button:
+//                waypointMissionOperator.uploadMission(new CommonCallbacks.CompletionCallback() {
+//                    @Override
+//                    public void onResult(GDUError error) {
+//                        if (error == null) {
+//                            toast("上传航迹发送成功");
+//                        } else {
+//                            toast("上传航迹发送失败");
+//                        }
+//                    }
+//                });
+//                break;
             case R.id.start_waypoint_button:
-                if (waypointMissionOperator.getCurrentState() == WaypointMissionState.READY_TO_EXECUTE) {
+                if(GlobalVariable.isWaypointDoing){
+                    toast("任务状态不符，当前状态："+waypointMissionOperator.getCurrentState().getName());
+                    break;
+                }
+                if (validMissionStartStates.contains(waypointMissionOperator.getCurrentState())) {
                     waypointMissionOperator.startMission(new CommonCallbacks.CompletionCallback() {
                         @Override
                         public void onResult(GDUError error) {
                             if (error == null) {
                                 toast("开始航迹成功");
                             } else {
-                                toast("开始航迹失败");
+
+                                toast("开始航迹失败"+error);
                             }
                         }
                     });
                 }else {
-                    toast(waypointMissionOperator.getCurrentState().getName());
+                    toast("任务状态不符，当前状态："+waypointMissionOperator.getCurrentState().getName());
                 }
                 break;
             case R.id.resume_waypoint_button:
@@ -997,8 +1067,13 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
                 });
                 break;
             case R.id.btn_back_to_flight:
-                 Intent intent = new Intent(WaypointMissionOperatorActivity.this, FlightActivity.class);
-                 startActivity(intent);
+                if(getIntent().getStringExtra("source_class")!=null){
+                    finish();
+                }else{
+                    Intent intent = new Intent(WaypointMissionOperatorActivity.this, FlightActivity.class);
+                    intent.putExtra("source_class", WaypointMissionOperatorActivity.class.getName());
+                    startActivity(intent);
+                }
                 break;
         }
     }
@@ -1152,7 +1227,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
 //
         waypointMission.setWaypointCount(waypointList.size());
         waypointMission.setWaypointList(waypointList);
-        toast(""+waypointList.size());
+//        toast(""+waypointList.size());
         return waypointMission;
     }
 

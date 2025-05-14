@@ -267,12 +267,13 @@
 
 
     <LinearLayout
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
         android:orientation="horizontal"
         android:layout_marginStart="12dp"
         android:layout_marginBottom="@dimen/dp_60"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/lay_waypoint"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <!-- 一键返航按钮 -->
@@ -281,8 +282,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="一键降落"
-            android:padding="16dp"
+            android:paddingLeft="@dimen/dp_6"
+            android:paddingRight="@dimen/dp_6"
             android:textColor="@color/btn_return_home_text_color"
+            android:background="@drawable/shape_bg_ffffff"
             android:onClick="onClick"
             android:layout_marginBottom="8dp"/>
         <!--            android:background="@drawable/btn_bg" &lt;!&ndash; 自定义按钮背景 &ndash;&gt;-->
@@ -292,23 +295,27 @@
             android:id="@+id/btn_return_home"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="一键返航"
-            android:padding="16dp"
-            android:textColor="@color/btn_return_home_text_color"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="@dimen/dp_5"
+            android:background="@drawable/shape_bg_ffffff"
             android:onClick="onClick"
-            android:layout_marginBottom="8dp"/>
+            android:paddingLeft="@dimen/dp_6"
+            android:paddingRight="@dimen/dp_6"
+            android:text="一键返航"
+            android:textColor="@color/btn_return_home_text_color" />
 
 
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/lay_gimbal_rotate"
+        android:layout_width="wrap_content"
         android:layout_height="@dimen/dp_20"
         android:orientation="horizontal"
         android:layout_marginBottom="@dimen/dp_20"
         android:layout_marginStart="@dimen/dp_10"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
+        app:layout_constraintLeft_toLeftOf="parent">
 
         <TextView
             android:id="@+id/button_gimbal_rotate"
@@ -322,7 +329,8 @@
             android:textColor="@color/color_333333"
             android:background="@drawable/shape_bg_ffffff"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintRight_toRightOf="parent" />
+            app:layout_constraintRight_toRightOf="parent"
+            />
 
         <TextView
             android:id="@+id/button_gimbal_reset"
@@ -340,11 +348,36 @@
             android:layout_marginLeft="@dimen/dp_5"
             />
 
-        <com.gdu.demo.views.PaintView
-            android:id="@+id/ai_paint_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+    </LinearLayout>
 
+
+    <LinearLayout
+        android:id="@+id/lay_waypoint"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dp_40"
+        android:orientation="horizontal"
+        android:layout_marginBottom="@dimen/dp_20"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/lay_gimbal_rotate">
+
+
+        <Button
+            android:id="@+id/btn_go_to_waypoint"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/sp_11"
+            android:paddingLeft="@dimen/dp_6"
+            android:paddingRight="@dimen/dp_6"
+            android:gravity="center"
+            android:text="任务飞行"
+            android:textColor="@color/color_333333"
+            android:background="@drawable/shape_bg_ffffff"
+            android:onClick="onClick"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginLeft="@dimen/dp_5"
+            />
 
     </LinearLayout>
 
@@ -357,17 +390,12 @@
     <!--        app:layout_constraintTop_toBottomOf="@id/top_state_view"-->
     <!--        app:layout_constraintBottom_toBottomOf="parent"/>-->
 
-
     <!-- 变焦控件 -->
 
-    <Button
-        android:id="@+id/btn_go_to_waypoint"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="任务飞行"
-        android:onClick="onClick"
-        tools:layout_editor_absoluteX="661dp"
-        tools:layout_editor_absoluteY="403dp" />
+    <com.gdu.demo.views.PaintView
+        android:id="@+id/ai_paint_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"

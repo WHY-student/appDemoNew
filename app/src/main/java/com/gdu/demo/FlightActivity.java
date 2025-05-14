@@ -137,7 +137,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private TextView aiState;
     private Button startIncremental;
     private RecyclerView recyclerView;
-    private Button btnGoToWaypoint;
     private AppCompatImageView AIRecognize;
     private Spinner spinner;
     private ImageView imageView;
@@ -265,7 +264,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         AIRecognize = findViewById(R.id.ai_recognize_imageview);
         spinner = findViewById(R.id.spinner);
         imageView=findViewById(R.id.imageView);
-        btnGoToWaypoint = findViewById(R.id.btn_go_to_waypoint);
         //know graph button
         knowledgeGraphButton=findViewById(R.id.button_know_graph);
         knowledgeGraphButton.setOnClickListener(this); // 设置点击监听器
@@ -1231,9 +1229,15 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 });
                 break;
             case R.id.btn_go_to_waypoint:
-                Intent intent = new Intent(FlightActivity.this, WaypointMissionOperatorActivity.class);
-                startActivity(intent);
+                if(getIntent().getStringExtra("source_class")!=null){
+                    finish();
+                }else {
+                    Intent intent = new Intent(FlightActivity.this, WaypointMissionOperatorActivity.class);
+                    intent.putExtra("source_class", FlightActivity.class.getName());
+                    startActivity(intent);
+                }
                 break;
+
         }
     }
 
@@ -1424,7 +1428,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     @Override
     protected void onStop() {
         super.onStop();
-        viewModel.stopTarget((byte) 0x02, GlobalVariable.mCurrentLightType);
+        if(quitAIRecognize.isActivated()){
+            viewModel.stopTarget((byte) 0x02, GlobalVariable.mCurrentLightType);
+        }
     }
 }
 
