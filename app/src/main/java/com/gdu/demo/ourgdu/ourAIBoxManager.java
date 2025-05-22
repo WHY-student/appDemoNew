@@ -76,7 +76,7 @@ public class ourAIBoxManager {
                 TargetMode targetMode = parseTargetAIBox(targetBytes);
                 targetMode.setCreateTime(createTime);
                 targetMode.setTargetName(getTargetName(modelId, targetMode.getTargetType()));
-                targetMode.setTargetType((short) -1);
+//                targetMode.setTargetType((short) -1);
                 targetModes.add(targetMode);
             }
             if (!targetModes.isEmpty()) {

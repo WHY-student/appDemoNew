@@ -48,6 +48,10 @@ public class PaintView extends AppCompatImageView {
         return attribute_label3;
     }
 
+    public List<String> getAttributeLabelNew() {
+        return attribute_label_new;
+    }
+
     //    List<String> class_label = new ArrayList<>();
 //    {
 //        class_label.add("bus");
@@ -61,16 +65,31 @@ public class PaintView extends AppCompatImageView {
 //        class_label.add("new3");
 //        class_label.add("unknown");
 //    }
+//    List<String> class_label = new ArrayList<>();
+//    {
+//        class_label.add("bus");
+//        class_label.add("car");
+//        class_label.add("SUV");
+//        class_label.add("pickup");
+//        class_label.add("new1");
+//        class_label.add("new2");
+//        class_label.add("saved");
+//        class_label.add("unknown");
+//    }
+
     List<String> class_label = new ArrayList<>();
     {
-        class_label.add("bus");
-        class_label.add("car");
-        class_label.add("SUV");
-        class_label.add("pickup");
-        class_label.add("new1");
-        class_label.add("new2");
-        class_label.add("saved");
-        class_label.add("unknown");
+        class_label.add("尼米兹号");
+        class_label.add("类2");
+        class_label.add("类3");
+        class_label.add("类4");
+        class_label.add("类5");
+        class_label.add("类6");
+        class_label.add("类7");
+        class_label.add("类8");
+        class_label.add("库兹涅佐夫号");
+        class_label.add("保存类别");
+        class_label.add("未知类");
     }
 
     List<String> attribute_label1 = new ArrayList<>();
@@ -166,6 +185,26 @@ public class PaintView extends AppCompatImageView {
         attribute_label3.add("有潜望镜");
         attribute_label3.add("功能: 两栖");
     }
+
+    List<String> attribute_label_new = new ArrayList<>();
+    {
+        attribute_label_new.add("跑道");
+        attribute_label_new.add("舰岛");
+        attribute_label_new.add("起降平台");
+        attribute_label_new.add("BVSA");
+        attribute_label_new.add("舰炮");
+        attribute_label_new.add("后掠翼");
+        attribute_label_new.add("平直翼");
+        attribute_label_new.add("三角翼");
+        attribute_label_new.add("螺旋桨发动机");
+        attribute_label_new.add("喷气发动机");
+        attribute_label_new.add("炮管");
+        attribute_label_new.add("导弹发射器");
+        attribute_label_new.add("飞机升降机");
+        attribute_label_new.add("近程防御武器系统");
+    }
+
+
 //    List<String> gdu_class_label = new ArrayList<>();
 //    {
 //        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0000));
@@ -310,15 +349,16 @@ public class PaintView extends AppCompatImageView {
             int y = (int)(detection.getLeftY() * 1200.0 / 1080.0/1.5);
             int maxX = (int)((detection.getLeftX() + detection.getWidth())/1.5);
             int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0/1.5);
-//            aiState =detection.getId();
             String label = null;
             if (label == null) {
 
                 int labelIndex = detection.getTargetType() % 16;
-                if (labelIndex == -1 || labelIndex == 6) {
-                    label = "unknown";
+//                Log.d("targetType", "parseTargetAIBox: "+detection.getTargetType());
+//                Log.d("labelIndex", "parseTargetAIBox: "+labelIndex);
+                if (labelIndex == -1) {
+                    label = "未知类";
                 } else if (labelIndex > 9) {
-                    label = "test";
+                    label = "未知类";
                 } else {
                     label = class_label.get(labelIndex);
                 }
@@ -343,7 +383,7 @@ public class PaintView extends AppCompatImageView {
     }
 
     public void setRectParams(List<TargetMode> detectionBox) {
-        Log.d("interval time", "setRectParams: "+(System.currentTimeMillis()-lastTime));
+//        Log.d("interval time", "setRectParams: "+(System.currentTimeMillis()-lastTime));
         lastTime = System.currentTimeMillis();
         if (detectionBox == null || detectionBox.isEmpty()) {
             // 如果没有目标，清空 detectionBox

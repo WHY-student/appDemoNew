@@ -851,9 +851,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         storageManager.clearDirectory(LOAD_DIR);
 
         // 显示里面对应的各条属性，目前仅展示class
+        Log.d("showAttributewithBox:", "showAttributewithBox: "+clickBox.getTargetType());
         String class_label = viewBinding.aiPaintView.getClassLabel().get(clickBox.getTargetType()%16);
-        if(Objects.equals(class_label, "saved")){
-            class_label="unknown";
+        if(Objects.equals(class_label, "保存类别")){
+            class_label="未知类别";
         }
         show(attributePopupView.findViewById(R.id.target_label_name), class_label);
         int coarseIndex = clickBox.getTargetType() / 16;
@@ -874,7 +875,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //                return;
         }
 //        attributeList = car_attribute_labels;
-        attributeList = viewBinding.aiPaintView.getAttributeLabel2();
+        attributeList = viewBinding.aiPaintView.getAttributeLabelNew();
 
         // 1. 将byte转换为8位二进制字符串（补前导零）
         String byteBinary = String.format("%8s", Integer.toBinaryString(clickBox.getTargetConfidence() & 0xFF))
@@ -887,8 +888,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 .replace(' ', '0');
 
         // 3. 拼接成40位二进制字符串
-        String combined = intBinary + byteBinary;
-        combined = "01000110001100010010100000";
+//        String combined = intBinary + byteBinary;
+        String combined = intBinary;
+//        combined = "01000110001100010010100000";
         int len = attributeList.size();
 
         StringBuilder result = new StringBuilder();
