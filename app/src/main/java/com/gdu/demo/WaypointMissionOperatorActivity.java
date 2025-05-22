@@ -986,9 +986,9 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
             case R.id.simulator_button:
                 startSimulator();
                 break;
-            case R.id.get_mission_state:
-                toast(waypointMissionOperator.getCurrentState().getName());
-                break;
+//            case R.id.get_mission_state:
+//                toast(waypointMissionOperator.getCurrentState().getName());
+//                break;
 
 //            case R.id.load_waypoint_button:
 ////                cleanWaypointMission();
@@ -1093,7 +1093,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
         }
 
         WaypointMission waypointMission = new WaypointMission();
-        waypointMission.setAutoFlightSpeed(10f);
+        waypointMission.setAutoFlightSpeed(3f);
         waypointMission.setMaxFlightSpeed(10f);
         waypointMission.setResponseLostActionOnRCSignalLost(false);
         waypointMission.setFinishedAction(WaypointMissionFinishedAction.GO_HOME);
@@ -1112,19 +1112,20 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
             double Longitude = Double.parseDouble(s[0]);
             double Latitude = Double.parseDouble(s[1]);
             float Altitude = Float.parseFloat(s[2]);
+//            float Altitude=10f;
             waypoint =  new Waypoint(Latitude, Longitude, Altitude);
-//            waypoint.setSpeed(Integer.parseInt(element.getElementsByTagName("speed").item(0).getTextContent()));
+            waypoint.setSpeed(Integer.parseInt(element.getElementsByTagName("speed").item(0).getTextContent()));
             gimbal_pitch = Float.parseFloat(element.getElementsByTagName("gimbalAngle").item(0).getTextContent());
             gimbal_rotate=Float.parseFloat(element.getElementsByTagName("droneHeadAngle").item(0).getTextContent());
             waypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,(int)gimbal_rotate));
 //            waypoint.addAction(new WaypointAction(WaypointActionType.START_TAKE_PHOTO, 0));//拍照比较耗时
             waypoint.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, (int) gimbal_pitch));
-            waypoint.setSpeed(3);
+//            waypoint.setSpeed(3);
 //            waypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,720));
 //            waypoint.addAction(new WaypointAction(WaypointActionType.STAY, 30));
             waypoint.setGimbalPitch(-45);
             waypointList.add(waypoint);
-            show("高度"+Altitude+"经度"+Latitude+"维度"+Latitude+"云台角度"+gimbal_pitch+"旋转角度"+gimbal_rotate);
+//            show("高度"+Altitude+"经度"+Latitude+"维度"+Latitude+"云台角度"+gimbal_pitch+"旋转角度"+gimbal_rotate);
         }
 //
 //        WaypointMission waypointMission = new WaypointMission();
