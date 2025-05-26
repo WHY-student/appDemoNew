@@ -986,9 +986,9 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
             case R.id.simulator_button:
                 startSimulator();
                 break;
-//            case R.id.get_mission_state:
-//                toast(waypointMissionOperator.getCurrentState().getName());
-//                break;
+            case R.id.get_mission:
+                toast(waypointMissionOperator.getCurrentState().getName());
+                break;
 
 //            case R.id.load_waypoint_button:
 ////                cleanWaypointMission();

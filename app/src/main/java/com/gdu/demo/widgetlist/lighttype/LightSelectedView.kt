@@ -3,19 +3,17 @@ package com.gdu.demo.widgetlist.lighttype
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.gdu.camera.SettingsDefinitions
-import com.gdu.common.error.GDUError
 import com.gdu.demo.R
 import com.gdu.demo.SdkDemoApplication
 import com.gdu.demo.databinding.LayoutLightSelectedBinding
 import com.gdu.demo.ourgdu.ourGDUAircraft
-import com.gdu.demo.widgetlist.core.base.widget.WidgetModel
-import com.gdu.demo.widgetlist.flyState.FlyStateModel
 import com.gdu.sdk.camera.GDUCamera
 import com.gdu.sdk.gimbal.GDUGimbal
-import com.gdu.sdk.products.GDUAircraft
-import com.gdu.sdk.util.CommonCallbacks.CompletionCallback
 import com.gdu.ux.core.base.widget.ConstraintLayoutWidget
+import com.gdu.demo.FlightActivity;
+
 
 class LightSelectedView @JvmOverloads constructor(
     context: Context,
@@ -24,231 +22,170 @@ class LightSelectedView @JvmOverloads constructor(
 ) : ConstraintLayoutWidget<LightTypeModel>(context, attrs, defStyleAttr) {
 
     private lateinit var binding: LayoutLightSelectedBinding
-
     private var mGDUGimbal: GDUGimbal? = null
-
     private var currentType = -1
+    private var buttonsEnabled = true
 
+    interface OnButtonStateChangeListener {
+        fun onButtonStateChanged(enabled: Boolean)
+    }
+    private var buttonStateListener: OnButtonStateChangeListener? = null
+
+    interface OnModeSelectedListener {
+        fun onModeSelected(mode: SettingsDefinitions.DisplayMode)
+    }
+
+    private var modeSelectedListener: OnModeSelectedListener? = null
+
+    // 设置监听器方法
+    fun setOnModeSelectedListener(listener: OnModeSelectedListener) {
+        this.modeSelectedListener = listener
+    }
 
     override fun initView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) {
-        
         binding = LayoutLightSelectedBinding.bind(inflate(context, R.layout.layout_light_selected, this))
-        
+
+        setupButtonClickListeners()
+        initGimbalSupportModes()
+    }
+
+    private fun setupButtonClickListeners() {
         binding.tvVisibleLight.setOnClickListener {
-            changeLight(SettingsDefinitions.DisplayMode.VISUAL_ONLY)
+            if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.VISUAL_ONLY)
         }
-        binding.tvWide.setOnClickListener{
-            changeLight(SettingsDefinitions.DisplayMode.WAL)
+        binding.tvWide.setOnClickListener {
+            if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.WAL)
         }
-        binding.tvZoom.setOnClickListener{
-            changeLight(SettingsDefinitions.DisplayMode.ZL)
+        binding.tvZoom.setOnClickListener {
+            if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.ZL)
         }
-        binding.tvIr.setOnClickListener{
-            changeLight(SettingsDefinitions.DisplayMode.THERMAL_ONLY)
+        binding.tvIr.setOnClickListener {
+            if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.THERMAL_ONLY)
         }
-        
-        binding.tvSplit.setOnClickListener{
-            changeLight(SettingsDefinitions.DisplayMode.PIP)
+        binding.tvSplit.setOnClickListener {
+            if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.PIP)
         }
+    }
 
+    private fun initGimbalSupportModes() {
         mGDUGimbal = (SdkDemoApplication.getProductInstance() as ourGDUAircraft).gimbal as? GDUGimbal
-        mGDUGimbal?.let {
-            val list: List<SettingsDefinitions.DisplayMode> = it.supportDisplayMode
-            for (mode in list) {
-
+        mGDUGimbal?.let { gimbal ->
+            gimbal.supportDisplayMode.forEach { mode ->
                 when (mode) {
-                    SettingsDefinitions.DisplayMode.THERMAL_ONLY -> {
-                        binding.tvIr.visibility = VISIBLE
-                    }
-                    SettingsDefinitions.DisplayMode.VISUAL_ONLY -> {
-                        binding.tvVisibleLight.visibility = VISIBLE
-                    }
-                    SettingsDefinitions.DisplayMode.WAL -> {
-                        binding.tvWide.visibility = VISIBLE
-                    }
-                    SettingsDefinitions.DisplayMode.ZL -> {
-                        binding.tvZoom.visibility = VISIBLE
-                    }
-                    SettingsDefinitions.DisplayMode.PIP -> {
-                        binding.tvSplit.visibility = VISIBLE }
-
-                    else ->{ }
-
+                    SettingsDefinitions.DisplayMode.THERMAL_ONLY -> binding.tvIr.visibility = VISIBLE
+                    SettingsDefinitions.DisplayMode.VISUAL_ONLY -> binding.tvVisibleLight.visibility = VISIBLE
+                    SettingsDefinitions.DisplayMode.WAL -> binding.tvWide.visibility = VISIBLE
+                    SettingsDefinitions.DisplayMode.ZL -> binding.tvZoom.visibility = VISIBLE
+                    SettingsDefinitions.DisplayMode.PIP -> binding.tvSplit.visibility = VISIBLE
+                    else -> {}
                 }
             }
         }
-
-
-
-
     }
 
     override fun initWidgetModel(): LightTypeModel = LightTypeModel()
 
-
     override fun bindingData(data: Any) {
-
-        if (data is LightTypeValue) {
-            if (data.lightType == currentType) {
-                return
-            }
-            currentType = data.lightType
-            mGDUGimbal = (SdkDemoApplication.getProductInstance() as ourGDUAircraft).gimbal as? GDUGimbal
-            when (data.lightType) {
-                0x00 -> {
-                    mGDUGimbal?.let {
-                        val list: List<SettingsDefinitions.DisplayMode> = it.supportDisplayMode
-                        for (mode in list) {
-                            when (mode) {
-                                SettingsDefinitions.DisplayMode.THERMAL_ONLY -> {
-                                    binding.tvIr.visibility = GONE
-                                }
-                                SettingsDefinitions.DisplayMode.VISUAL_ONLY -> {
-                                    binding.tvVisibleLight.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.WAL -> {
-                                    binding.tvWide.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.ZL -> {
-                                    binding.tvZoom.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.PIP -> {
-                                    binding.tvSplit.visibility = VISIBLE }
-
-                                else ->{ }
-
-                            }
-                        }
-                    }
-                }
-
-                0x02 ->{
-                    mGDUGimbal?.let {
-                        val list: List<SettingsDefinitions.DisplayMode> = it.supportDisplayMode
-                        for (mode in list) {
-                            when (mode) {
-                                SettingsDefinitions.DisplayMode.THERMAL_ONLY -> {
-                                    binding.tvIr.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.VISUAL_ONLY -> {
-                                    binding.tvVisibleLight.visibility = GONE
-                                }
-                                SettingsDefinitions.DisplayMode.WAL -> {
-                                    binding.tvWide.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.ZL -> {
-                                    binding.tvZoom.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.PIP -> {
-                                    binding.tvSplit.visibility = VISIBLE }
-
-                                else ->{ }
-
-                            }
-                        }
-                    }
-                }
-
-                0x05 ->{
-                    mGDUGimbal?.let {
-                        val list: List<SettingsDefinitions.DisplayMode> = it.supportDisplayMode
-                        for (mode in list) {
-                            when (mode) {
-                                SettingsDefinitions.DisplayMode.THERMAL_ONLY -> {
-                                    binding.tvIr.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.VISUAL_ONLY -> {
-                                    binding.tvVisibleLight.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.WAL -> {
-                                    binding.tvWide.visibility = GONE
-                                }
-                                SettingsDefinitions.DisplayMode.ZL -> {
-                                    binding.tvZoom.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.PIP -> {
-                                    binding.tvSplit.visibility = VISIBLE }
-
-                                else ->{ }
-
-                            }
-                        }
-                    }
-                }
-                0x06 ->{
-                    mGDUGimbal?.let {
-                        val list: List<SettingsDefinitions.DisplayMode> = it.supportDisplayMode
-                        for (mode in list) {
-                            when (mode) {
-                                SettingsDefinitions.DisplayMode.THERMAL_ONLY -> {
-                                    binding.tvIr.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.VISUAL_ONLY -> {
-                                    binding.tvVisibleLight.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.WAL -> {
-                                    binding.tvWide.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.ZL -> {
-                                    binding.tvZoom.visibility = GONE
-                                }
-                                SettingsDefinitions.DisplayMode.PIP -> {
-                                    binding.tvSplit.visibility = VISIBLE }
-
-                                else ->{ }
-
-                            }
-                        }
-                    }
-                }
-                0x07 ->{
-                    mGDUGimbal?.let {
-                        val list: List<SettingsDefinitions.DisplayMode> = it.supportDisplayMode
-                        for (mode in list) {
-                            when (mode) {
-                                SettingsDefinitions.DisplayMode.THERMAL_ONLY -> {
-                                    binding.tvIr.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.VISUAL_ONLY -> {
-                                    binding.tvVisibleLight.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.WAL -> {
-                                    binding.tvWide.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.ZL -> {
-                                    binding.tvZoom.visibility = VISIBLE
-                                }
-                                SettingsDefinitions.DisplayMode.PIP -> {
-                                    binding.tvSplit.visibility = GONE }
-
-                                else ->{ }
-
-                            }
-                        }
-                    }
-                }
-
-            }
-
-
+        when (data) {
+            is LightTypeValue -> handleLightTypeValue(data)
+            is Boolean -> setButtonsEnabled(data)
         }
     }
 
+    private fun handleLightTypeValue(data: LightTypeValue) {
+        if (data.lightType == currentType) return
+        currentType = data.lightType
+        mGDUGimbal = (SdkDemoApplication.getProductInstance() as ourGDUAircraft).gimbal as? GDUGimbal
+        mGDUGimbal?.let { gimbal ->
+            gimbal.supportDisplayMode.forEach { mode ->
+                updateButtonVisibility(mode, data.lightType)
+            }
+        }
+    }
 
+    private fun updateButtonVisibility(mode: SettingsDefinitions.DisplayMode, lightType: Int) {
+        val visible = when (lightType) {
+            0x00 -> mode != SettingsDefinitions.DisplayMode.THERMAL_ONLY
+            0x02 -> mode != SettingsDefinitions.DisplayMode.VISUAL_ONLY
+            0x05 -> mode != SettingsDefinitions.DisplayMode.WAL
+            0x06 -> mode != SettingsDefinitions.DisplayMode.ZL
+            0x07 -> mode != SettingsDefinitions.DisplayMode.PIP
+            else -> true
+        }
+
+        when (mode) {
+            SettingsDefinitions.DisplayMode.THERMAL_ONLY -> binding.tvIr.visibility = if (visible) VISIBLE else GONE
+            SettingsDefinitions.DisplayMode.VISUAL_ONLY -> binding.tvVisibleLight.visibility = if (visible) VISIBLE else GONE
+            SettingsDefinitions.DisplayMode.WAL -> binding.tvWide.visibility = if (visible) VISIBLE else GONE
+            SettingsDefinitions.DisplayMode.ZL -> binding.tvZoom.visibility = if (visible) VISIBLE else GONE
+            SettingsDefinitions.DisplayMode.PIP -> binding.tvSplit.visibility = if (visible) VISIBLE else GONE
+            else -> {}
+        }
+    }
+
+    fun setButtonsEnabled(enabled: Boolean) {
+        buttonsEnabled = enabled
+        updateButtonsState()
+        buttonStateListener?.onButtonStateChanged(enabled)
+    }
+
+    fun setOnButtonStateChangeListener(listener: OnButtonStateChangeListener) {
+        this.buttonStateListener = listener
+    }
+
+    private fun updateButtonsState() {
+        val alpha = if (buttonsEnabled) 1.0f else 0.5f
+        binding.tvVisibleLight.isEnabled = buttonsEnabled
+        binding.tvWide.isEnabled = buttonsEnabled
+        binding.tvZoom.isEnabled = buttonsEnabled
+        binding.tvIr.isEnabled = buttonsEnabled
+        binding.tvSplit.isEnabled = buttonsEnabled
+
+        binding.tvVisibleLight.alpha = alpha
+        binding.tvWide.alpha = alpha
+        binding.tvZoom.alpha = alpha
+        binding.tvIr.alpha = alpha
+        binding.tvSplit.alpha = alpha
+    }
 
     private fun changeLight(type: SettingsDefinitions.DisplayMode) {
-        val mGDUCamera = (SdkDemoApplication.getProductInstance() as ourGDUAircraft).camera as? GDUCamera
-        mGDUCamera?.setDisplayMode(type) { error ->
-            if (error == null) {
-                Toast.makeText(context, "设置成功", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "设置失败", Toast.LENGTH_SHORT).show()
-            }
+        if (!buttonsEnabled) {
+            Toast.makeText(context, "当前模式不可操作", Toast.LENGTH_SHORT).show()
+            return
         }
 
-
+        val mGDUCamera = (SdkDemoApplication.getProductInstance() as ourGDUAircraft).camera as? GDUCamera
+        mGDUCamera?.setDisplayMode(type) { error ->
+            val message = if (error == null) "设置成功" else "设置失败"
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+    fun setButtonTextColor(colorRes: Int) {
+        val color = ContextCompat.getColor(context, colorRes)
+        binding.tvVisibleLight.setTextColor(color)
+        binding.tvWide.setTextColor(color)
+        binding.tvZoom.setTextColor(color)
+        binding.tvIr.setTextColor(color)
+        binding.tvSplit.setTextColor(color)
     }
 
-
+    fun setButtonBackgroundColor(colorRes: Int) {
+        val color = ContextCompat.getColor(context, colorRes)
+        binding.tvVisibleLight.setBackgroundColor(color)
+        binding.tvWide.setBackgroundColor(color)
+        binding.tvZoom.setBackgroundColor(color)
+        binding.tvIr.setBackgroundColor(color)
+        binding.tvSplit.setBackgroundColor(color)
+    }
+    public  fun get_irselected(): Int{
+//        if (currentType==0x00 ){
+//            return 0x00;
+//        }else if(currentType==0x07 ){
+//            return 0;
+//        }else{
+//            return 2;
+//        }
+        return currentType ;
+    }
 
 }

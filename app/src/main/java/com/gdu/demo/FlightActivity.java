@@ -60,6 +60,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.gdu.AlgorithmMark;
 import com.gdu.beans.WarnBean;
+import com.gdu.camera.SettingsDefinitions;
 import com.gdu.camera.StorageState;
 import com.gdu.common.error.GDUError;
 import com.gdu.config.ConnStateEnum;
@@ -85,6 +86,7 @@ import com.gdu.demo.views.ImageItem;
 import com.gdu.demo.views.ImageStorageManager;
 import com.gdu.demo.widget.TopStateView;
 import com.gdu.demo.widget.zoomView.S220CustomSizeFocusHelper;
+import com.gdu.demo.widgetlist.lighttype.LightSelectedView;
 import com.gdu.drone.LocationCoordinate2D;
 import com.gdu.drone.LocationCoordinate3D;
 import com.gdu.drone.TargetMode;
@@ -118,7 +120,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class FlightActivity extends FragmentActivity implements TextureView.SurfaceTextureListener, MsgBoxViewCallBack, View.OnClickListener {
+public class FlightActivity extends FragmentActivity implements TextureView.SurfaceTextureListener, MsgBoxViewCallBack, View.OnClickListener{
 
     private ActivityFlightBinding viewBinding;
     private ourGDUCodecManager codecManager=null;
@@ -185,6 +187,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private View photoPopupView;
     private int savedID=-1;
+    private LightSelectedView lightSelectedView;
 
     private List<String> object_labels = new ArrayList<>();
     {
@@ -228,8 +231,12 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
         initKnownledgeGraph();
     }
+    // 检查接口定义，确保完全匹配
+//    public interface OnButtonStateChangeListener {
+//        void onButtonStateChanged(boolean enabled);  // 注意方法名和参数
+//    }
 
-
+    // 然后在FlightActivity中确保实现完全匹配
     private void initView() {
         viewBinding.topStateView.setViewClickListener(new TopStateView.OnClickCallBack() {
             @Override
@@ -264,6 +271,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         AIRecognize = findViewById(R.id.ai_recognize_imageview);
         spinner = findViewById(R.id.spinner);
         imageView=findViewById(R.id.imageView);
+        lightSelectedView=findViewById(R.id.light_select);
+//        lightSelectedView.setOnButtonStateChangeListener(this);
+        lightSelectedView.setOnClickListener(this);
         //know graph button
         knowledgeGraphButton=findViewById(R.id.button_know_graph);
         knowledgeGraphButton.setOnClickListener(this); // 设置点击监听器
@@ -281,7 +291,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         SettingDao settingDao = SettingDao.getSingle();
         boolean show = settingDao.getBooleanValue(settingDao.ZORRORLabel_Grid, false);
         showNineGridShow(show);
-
         mCustomSizeFocusHelper = new S220CustomSizeFocusHelper(viewBinding.zoomSeekBar);
 
 //        mTargetDetectHelper = TargetDetectHelper.getInstance();
@@ -330,6 +339,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        云台向下及回正
         viewBinding.buttonGimbalRotate.setOnClickListener(this);
         viewBinding.buttonGimbalReset.setOnClickListener(this);
+        lightSelectedView.setButtonsEnabled(true);
+        lightSelectedView.setButtonBackgroundColor(R.color.white);
 //        mYUVImageView = findViewById(R.id.test_imageview);
     }
 
@@ -444,6 +455,23 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 }
             });
         }
+    }
+    private SettingsDefinitions.DisplayMode displayMode1;
+    private SettingsDefinitions.DisplayMode getCameraModel(){
+        mGDUCamera.getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
+            @Override
+            public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
+                showToast("发送成功 " + displayMode);
+                displayMode1=displayMode;
+            }
+
+            @Override
+            public void onFailure(GDUError var1) {
+                showToast("发送失败");
+                displayMode1=null;
+            }
+        });
+        return displayMode1;
     }
 
     private void initCamera(){
@@ -592,17 +620,37 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         setPhotoShow(4);
     }
 
+
     public void setPhotoShow(int temp){
         imageItems.clear();
-        imageItems.add(new ImageItem("images/image1.png", object_labels.get(0)));
-        imageItems.add(new ImageItem("images/image2.png", object_labels.get(1)));
-        imageItems.add(new ImageItem("images/image3.png", object_labels.get(2)));
-        imageItems.add(new ImageItem("images/image4.png", object_labels.get(3)));
-        imageItems.add(new ImageItem("images/image5.png", object_labels.get(4)));
-        imageItems.add(new ImageItem("images/image6.png", object_labels.get(5)));
-        imageItems.add(new ImageItem("images/image7.png", object_labels.get(6)));
-        imageItems.add(new ImageItem("images/image8.png", object_labels.get(7)));
+        getCameraModel();
+        int i=lightSelectedView.get_irselected();
+        if(i==1){
+//        if(displayMode1==SettingsDefinitions.DisplayMode.THERMAL_ONLY){
+            imageItems.add(new ImageItem("images/00.jpg", object_labels.get(0)));
+            imageItems.add(new ImageItem("images/01.jpg", object_labels.get(1)));
+            imageItems.add(new ImageItem("images/02.jpg", object_labels.get(2)));
+            imageItems.add(new ImageItem("images/03.jpg", object_labels.get(3)));
+            imageItems.add(new ImageItem("images/04.jpg", object_labels.get(4)));
+            imageItems.add(new ImageItem("images/05.jpg", object_labels.get(5)));
+            imageItems.add(new ImageItem("images/06.jpg", object_labels.get(6)));
+            imageItems.add(new ImageItem("images/07.jpg", object_labels.get(7)));
 
+            Log.d("FlightActivity", "THERMAL模式 - 加载图片: " + imageItems.toString()+i);
+        }else if(i==2){
+//        }else if(displayMode1==SettingsDefinitions.DisplayMode.PIP){
+            imageItems.add(new ImageItem("images/image1.png", object_labels.get(0)));
+            imageItems.add(new ImageItem("images/image2.png", object_labels.get(1)));
+            imageItems.add(new ImageItem("images/image3.png", object_labels.get(2)));
+            imageItems.add(new ImageItem("images/image4.png", object_labels.get(3)));
+            imageItems.add(new ImageItem("images/image5.png", object_labels.get(4)));
+            imageItems.add(new ImageItem("images/image6.png", object_labels.get(5)));
+            imageItems.add(new ImageItem("images/image7.png", object_labels.get(6)));
+            imageItems.add(new ImageItem("images/image8.png", object_labels.get(7)));
+            Log.d("FlightActivity", "可见光 - 加载图片: " + imageItems.toString()+i);
+        }else{
+            Log.d("FlightActivity", "分屏模式 - 加载图片: " + imageItems.toString()+i);
+        }
         // 初始化 RecyclerView
         if(photoIsDialog){
             recyclerView = photoPopupView.findViewById(R.id.recyclerView);
@@ -611,6 +659,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
         recyclerView.setLayoutManager(new GridLayoutManager(this, temp)); // 每排 temp 个
         adapter1 = new ImageAdapter(imageItems, this);
+        Log.d("test","内容"+adapter1.getItemCount()+adapter1.getClass());
         recyclerView.setAdapter(adapter1);
     }
 
@@ -1085,9 +1134,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     show(aiState, "AI状态：未增量");
                     AIRecognize.setImageResource(R.drawable.ai_recognize_selected);
                     findViewById(R.id.all_ai_state).setVisibility(View.VISIBLE);
+                    lightSelectedView.setButtonsEnabled(false);
+                    lightSelectedView.setButtonBackgroundColor(R.color.color_A8A8A8);
                 } catch (Exception e) {
                     showToast("请检查初始化是否完成");
                     AIRecognize.setEnabled(true);
+                    lightSelectedView.setButtonsEnabled(true);
+                    lightSelectedView.setButtonBackgroundColor(R.color.white);
                 }
                 break;
             case R.id.button_quit_ai:
@@ -1129,10 +1182,14 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         setPhotoShow(1);
                     }
                     isIncrementalMode=false;
+                    lightSelectedView.setButtonsEnabled(true);
+                    lightSelectedView.setButtonBackgroundColor(R.color.white);
 //                    IncrementalStateManager.getInstance().setIncremental(false);
                 }catch(Exception e){
                     quitAIRecognize.setEnabled(true);
                     isIncrementalMode=true;
+                    lightSelectedView.setButtonsEnabled(false);
+                    lightSelectedView.setButtonBackgroundColor(R.color.color_A8A8A8);
 //                    IncrementalStateManager.getInstance().setIncremental(true);
                 }
                 break;
@@ -1209,10 +1266,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     }
                 });
                 break;
-            case R.id.btnToggle:
-                clickCount++;
-                updateImageVisibility();
-                break;
+//            case R.id.btnToggle:
+//                clickCount++;
+//                updateImageVisibility();
+//                break;
             case R.id.button_know_graph:
                 showKnowledgeGraphPopup();
                 break;
