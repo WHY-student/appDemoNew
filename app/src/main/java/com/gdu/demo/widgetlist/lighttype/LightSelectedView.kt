@@ -2,6 +2,7 @@ package com.gdu.demo.widgetlist.lighttype
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.gdu.camera.SettingsDefinitions
@@ -25,6 +26,7 @@ class LightSelectedView @JvmOverloads constructor(
     private var mGDUGimbal: GDUGimbal? = null
     private var currentType = -1
     private var buttonsEnabled = true
+    private var action: Runnable? = null
 
     interface OnButtonStateChangeListener {
         fun onButtonStateChanged(enabled: Boolean)
@@ -45,11 +47,12 @@ class LightSelectedView @JvmOverloads constructor(
     override fun initView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) {
         binding = LayoutLightSelectedBinding.bind(inflate(context, R.layout.layout_light_selected, this))
 
-        setupButtonClickListeners()
+//        setupButtonClickListeners()
         initGimbalSupportModes()
     }
 
-    private fun setupButtonClickListeners() {
+    public fun setupSelectButtonClick(action: Runnable){
+        this.action = action
         binding.tvVisibleLight.setOnClickListener {
             if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.VISUAL_ONLY)
         }
@@ -66,6 +69,24 @@ class LightSelectedView @JvmOverloads constructor(
             if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.PIP)
         }
     }
+
+//    private fun setupButtonClickListeners() {
+//        binding.tvVisibleLight.setOnClickListener {
+//            if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.VISUAL_ONLY)
+//        }
+//        binding.tvWide.setOnClickListener {
+//            if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.WAL)
+//        }
+//        binding.tvZoom.setOnClickListener {
+//            if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.ZL)
+//        }
+//        binding.tvIr.setOnClickListener {
+//            if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.THERMAL_ONLY)
+//        }
+//        binding.tvSplit.setOnClickListener {
+//            if (buttonsEnabled) changeLight(SettingsDefinitions.DisplayMode.PIP)
+//        }
+//    }
 
     private fun initGimbalSupportModes() {
         mGDUGimbal = (SdkDemoApplication.getProductInstance() as ourGDUAircraft).gimbal as? GDUGimbal
@@ -101,6 +122,7 @@ class LightSelectedView @JvmOverloads constructor(
                 updateButtonVisibility(mode, data.lightType)
             }
         }
+        this.action?.run()
     }
 
     private fun updateButtonVisibility(mode: SettingsDefinitions.DisplayMode, lightType: Int) {
@@ -177,15 +199,15 @@ class LightSelectedView @JvmOverloads constructor(
         binding.tvIr.setBackgroundColor(color)
         binding.tvSplit.setBackgroundColor(color)
     }
-    public  fun get_irselected(): Int{
-//        if (currentType==0x00 ){
-//            return 0x00;
-//        }else if(currentType==0x07 ){
-//            return 0;
-//        }else{
-//            return 2;
-//        }
-        return currentType ;
+    public fun get_irselected(): Int{
+        Log.d("get_irselected: ", ""+currentType)
+        if (currentType==0x00 ){
+            return 1
+        }else if(currentType==0x07 ){
+            return 0
+        }else{
+            return 2
+        }
     }
 
 }

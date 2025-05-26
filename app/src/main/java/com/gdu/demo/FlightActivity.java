@@ -230,6 +230,18 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             setPhotoShow(1);
         }
         initKnownledgeGraph();
+        // 这里加延迟主要是为了防止状态没有更新
+        lightSelectedView.setupSelectButtonClick(new Runnable() {
+            @Override
+            public void run() {
+//                Log.d("run: ", "run: setphoto");
+                handler1.post(
+                    ()->{
+                        setPhotoShow(1);
+                    }
+                );
+            }
+        });
     }
     // 检查接口定义，确保完全匹配
 //    public interface OnButtonStateChangeListener {
@@ -341,6 +353,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         viewBinding.buttonGimbalReset.setOnClickListener(this);
         lightSelectedView.setButtonsEnabled(true);
         lightSelectedView.setButtonBackgroundColor(R.color.white);
+
+//        lightSelectedView.tvVisibleLight.
 //        mYUVImageView = findViewById(R.id.test_imageview);
     }
 
@@ -623,7 +637,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     public void setPhotoShow(int temp){
         imageItems.clear();
-        getCameraModel();
         int i=lightSelectedView.get_irselected();
         if(i==1){
 //        if(displayMode1==SettingsDefinitions.DisplayMode.THERMAL_ONLY){
@@ -659,7 +672,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
         recyclerView.setLayoutManager(new GridLayoutManager(this, temp)); // 每排 temp 个
         adapter1 = new ImageAdapter(imageItems, this);
-        Log.d("test","内容"+adapter1.getItemCount()+adapter1.getClass());
         recyclerView.setAdapter(adapter1);
     }
 
