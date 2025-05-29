@@ -275,7 +275,7 @@ public class PaintView extends AppCompatImageView {
                 }
 
                 long startTime = System.currentTimeMillis();
-                if(startTime - lastTime > 150){
+                if(startTime - lastTime > 300){
                     // 如果超过一定时间没有检测到物体，则清空物体box
                     PaintView.this.detectionBox = new ArrayList<>();
                 }

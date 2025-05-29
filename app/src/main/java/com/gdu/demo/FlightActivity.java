@@ -1037,7 +1037,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             return;
         }
         latestModelID = modelID;
-
+        showToast(""+modelID);
         runOnUiThread(() -> {
             dataList.clear();
             int temp = modelID % 100000000;
