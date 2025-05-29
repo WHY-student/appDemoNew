@@ -768,13 +768,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 thirdImageID = 1;
             }
             String picture1=storageManager.getAbsolutePath(IMAGE_DIR,firstImageID);
-            String picture2=storageManager.getAbsolutePath(IMAGE_DIR,secondImageID);
-            String picture3=storageManager.getAbsolutePath(IMAGE_DIR,thirdImageID);
+//            String picture2=storageManager.getAbsolutePath(IMAGE_DIR,secondImageID);
+//            String picture3=storageManager.getAbsolutePath(IMAGE_DIR,thirdImageID);
             List<ImageItem> newItems = new ArrayList<>();
 //            storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
             newItems.add(new ImageItem(picture1, object_labels.get(8)));
-            newItems.add(new ImageItem(picture2, object_labels.get(9)));
-            newItems.add(new ImageItem(picture3, object_labels.get(10)));
+//            newItems.add(new ImageItem(picture2, object_labels.get(9)));
+//            newItems.add(new ImageItem(picture3, object_labels.get(10)));
             GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
             assert layoutManager != null;
             adapter1.addNewItems(newItems, layoutManager);
