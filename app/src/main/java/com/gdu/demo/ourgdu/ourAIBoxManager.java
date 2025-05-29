@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ourAIBoxManager {
-    private OnTargetDetectListener targetDetectListener;
+    private OnOurTargetDetectListener targetDetectListener;
     private int mTargetId;
     public VideoSizeMode show_mode = VideoSizeMode.MODE_16_9;
     private long currentTime = 0;
@@ -32,7 +32,7 @@ public class ourAIBoxManager {
         this.frameHeight = height;
     }
 
-    public void setOnTargetDetectListener(OnTargetDetectListener listener) {
+    public void setOnTargetDetectListener(OnOurTargetDetectListener listener) {
         this.targetDetectListener = listener;
     }
 
@@ -84,7 +84,7 @@ public class ourAIBoxManager {
             }
             this.mTargetId = 0;
             if (this.targetDetectListener != null) {
-                this.targetDetectListener.onTargetDetecting(this.mTargetModeList);
+                this.targetDetectListener.onTargetDetectingNew(this.mTargetModeList, (int) modelId / 1000000, (long) modelId % 1000000);
             }
         }
     }
