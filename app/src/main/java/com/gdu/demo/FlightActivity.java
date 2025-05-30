@@ -361,6 +361,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         GlobalVariable.isTargetDetectMode = true;
                         viewBinding.aiPaintView.setRectParams(targetModes);
                         GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
+                        Log.d("onTarget","进入onTargetDetecting");
                     }
                 }
 
@@ -392,7 +393,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                                 Log.d("saveImage", "saveImage");
                                 byte[] yuvData = codecManager.getYuvData();
                                 backgroundHandler.post(() -> {
-                                    savedImage(targetMode, yuvData, IMAGE_DIR);
+                                    savedImage(targetMode, yuvData, IMAGE_DIR,"inc");
                                 });
                                 break;
                             }
@@ -403,7 +404,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     updateModel(tempModelID);
                     updateSpinnerData(tempModelID);
 
-//                    Log.d("savedID", "onTargetDetectingNew: "+ savedID);
+                    Log.d("savedID", "onTargetDetectingNew: "+ savedID);
                     // savedID
                     if(savedID!=0 && FlightActivity.this.savedID!=savedID){
                         FlightActivity.this.savedID = (int) savedID;
@@ -716,7 +717,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
         if (yuvData != null) {
             Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
-            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX()  /1.5), (int) (clickBox.getLeftY() * 1200.0 / 1080.0 /1.5), (int) (clickBox.getWidth()/1.5), (int) (clickBox.getHeight() * 1200.0 / 1080.0 /1.5));
+            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX() ), (int) (clickBox.getLeftY() * 1200.0 / 1080.0), (int) (clickBox.getWidth()), (int) (clickBox.getHeight() * 1200.0 / 1080.0 ));
             bitmap.recycle();
             return bitmap2;
         }else {
@@ -725,12 +726,14 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }
     }
 
-    public void savedImage(TargetMode clickBox, byte[] yuvData,String temp) {
+    public void savedImage(TargetMode clickBox, byte[] yuvData,String temp,String source) {
         Bitmap bitmap2 = cropImage(clickBox, yuvData);
         if(bitmap2!=null){
             int savedNumber = storageManager.saveImage(bitmap2,temp);
             if (savedNumber > 0) {
-                lastSavedNumber = savedNumber;
+                if(source.equals("attribute")){
+                    lastSavedNumber = savedNumber;
+                }
 //                showToast("保存成功，编号: " + lastSavedNumber);
             }else{
                 showToast("保存失败");
@@ -756,6 +759,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //            String picture3=storageManager.getAbsolutePath(IMAGE_DIR,thirdImageID);
             List<ImageItem> newItems = new ArrayList<>();
 //            storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
+            Log.d("picture1",""+firstImageID);
             newItems.add(new ImageItem(picture1, object_labels.get(8)));
 //            newItems.add(new ImageItem(picture2, object_labels.get(9)));
 //            newItems.add(new ImageItem(picture3, object_labels.get(10)));
@@ -889,7 +893,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         int maxHeightPx = (int) (200 * density); // 200dp -> 像素
         byte[] yuvData = codecManager.getYuvData();
         long time1=System.currentTimeMillis();
-        savedImage(clickBox,yuvData,LOAD_DIR);
+        savedImage(clickBox,yuvData,LOAD_DIR,"attribute");
 
         ImageView instanceImageView = attributePopupView.findViewById(R.id.target_image);
 //        instanceImageView.setImageBitmap(scaledBitmap);
