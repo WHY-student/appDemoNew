@@ -92,11 +92,16 @@ import com.gdu.util.ViewUtils;
 import com.gdu.gimbal.Rotation;
 import com.gdu.gimbal.RotationMode;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -383,7 +388,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         viewBinding.aiPaintView.setRectParams(targetModes);
                         GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
                         for (TargetMode targetMode:targetModes){
-                            if(targetMode.getTargetType()%16==6){
+                            if(targetMode.getTargetType()%16==9){
                                 Log.d("saveImage", "saveImage");
                                 byte[] yuvData = codecManager.getYuvData();
                                 backgroundHandler.post(() -> {
@@ -984,7 +989,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private void showKnowledgeGraphPopup() {
         //popupWindow.setAnimationStyle(R.style.PopupAnimation);
         webView.loadUrl("file:///android_asset/templates/fenlei2.html");
-        webView.addJavascriptInterface(new AndroidInterface(), "Android");
+        webView.addJavascriptInterface(new AndroidInterface(incState), "Android");
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
@@ -994,7 +999,47 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
         // 显示在屏幕中央
         KnowledgeGraphPopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, 0);
+    }
 
+    private void updatedKnowledgeGraph(int first_class_id, int second_class_id, int third_class_id){
+        // 需要新类别的大类
+        // 假设车是3，船是1，飞机是2
+        // 按照船机车来配列新类名字，现在是1+1因此只考虑first_class_id
+        // 把值和它对应的“原始下标”打包
+        if(second_class_id != 0){
+            int[] ids  = { first_class_id, second_class_id, third_class_id };
+            Integer[] idx = {1, 2, 3 };  // 下标从 1 开始
+
+            // 按对应的 id 值升序排序下标数组
+            Arrays.sort(idx, Comparator.comparingInt(a -> ids[a - 1]));
+
+            // 新类idx
+            // 对于 2,1,3 的输入，会输出：2,1,3
+            String cls_name_inc_txt = "\n新类"+idx[0]+"\n新类"+idx[1]+"\n新类"+idx[2];
+            String clsName = readFileFromAssets("templates/cls_name_inc_base.txt");
+            String inc_clsName = clsName + cls_name_inc_txt;
+            saveTxtFile(mContext.getFilesDir().getAbsolutePath() + "templates/cls_name_inc.txt", inc_clsName);
+
+            String cls2Fine_inc_txt = readFileFromAssets("templates/cls2fine_inc_base.txt");
+            //        将其中的航母替换掉
+            cls2Fine_inc_txt = cls2Fine_inc_txt.replace("航母 尼米兹级航空母舰 中途岛级航空母舰\n", "航母 尼米兹级航空母舰 中途岛级航空母舰 新类"+idx[0]+"\n");
+            // 将其中的战机替换掉
+            cls2Fine_inc_txt = cls2Fine_inc_txt.replace("战斗机\n", "战斗机 新类"+idx[1]+"\n");
+            // 将其中的车替换掉
+            cls2Fine_inc_txt = cls2Fine_inc_txt.replace("导弹发射车 BM-8-24\n", "导弹发射车 BM-8-24 新类"+idx[2]+"\n");
+            saveTxtFile(mContext.getFilesDir().getAbsolutePath() + "templates/cls2fine_inc.txt", cls2Fine_inc_txt);
+        }
+        else {
+            String cls_name_inc_txt = "\n新类1";
+            String clsName = readFileFromAssets("templates/cls_name_inc_base.txt");
+            String inc_clsName = clsName + cls_name_inc_txt;
+            saveTxtFile(mContext.getFilesDir().getAbsolutePath() + "templates/cls_name_inc.txt", inc_clsName);
+
+            String cls2Fine_inc_txt = readFileFromAssets("templates/cls2fine_inc_base.txt");
+            //        将其中的航母替换掉
+            cls2Fine_inc_txt = cls2Fine_inc_txt.replace("航母 尼米兹级航空母舰 中途岛级航空母舰\n", "航母 尼米兹级航空母舰 中途岛级航空母舰 新类1\n");
+            saveTxtFile(mContext.getFilesDir().getAbsolutePath() + "templates/cls2fine_inc.txt", cls2Fine_inc_txt);
+        }
 
     }
 
@@ -1050,19 +1095,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             }
         });
     }
-//    private void updateKnowNum(int modelID) {
-//        int num = modelID % 100;
-//        if (num == unkonwNum) {
-//            Log.d("TaskDebug", "ModelID unchanged: " + modelID + ", skipping update");
-//            return;
-//        }
-//        if (num != unkonwNum) {
-////            show(unKnownum, "  " + "未知类数目 " + num);
-//            unkonwNum = num;
-//        }
-//    }
-
-//    private boolean isTaskRunning = false; // 标记是否有延迟任务正在运行
 
     private void updateModel(int newModelID) {
         if(modelID==newModelID){
@@ -1270,47 +1302,96 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
 
     class AndroidInterface {
+        private int incState = 0;
+
+        public AndroidInterface(int incState){
+            this.incState = incState;
+        }
         @android.webkit.JavascriptInterface
         public void onJsReady() {
-            runOnUiThread(new Runnable(){
-                @Override
-                public void run(){
-                    try {
-                        String coarseName = readFileFromAssets("templates/coarse_name_temp.txt");
-                        String fineName = readFileFromAssets("templates/fine_name_temp.txt");
-                        String clsName = readFileFromAssets("templates/cls_name_temp.txt");
-                        String attName = readFileFromAssets("templates/att_name.txt");
-                        String fine2Coarse = readFileFromAssets("templates/fine2coarse_temp.txt");
-                        String cls2Fine = readFileFromAssets("templates/cls2fine_temp.txt");
-                        String attribute = readFileFromAssets("templates/attribute_temp.txt");
+            if(incState==0){
+                runOnUiThread(new Runnable(){
+                    @Override
+                    public void run(){
+                        try {
+                            String coarseName = readFileFromAssets("templates/coarse_name_temp.txt");
+                            String fineName = readFileFromAssets("templates/fine_name_temp.txt");
+                            String clsName = readFileFromAssets("templates/cls_name_temp.txt");
+                            String attName = readFileFromAssets("templates/att_name.txt");
+                            String fine2Coarse = readFileFromAssets("templates/fine2coarse_temp.txt");
+                            String cls2Fine = readFileFromAssets("templates/cls2fine_temp.txt");
+                            String attribute = readFileFromAssets("templates/attribute_temp.txt");
 
-                        // 使用 evaluateJavascript 调用 JavaScript 方法传入txt文件内容
-                        String jsCode = "receiveFiles('" + escapeJavaScript(coarseName) + "','"
-                                + escapeJavaScript(fineName) + "','" + escapeJavaScript(clsName) + "','"
-                                + escapeJavaScript(attName) + "','" + escapeJavaScript(fine2Coarse) + "','"
-                                + escapeJavaScript(cls2Fine) + "','" + escapeJavaScript(attribute) + "')";
-                        Log.d("jscode",jsCode);
-                        webView.setWebChromeClient(new WebChromeClient() {
-                            @Override
-                            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                                Log.d("WebViewConsole", consoleMessage.message() + " -- From line "
-                                        + consoleMessage.lineNumber() + " of "
-                                        + consoleMessage.sourceId());
-                                return super.onConsoleMessage(consoleMessage);
-                            }
-                        });
-                        //"javascript:"+"console.log('hello world');"
-                       webView.evaluateJavascript(jsCode, new ValueCallback<String>() {
-                            @Override
-                            public void onReceiveValue(String value) {
-                                Log.d("WebViewJS", "JavaScript 执行结果: " + value);
-                            }
-                        });
-                    } catch (Exception e) {
-                        Log.d("onJsReady", e.toString());
+                            // 使用 evaluateJavascript 调用 JavaScript 方法传入txt文件内容
+                            String jsCode = "receiveFiles('" + escapeJavaScript(coarseName) + "','"
+                                    + escapeJavaScript(fineName) + "','" + escapeJavaScript(clsName) + "','"
+                                    + escapeJavaScript(attName) + "','" + escapeJavaScript(fine2Coarse) + "','"
+                                    + escapeJavaScript(cls2Fine) + "','" + escapeJavaScript(attribute) + "')";
+                            Log.d("jscode",jsCode);
+                            webView.setWebChromeClient(new WebChromeClient() {
+                                @Override
+                                public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                                    Log.d("WebViewConsole", consoleMessage.message() + " -- From line "
+                                            + consoleMessage.lineNumber() + " of "
+                                            + consoleMessage.sourceId());
+                                    return super.onConsoleMessage(consoleMessage);
+                                }
+                            });
+                            //"javascript:"+"console.log('hello world');"
+                            webView.evaluateJavascript(jsCode, new ValueCallback<String>() {
+                                @Override
+                                public void onReceiveValue(String value) {
+                                    Log.d("WebViewJS", "JavaScript 执行结果: " + value);
+                                }
+                            });
+                        } catch (Exception e) {
+                            Log.d("onJsReady", e.toString());
+                        }
                     }
-                }
-            });
+                });
+            }
+            else{
+                runOnUiThread(new Runnable(){
+                    @Override
+                    public void run(){
+                        try {
+                            String coarseName = readFileFromAssets("templates/coarse_name_temp.txt");
+                            String fineName = readFileFromAssets("templates/fine_name_inc.txt");
+                            String clsName = readFileFromAssets("templates/cls_name_inc.txt");
+                            String attName = readFileFromAssets("templates/att_name.txt");
+                            String fine2Coarse = readFileFromAssets("templates/fine2coarse_inc.txt");
+                            String cls2Fine = readFileFromAssets("templates/cls2fine_inc.txt");
+                            String attribute = readFileFromAssets("templates/attribute_inc.txt");
+
+                            // 使用 evaluateJavascript 调用 JavaScript 方法传入txt文件内容
+                            String jsCode = "receiveFiles('" + escapeJavaScript(coarseName) + "','"
+                                    + escapeJavaScript(fineName) + "','" + escapeJavaScript(clsName) + "','"
+                                    + escapeJavaScript(attName) + "','" + escapeJavaScript(fine2Coarse) + "','"
+                                    + escapeJavaScript(cls2Fine) + "','" + escapeJavaScript(attribute) + "')";
+                            Log.d("jscode",jsCode);
+                            webView.setWebChromeClient(new WebChromeClient() {
+                                @Override
+                                public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                                    Log.d("WebViewConsole", consoleMessage.message() + " -- From line "
+                                            + consoleMessage.lineNumber() + " of "
+                                            + consoleMessage.sourceId());
+                                    return super.onConsoleMessage(consoleMessage);
+                                }
+                            });
+                            //"javascript:"+"console.log('hello world');"
+                            webView.evaluateJavascript(jsCode, new ValueCallback<String>() {
+                                @Override
+                                public void onReceiveValue(String value) {
+                                    Log.d("WebViewJS", "JavaScript 执行结果: " + value);
+                                }
+                            });
+                        } catch (Exception e) {
+                            Log.d("onJsReady", e.toString());
+                        }
+                    }
+                });
+
+            }
 
         }
         //filter know graph by detect target,need open fenlei2.html onChartReady,such 322
@@ -1354,6 +1435,18 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             Log.d("readFileFromAssets", e.toString());
         }
         return result;
+    }
+
+    public void saveTxtFile(String filePath, String content) {
+        try {
+            FileOutputStream fos = new FileOutputStream(filePath);
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fos));
+            writer.write(content);
+            writer.close();
+            fos.close();
+        } catch (IOException e) {
+            Log.d("saveTxtFile", e.toString());
+        }
     }
 
     private String escapeJavaScript(String input) {

@@ -202,6 +202,7 @@ public class PaintView extends AppCompatImageView {
         attribute_label_new.add("导弹发射器");
         attribute_label_new.add("飞机升降机");
         attribute_label_new.add("近程防御武器系统");
+        attribute_label_new.add("舰载机");
     }
 
 
