@@ -84,7 +84,7 @@ public class ourAIBoxManager {
             }
             this.mTargetId = 0;
             if (this.targetDetectListener != null) {
-                this.targetDetectListener.onTargetDetectingNew(this.mTargetModeList, (int) modelId / 1000000, (long) modelId % 1000000);
+                this.targetDetectListener.onTargetDetectingNew(this.mTargetModeList, modelId, (long) modelId % 1000000);
             }
         }
     }

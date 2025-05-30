@@ -764,9 +764,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //                    } else {
 //                        Toast.makeText(this, "请先保存图片", Toast.LENGTH_SHORT).show();
 //                    }
-            if(thirdImageID==0){
-                thirdImageID = 1;
-            }
+//            if(thirdImageID==0){
+//                thirdImageID = 1;
+//            }
             String picture1=storageManager.getAbsolutePath(IMAGE_DIR,firstImageID);
 //            String picture2=storageManager.getAbsolutePath(IMAGE_DIR,secondImageID);
 //            String picture3=storageManager.getAbsolutePath(IMAGE_DIR,thirdImageID);
@@ -1066,7 +1066,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 });
                 spinner.setAdapter(adapter);
             } else {
-                Log.d("增量", ""+modelID);
+//                Log.d("增量", ""+modelID);
                 adapter.notifyDataSetChanged();
 //                spinner.setSelection(0); // 重新设置选中位置
             }
