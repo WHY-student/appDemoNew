@@ -87,7 +87,7 @@ public class PaintView extends AppCompatImageView {
         class_label.add("类6");
         class_label.add("类7");
         class_label.add("类8");
-        class_label.add("库兹涅佐夫号");
+//        class_label.add("库兹涅佐夫号");
         class_label.add("保存类别");
         class_label.add("未知类");
     }
@@ -361,7 +361,7 @@ public class PaintView extends AppCompatImageView {
 //                Log.d("labelIndex", "parseTargetAIBox: "+labelIndex);
             if (labelIndex == -1) {
                 label = "未知类";
-            } else if (labelIndex > 9) {
+            } else if (labelIndex > 8) {
                 label = "未知类";
             } else {
                 label = class_label.get(labelIndex);
@@ -409,10 +409,14 @@ public class PaintView extends AppCompatImageView {
 
     public TargetMode getTargetModebyXY(int clickX, int clickY){
         for (TargetMode detection : this.detectionBox) {
-            int x = (int) (detection.getLeftX()/1.5);
-            int y = (int) (detection.getLeftY() * 1200.0 / 1080.0/1.5);
-            int maxX = (int) ((detection.getLeftX() + detection.getWidth())/1.5);
-            int maxY = (int) ((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0/1.5);
+//            int x = (int) (detection.getLeftX()/1.5);
+//            int y = (int) (detection.getLeftY() * 1200.0 / 1080.0/1.5);
+//            int maxX = (int) ((detection.getLeftX() + detection.getWidth())/1.5);
+//            int maxY = (int) ((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0/1.5);
+            int x = detection.getLeftX();
+            int y = (int)(detection.getLeftY() * 1200.0 / 1080.0);
+            int maxX = (detection.getLeftX() + detection.getWidth());
+            int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0);
             if(clickX>=x && clickX<= maxX && clickY>=y && clickY<=maxY){
                 return detection;
             }
