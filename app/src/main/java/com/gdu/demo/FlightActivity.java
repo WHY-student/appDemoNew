@@ -1,25 +1,15 @@
 package com.gdu.demo;
 
-import static com.gdu.util.RectUtil.getScreenHeight;
-import static com.gdu.util.RectUtil.getScreenWidth;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
 import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.net.Uri;
 import android.util.DisplayMetrics;
-import android.view.ViewGroup;
 import android.webkit.ConsoleMessage;
-import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
 
@@ -29,11 +19,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.renderscript.Allocation;
-import android.renderscript.Element;
-import android.renderscript.RenderScript;
-import android.renderscript.ScriptIntrinsicYuvToRGB;
-import android.renderscript.Type;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -50,7 +35,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.fragment.app.FragmentActivity;
@@ -105,14 +89,12 @@ import com.gdu.util.CollectionUtils;
 import com.gdu.util.StringUtils;
 import com.gdu.util.ThreadHelper;
 import com.gdu.util.ViewUtils;
-import com.gdu.util.logger.MyLogUtils;
 import com.gdu.gimbal.Rotation;
 import com.gdu.gimbal.RotationMode;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -143,32 +125,29 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private Spinner spinner;
     private ImageView imageView;
 
-    private Button knowledgeGraphButton;
     private WebView webView;
     private PopupWindow KnowledgeGraphPopupWindow;
-    private List<String> recognizedModels = Arrays.asList("B-1B", "BMP-2");
-    private int clickCount = 0; // 点击计数器
+    private final List<String> recognizedModels = Arrays.asList("B-1B", "BMP-2");
+    private final int clickCount = 0; // 点击计数器
     private final int[] imageRes = {R.drawable.knowgrape1, R.drawable.knowgrap2};
 
     private Runnable resetStateTask; // 用于重置状态的任务
     private Runnable completeTask;
     private int incState = 0;
-    private int unkonwNum = 0;
 
-    private boolean isProcessRunning = false;
     private int latestModelID = 0;
     private int tempModelID=0;
     private int modelID = 0;
     private boolean isIncrementalMode = false;
     private ArrayAdapter<String> adapter;
-    private List<String> dataList = new ArrayList<>();
+    private final List<String> dataList = new ArrayList<>();
     private ImageAdapter adapter1;
     private Context mContext;
-    private  String IMAGE_DIR = "cropped_images";
-    private   String LOAD_DIR="load_images";
+    private final String IMAGE_DIR = "cropped_images";
+    private final String LOAD_DIR="load_images";
 
-    private Handler mHandler = new Handler(Looper.getMainLooper());
-    private Handler handler1 = new Handler(Looper.getMainLooper());
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private final Handler handler1 = new Handler(Looper.getMainLooper());
 //    private Boolean isPaused = false;
 //    private boolean isSelected = false;
 
@@ -177,7 +156,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private GDUCamera mGDUCamera;
 
     private ourGDUVision mGduVision;
-    private List<ImageItem> imageItems = new ArrayList<>();
+    private final List<ImageItem> imageItems = new ArrayList<>();
     private ImageProcessingManager mImageProcessingManager;
     private ImageStorageManager storageManager;
     private int lastSavedNumber = 0;
@@ -189,7 +168,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     private int savedID=-1;
     private LightSelectedView lightSelectedView;
 
-    private List<String> object_labels = new ArrayList<>();
+    private final List<String> object_labels = new ArrayList<>();
     {
         object_labels.add("标签1");
         object_labels.add("标签2");
@@ -229,7 +208,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         }else{
             setPhotoShow(1);
         }
-        initKnownledgeGraph();
+        initKnowledgeGraph();
         // 这里加延迟主要是为了防止状态没有更新
         lightSelectedView.setupSelectButtonClick(new Runnable() {
             @Override
@@ -287,7 +266,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //        lightSelectedView.setOnButtonStateChangeListener(this);
         lightSelectedView.setOnClickListener(this);
         //know graph button
-        knowledgeGraphButton=findViewById(R.id.button_know_graph);
+        Button knowledgeGraphButton = findViewById(R.id.button_know_graph);
         knowledgeGraphButton.setOnClickListener(this); // 设置点击监听器
         //webView = findViewById(R.id.webview);
 
@@ -426,8 +405,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         Log.d("savedID:success", "success"+ savedID);
                         int firstImageID = (int) savedID / 10000;
                         int tempSavedID = (int) savedID % 10000;
-                        int secondImageID = (int) tempSavedID / 100;
-                        int thirdImageID = (int) tempSavedID % 100;
+                        int secondImageID = tempSavedID / 100;
+                        int thirdImageID = tempSavedID % 100;
                         runOnUiThread(() -> {
                             updatedPhotoList(firstImageID, secondImageID, thirdImageID);
                         });
@@ -589,7 +568,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 spinner.setSelection(0);
-                return;
             }
 
             @Override
@@ -620,7 +598,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //    }
     @SuppressLint("InflateParams")
     public void initPhotoDialog() {
-        photoPopupView = LayoutInflater.from(FlightActivity.this).inflate(R.layout.popup_layout, null);
+        photoPopupView = LayoutInflater.from(mContext).inflate(R.layout.popup_layout, null);
         // 创建PopupWindow实例
         photoPopupWindow = new PopupWindow(
                 photoPopupView,
@@ -649,7 +627,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             imageItems.add(new ImageItem("images/06.jpg", object_labels.get(6)));
             imageItems.add(new ImageItem("images/07.jpg", object_labels.get(7)));
 
-            Log.d("FlightActivity", "THERMAL模式 - 加载图片: " + imageItems.toString()+i);
+            Log.d("FlightActivity", "THERMAL模式 - 加载图片: " + imageItems +i);
         }else if(i==2){
 //        }else if(displayMode1==SettingsDefinitions.DisplayMode.PIP){
             imageItems.add(new ImageItem("images/image1.png", object_labels.get(0)));
@@ -660,7 +638,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             imageItems.add(new ImageItem("images/image6.png", object_labels.get(5)));
             imageItems.add(new ImageItem("images/image7.png", object_labels.get(6)));
             imageItems.add(new ImageItem("images/image8.png", object_labels.get(7)));
-            Log.d("FlightActivity", "可见光 - 加载图片: " + imageItems.toString()+i);
+            Log.d("FlightActivity", "可见光 - 加载图片: " + imageItems +i);
         }else{
             Log.d("FlightActivity", "分屏模式 - 加载图片: " + imageItems.toString()+i);
         }
@@ -675,9 +653,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         recyclerView.setAdapter(adapter1);
     }
 
-    public void initKnownledgeGraph(){
+    @SuppressLint({"SetJavaScriptEnabled", "InflateParams"})
+    public void initKnowledgeGraph(){
         // 加载弹出窗口布局
-        View popupView = getLayoutInflater().inflate(R.layout.webview_popup, null);
+     View popupView = getLayoutInflater().inflate(R.layout.webview_popup, null);
 
         // 初始化WebView
         webView=popupView.findViewById(R.id.knowledge_graph_webView);
@@ -712,15 +691,15 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         KnowledgeGraphPopupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
     }
 
-    // 更新显示/隐藏状态
-    private void updateImageVisibility() {
-        if (clickCount % 2 == 1) { // 奇数次点击显示
-            imageView.setVisibility(View.VISIBLE);
-            updateImageDisplay();
-        } else { // 偶数次点击隐藏
-            imageView.setVisibility(View.GONE);
-        }
-    }
+//    // 更新显示/隐藏状态
+//    private void updateImageVisibility() {
+//        if (clickCount % 2 == 1) { // 奇数次点击显示
+//            imageView.setVisibility(View.VISIBLE);
+//            updateImageDisplay();
+//        } else { // 偶数次点击隐藏
+//            imageView.setVisibility(View.GONE);
+//        }
+//    }
 
     // 根据增量状态更新图片
     private void updateImageDisplay() {
@@ -818,15 +797,16 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         });
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 101) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                mGduPlayView.beginRecord("/mnt/sdcard/gdu","ron.mp4");
-            }
-        }
-    }
+    // 这个函数是普宙写的为了方便测试playerView的
+    //    @Override
+    //    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    //        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    //        if (requestCode == 101) {
+    //            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+    ////                mGduPlayView.beginRecord("/mnt/sdcard/gdu","ron.mp4");
+    //            }
+    //        }
+    //    }
 
     @Override
     protected void onResume() {
@@ -941,6 +921,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         // 1. 将byte转换为8位二进制字符串（补前导零）
         String byteBinary = String.format("%8s", Integer.toBinaryString(clickBox.getTargetConfidence() & 0xFF))
                 .replace(' ', '0');
+        byteBinary = "";
 
         // 2. 将int转换为32位二进制字符串（补前导零）
 //        String intBinary = String.format("%32s", Integer.toBinaryString(clickBox.getId()))
@@ -949,15 +930,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 .replace(' ', '0');
 
         // 3. 拼接成40位二进制字符串
-//        String combined = intBinary + byteBinary;
-        String combined = intBinary;
-//        combined = "01000110001100010010100000";
+        String combined = intBinary + byteBinary;
         int len = attributeList.size();
 
         StringBuilder result = new StringBuilder();
         for (int pos = 0; pos < len; pos++) {
             if (combined.charAt(pos) == '1') { // 从左到右对应高位到低位
-                result.append(attributeList.get(pos)+"\n");
+                result.append(attributeList.get(pos)).append("\n");
             }
         }
 
@@ -1051,7 +1030,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             dataList.add("新类1数量：" + part1);
             dataList.add("新类2数量：" + part2);
             dataList.add("新类3数量：" + part3);
-            unkonwNum = temp2;
 
             // 重新设置适配器以确保更新
             if(adapter == null) {
@@ -1129,18 +1107,14 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     initBackgroundThread();
                     // 开启检测
                     initGduVision(true);
-                    mGduVision.startTargetDetect(new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(GDUError var1) {
-                            if (var1 == null) {
-                                showToast("识别开始");
-                            } else {
-                                showToast("开始识别失败");
-                                AIRecognize.setEnabled(true);
-                            }
+                    mGduVision.startTargetDetect(error -> {
+                        if (error == null) {
+                            showToast("识别开始");
+                        } else {
+                            showToast("开始识别失败");
+                            AIRecognize.setEnabled(true);
                         }
                     });
-                    isProcessRunning = true;
                     quitAIRecognize.setEnabled(true);
                     startIncremental.setEnabled(true);
                     show(aiState, "AI状态：未增量");
@@ -1170,20 +1144,16 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     stopBackgroundThread();
                     if (mGduVision != null) {
                         initGduVision(false);
-                        mGduVision.stopTargetDetect(new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(GDUError var1) {
-                                if (var1 == null) {
-//                                    showToast("退出识别");
-                                } else {
-                                    showToast("退出识别失败");
-                                    quitAIRecognize.setEnabled(true);
-                                }
+                        mGduVision.stopTargetDetect(error -> {
+                            if (error == null) {
+                                showToast("退出识别");
+                            } else {
+                                showToast("退出识别失败");
+                                quitAIRecognize.setEnabled(true);
                             }
                         });
                     }
                     viewBinding.aiPaintView.setRectParams(new ArrayList<>());
-                    isProcessRunning = false;
                     AIRecognize.setEnabled(true);
                     startIncremental.setEnabled(false);
                     AIRecognize.setImageResource(R.drawable.ai_recognize);
@@ -1210,38 +1180,29 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 Rotation rotation = new Rotation();
                 rotation.setMode(RotationMode.ABSOLUTE_ANGLE);
                 rotation.setPitch(-90);
-                mGDUGimbal.rotate(rotation, new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError error) {
-                        if (error == null) {
-                            showToast("云台向下");
-                        }
+                mGDUGimbal.rotate(rotation, error -> {
+                    if (error == null) {
+                        showToast("云台向下");
                     }
                 });
                 break;
             case R.id.button_gimbal_reset:
                 mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
-                mGDUGimbal.reset(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError error) {
-                        if (error == null) {
-                            showToast("云台回正");
-                        }
+                mGDUGimbal.reset(error -> {
+                    if (error == null) {
+                        showToast("云台回正");
                     }
                 });
                 break;
             case R.id.button_start_incremental:
                 if (mGduVision != null) {
-                    mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(GDUError var1) {
-                            if (var1 == null) {
-                                showToast("开始增量");
-                                isIncrementalMode=true;
-                            } else {
-                                showToast("开始增量失败");
-                                isIncrementalMode=false;
-                            }
+                    mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, error -> {
+                        if (error == null) {
+                            showToast("开始增量");
+                            isIncrementalMode=true;
+                        } else {
+                            showToast("开始增量失败");
+                            isIncrementalMode=false;
                         }
                     });
                 } else {
@@ -1255,26 +1216,20 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //                updatedPhotoList(1,5,9);
                 break;
             case R.id.btn_take_off:
-                mGDUFlightController.startLanding(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError var1) {
-                        if (var1 == null) {
-                            showToast("开始降落");
-                        } else {
-                            showToast("开始降落失败");
-                        }
+                mGDUFlightController.startLanding(error -> {
+                    if (error == null) {
+                        showToast("开始降落");
+                    } else {
+                        showToast("开始降落失败");
                     }
                 });
                 break;
             case R.id.btn_return_home:
-                mGDUFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(GDUError var1) {
-                        if (var1 == null) {
-                            showToast("开始返航");
-                        } else {
-                            showToast("开始返航失败");
-                        }
+                mGDUFlightController.startGoHome(error -> {
+                    if (error == null) {
+                        showToast("开始返航");
+                    } else {
+                        showToast("开始返航失败");
                     }
                 });
                 break;
@@ -1295,6 +1250,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                             updateSpinnerData(latestModelID);
                             showToast(""+latestModelID);
                         }
+                        v.performClick();
                         return false;
                     }
                 });
@@ -1351,7 +1307,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                             }
                         });
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Log.d("onJsReady", e.toString());
                     }
                 }
             });
@@ -1391,11 +1347,11 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             InputStream is = getAssets().open(fileName);
             int size = is.available();
             byte[] buffer = new byte[size];
-            is.read(buffer);
+            int state = is.read(buffer);
             is.close();
-            result = new String(buffer, "UTF-8");
+            result = new String(buffer, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.d("readFileFromAssets", e.toString());
         }
         return result;
     }

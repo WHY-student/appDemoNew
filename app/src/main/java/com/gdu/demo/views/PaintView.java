@@ -215,13 +215,13 @@ public class PaintView extends AppCompatImageView {
 //        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0005));
 //        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0006));
 //    }
-    private Rect temp=new Rect();
+    private final Rect temp=new Rect();
 
-    private long timestamp = System.currentTimeMillis();
+    private final long timestamp = System.currentTimeMillis();
 
-    private Handler mainHandler; // 主线程的 Handler
-    private HandlerThread backgroundThread; // 后台线程
-    private Handler backgroundHandler; // 后台线程的 Handler
+    private final Handler mainHandler; // 主线程的 Handler
+    private final HandlerThread backgroundThread; // 后台线程
+    private final Handler backgroundHandler; // 后台线程的 Handler
 
     private long lastTime;
 
@@ -271,7 +271,7 @@ public class PaintView extends AppCompatImageView {
                 try {
                     Thread.sleep(57); // 模拟耗时操作
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Log.d("backgroundHandler", e.toString());
                 }
 
                 long startTime = System.currentTimeMillis();
@@ -350,24 +350,21 @@ public class PaintView extends AppCompatImageView {
 //            int maxX = (int)((detection.getLeftX() + detection.getWidth())/1.5);
 //            int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0/1.5);
 
-            int x = (int)(detection.getLeftX());
+            int x = detection.getLeftX();
             int y = (int)(detection.getLeftY() * 1200.0 / 1080.0);
-            int maxX = (int)((detection.getLeftX() + detection.getWidth()));
+            int maxX = (detection.getLeftX() + detection.getWidth());
             int maxY = (int)((detection.getLeftY() + detection.getHeight()) * 1200.0 / 1080.0);
 
-            String label = null;
-            if (label == null) {
-
-                int labelIndex = detection.getTargetType() % 16;
+            String label;
+            int labelIndex = detection.getTargetType() % 16;
 //                Log.d("targetType", "parseTargetAIBox: "+detection.getTargetType());
 //                Log.d("labelIndex", "parseTargetAIBox: "+labelIndex);
-                if (labelIndex == -1) {
-                    label = "未知类";
-                } else if (labelIndex > 9) {
-                    label = "未知类";
-                } else {
-                    label = class_label.get(labelIndex);
-                }
+            if (labelIndex == -1) {
+                label = "未知类";
+            } else if (labelIndex > 9) {
+                label = "未知类";
+            } else {
+                label = class_label.get(labelIndex);
             }
             if (x >= 0 && y >= 0 && maxX <= 1920 && maxY <= 1200) {
                 canvas.drawRect(new Rect(x, y, maxX, maxY), paint); // 绘制矩形
