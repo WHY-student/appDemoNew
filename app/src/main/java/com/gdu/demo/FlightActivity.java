@@ -718,7 +718,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
         if (yuvData != null) {
             Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
-            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX() ), (int) (clickBox.getLeftY() * 1200.0 / 1080.0), (int) (clickBox.getWidth()), (int) (clickBox.getHeight() * 1200.0 / 1080.0 ));
+            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX() ), (int) (clickBox.getLeftY()), (int) (clickBox.getWidth()), (int) (clickBox.getHeight()  ));
             bitmap.recycle();
             return bitmap2;
         }else {
