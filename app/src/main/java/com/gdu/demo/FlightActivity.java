@@ -415,6 +415,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         int thirdImageID = tempSavedID % 100;
                         runOnUiThread(() -> {
                             updatedPhotoList(firstImageID, secondImageID, thirdImageID);
+                            updatedKnowledgeGraph(1,0,0);
                         });
                         runOnUiThread(() -> {
                             spinner.performClick();
@@ -1236,6 +1237,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         if (error == null) {
                             showToast("开始增量");
                             isIncrementalMode=true;
+//                            incState+=1;
+//                            updatedKnowledgeGraph(1,0,0);
                         } else {
                             showToast("开始增量失败");
                             isIncrementalMode=false;
