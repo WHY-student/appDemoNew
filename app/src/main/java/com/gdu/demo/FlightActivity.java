@@ -175,7 +175,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private final List<String> object_labels = new ArrayList<>();
     {
-        object_labels.add("标签1");
+        object_labels.add("尼米兹号航母");
         object_labels.add("标签2");
         object_labels.add("标签3");
         object_labels.add("标签4");
