@@ -388,16 +388,16 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                         GlobalVariable.isTargetDetectMode = true;
                         viewBinding.aiPaintView.setRectParams(targetModes);
                         GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
-                        for (TargetMode targetMode:targetModes){
-                            if(targetMode.getTargetType()%16==9){
-                                Log.d("saveImage", "saveImage");
-                                byte[] yuvData = codecManager.getYuvData();
-                                backgroundHandler.post(() -> {
-                                    savedImage(targetMode, yuvData, IMAGE_DIR,"inc");
-                                });
-                                break;
-                            }
-                        }
+//                        for (TargetMode targetMode:targetModes){
+//                            if(targetMode.getTargetType()%16==9){
+//                                Log.d("saveImage", "saveImage");
+//                                byte[] yuvData = codecManager.getYuvData();
+//                                backgroundHandler.post(() -> {
+//                                    savedImage(targetMode, yuvData, IMAGE_DIR,"inc");
+//                                });
+//                                break;
+//                            }
+//                        }
                     }
                     // modelID
                     tempModelID=modelID;
@@ -762,9 +762,15 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             List<ImageItem> newItems = new ArrayList<>();
 //            storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
             Log.d("picture1",""+firstImageID);
-            newItems.add(new ImageItem(picture1, object_labels.get(8)));
+//            newItems.add(new ImageItem(picture1, object_labels.get(8)));
 //            newItems.add(new ImageItem(picture2, object_labels.get(9)));
 //            newItems.add(new ImageItem(picture3, object_labels.get(10)));
+            int i=lightSelectedView.get_irselected();
+            if(i==1) {
+                newItems.add(new ImageItem("images/08.jpg", object_labels.get(8)));
+            }else if(i==2){
+                newItems.add(new ImageItem("images/image9.jpg", object_labels.get(8)));
+            }
             GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
             assert layoutManager != null;
             adapter1.addNewItems(newItems, layoutManager);

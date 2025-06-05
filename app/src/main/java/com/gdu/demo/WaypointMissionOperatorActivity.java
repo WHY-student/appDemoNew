@@ -1114,7 +1114,8 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
             float Altitude = Float.parseFloat(s[2]);
 //            float Altitude=10f;
             waypoint =  new Waypoint(Latitude, Longitude, Altitude);
-            waypoint.setSpeed(Integer.parseInt(element.getElementsByTagName("speed").item(0).getTextContent()));
+            waypoint.setSpeed(0.5);
+//            waypoint.setSpeed(Integer.parseInt(element.getElementsByTagName("speed").item(0).getTextContent()));
             gimbal_pitch = Float.parseFloat(element.getElementsByTagName("gimbalAngle").item(0).getTextContent());
             gimbal_rotate=Float.parseFloat(element.getElementsByTagName("droneHeadAngle").item(0).getTextContent());
             waypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,(int)gimbal_rotate));
@@ -1123,7 +1124,7 @@ public class WaypointMissionOperatorActivity extends Activity implements Locatio
 //            waypoint.setSpeed(3);
 //            waypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT,720));
 //            waypoint.addAction(new WaypointAction(WaypointActionType.STAY, 30));
-            waypoint.setGimbalPitch(-45);
+            waypoint.setGimbalPitch(-90);
             waypointList.add(waypoint);
 //            show("高度"+Altitude+"经度"+Latitude+"维度"+Latitude+"云台角度"+gimbal_pitch+"旋转角度"+gimbal_rotate);
         }
