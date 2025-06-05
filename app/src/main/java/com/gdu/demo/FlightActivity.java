@@ -931,6 +931,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             }
         }
 
+        String attribute_labels = result.toString();
+        show(attributePopupView.findViewById(R.id.target_attribute), attribute_labels);
+
+
         attributePopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, -20);
     }
 
