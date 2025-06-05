@@ -873,7 +873,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                             Log.d("clickBox", "onClick: 未点击到物体");
                             break;
                         }
-                        showAttributewithBox(clickBox);
+                        showAttributeWithBox(clickBox);
                         v.performClick();
                         break;
                     case MotionEvent.ACTION_DOWN:
@@ -886,47 +886,23 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     }
 
-    public void showAttributewithBox(TargetMode clickBox){
+    public void showAttributeWithBox(TargetMode clickBox){
 
-        final float density = getResources().getDisplayMetrics().density;
-
-        // 转换最大尺寸限制
-        int maxWidthPx = (int) (400 * density); // 500dp -> 像素
-        int maxHeightPx = (int) (200 * density); // 200dp -> 像素
         byte[] yuvData = codecManager.getYuvData();
-        long time1=System.currentTimeMillis();
         savedImage(clickBox,yuvData,LOAD_DIR,"attribute");
 
         ImageView instanceImageView = attributePopupView.findViewById(R.id.target_image);
-//        instanceImageView.setImageBitmap(scaledBitmap);
         storageManager.loadImageToView(LOAD_DIR,lastSavedNumber,instanceImageView);
         storageManager.clearDirectory(LOAD_DIR);
 
         // 显示里面对应的各条属性，目前仅展示class
-        Log.d("showAttributewithBox:", "showAttributewithBox: "+clickBox.getTargetType());
+        Log.d("showAttributeWithBox:", "showAttributeWithBox: "+clickBox.getTargetType());
         String class_label = viewBinding.aiPaintView.getClassLabel().get(clickBox.getTargetType()%16);
         if(Objects.equals(class_label, "保存类别")){
             class_label="未知类别";
         }
         show(attributePopupView.findViewById(R.id.target_label_name), class_label);
-        int coarseIndex = clickBox.getTargetType() / 16;
         List<String> attributeList;
-        switch (coarseIndex){
-            case 1:
-                attributeList = viewBinding.aiPaintView.getAttributeLabel1();
-                break;
-            case 2:
-                attributeList = viewBinding.aiPaintView.getAttributeLabel2();
-                break;
-            case 3:
-                attributeList = viewBinding.aiPaintView.getAttributeLabel3();
-                break;
-            default:
-                attributeList = viewBinding.aiPaintView.getAttributeLabel1();
-                Log.d("attribute", "大类没有index");
-//                return;
-        }
-//        attributeList = car_attribute_labels;
         attributeList = viewBinding.aiPaintView.getAttributeLabelNew();
 
         // 1. 将byte转换为8位二进制字符串（补前导零）
@@ -935,8 +911,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         byteBinary = "";
 
         // 2. 将int转换为32位二进制字符串（补前导零）
-//        String intBinary = String.format("%32s", Integer.toBinaryString(clickBox.getId()))
-//                .replace(' ', '0');
         String intBinary = String.format("%32s", Integer.toBinaryString(clickBox.getId()))
                 .replace(' ', '0');
 
@@ -950,9 +924,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 result.append(attributeList.get(pos)).append("\n");
             }
         }
-
-//        String attribute_labels = result.toString();
-//        show(attributePopupView.findViewById(R.id.target_attribute), attribute_labels);
 
         attributePopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, -20);
     }
