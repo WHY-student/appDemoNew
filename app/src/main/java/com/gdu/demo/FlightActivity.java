@@ -718,7 +718,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
         if (yuvData != null) {
             Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
-            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX() ), (int) (clickBox.getLeftY() * 1200.0 / 1080.0), (int) (clickBox.getWidth()), (int) (clickBox.getHeight() * 1200.0 / 1080.0 ));
+//            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX() ), (int) (clickBox.getLeftY() * 1200.0 / 1080.0), (int) (clickBox.getWidth()), (int) (clickBox.getHeight() * 1200.0 / 1080.0 ));
+            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX() ), (int) (clickBox.getLeftY()), (int) (clickBox.getWidth()), (int) (clickBox.getHeight()));
             bitmap.recycle();
             return bitmap2;
         }else {
@@ -950,8 +951,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             }
         }
 
-        String attribute_labels = result.toString();
-        show(attributePopupView.findViewById(R.id.target_attribute), attribute_labels);
+//        String attribute_labels = result.toString();
+//        show(attributePopupView.findViewById(R.id.target_attribute), attribute_labels);
 
         attributePopupWindow.showAtLocation(viewBinding.aiPaintView, Gravity.CENTER, 0, -20);
     }
@@ -1233,6 +1234,13 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 break;
             case R.id.button_start_incremental:
                 if (mGduVision != null) {
+
+                    int temp = latestModelID % 100000000;
+                    int unknown_num = temp / 1000000;
+                    if(unknown_num <3){
+                        showToast("未知类别数目不足，请识别更多未知类别");
+                        break;
+                    }
                     mGduVision.targetDetect((byte) 3, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, error -> {
                         if (error == null) {
                             showToast("开始增量");

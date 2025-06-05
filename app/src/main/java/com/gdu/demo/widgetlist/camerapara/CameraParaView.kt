@@ -83,7 +83,8 @@ class CameraParaView @JvmOverloads constructor(
                         if (CameraUtil.isSupportESGimbal(GlobalVariable.gimbalType)) VISIBLE else GONE
                     binding.viewAutoSwitchGroup.visibility =
                         if (CameraUtil.isSupportAutoSwitchGimbal(GlobalVariable.gimbalType)) VISIBLE else GONE
-                    binding.ivAELockBtn.setVisibility(if (CameraUtil.isSupportAELockGimbal(GlobalVariable.gimbalType)) VISIBLE else GONE)
+//                    binding.ivAELockBtn.setVisibility(if (CameraUtil.isSupportAELockGimbal(GlobalVariable.gimbalType)) VISIBLE else GONE)
+                    binding.ivAELockBtn.setVisibility(GONE)
                 } else {
                     binding.viewEVGroup.visibility = GONE
                     binding.viewISOGroup.visibility = GONE
