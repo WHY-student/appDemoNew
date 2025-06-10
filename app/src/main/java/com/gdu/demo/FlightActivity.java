@@ -923,6 +923,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         // 3. 拼接成40位二进制字符串
         String combined = intBinary + byteBinary;
         int len = attributeList.size();
+//        Log.d("属性id",intBinary);
 
         StringBuilder result = new StringBuilder();
         for (int pos = 0; pos < len; pos++) {
@@ -930,6 +931,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 result.append(attributeList.get(pos)).append("\n");
             }
         }
+//        showToast(result.toString());
 
         String attribute_labels = result.toString();
         show(attributePopupView.findViewById(R.id.target_attribute), attribute_labels);
@@ -1048,7 +1050,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
             return;
         }
         latestModelID = modelID;
-        showToast(""+modelID);
+//        showToast(""+modelID);
         runOnUiThread(() -> {
             dataList.clear();
             int temp = modelID % 100000000;
