@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.util.DisplayMetrics;
 import android.webkit.ConsoleMessage;
 import android.webkit.ValueCallback;
@@ -98,12 +99,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -175,7 +178,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
     private final List<String> object_labels = new ArrayList<>();
     {
-        object_labels.add("尼米兹号航母");
+        object_labels.add("尼米兹号");
         object_labels.add("标签2");
         object_labels.add("标签3");
         object_labels.add("标签4");
@@ -188,6 +191,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         object_labels.add("新类别3");
     }
     private final boolean photoIsDialog=false;
+
+    private int native_threshold = 0;
 
 
     @Override
@@ -210,21 +215,12 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         initAttributeDialog();
         if(photoIsDialog){
             initPhotoDialog();
-        }else{
+        } else {
             setPhotoShow(1);
         }
         initKnowledgeGraph();
-        // 这里加延迟主要是为了防止状态没有更新
-        lightSelectedView.setupSelectButtonClick(new Runnable() {
-            @Override
-            public void run() {
-//                Log.d("run: ", "run: setphoto");
-                handler1.post(
-                    ()->{
-                        setPhotoShow(1);
-                    }
-                );
-            }
+        lightSelectedView.setupSelectButtonClick(() -> {
+            handler1.post(() -> setPhotoShow(1));
         });
     }
     // 检查接口定义，确保完全匹配
@@ -384,27 +380,31 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 
                 @Override
                 public void onTargetDetectingNew(List<TargetMode> targetModes, int modelID, long savedID){
+//                    Log.d("onTargetDetectingNew: ", "onTargetDetectingNew: ");
                     if (targetModes != null && !targetModes.isEmpty()) {
                         GlobalVariable.isTargetDetectMode = true;
                         viewBinding.aiPaintView.setRectParams(targetModes);
                         GlobalVariable.algorithmType = AlgorithmMark.AlgorithmType.DEVICE_RECOGNISE;
-//                        for (TargetMode targetMode:targetModes){
-//                            if(targetMode.getTargetType()%16==9){
-//                                Log.d("saveImage", "saveImage");
-//                                byte[] yuvData = codecManager.getYuvData();
-//                                backgroundHandler.post(() -> {
-//                                    savedImage(targetMode, yuvData, IMAGE_DIR,"inc");
-//                                });
-//                                break;
-//                            }
-//                        }
+                        int now_threshold = targetModes.get(0).getTargetConfidence();
+//                        Log.d("onTargetDetectingNew: ", ""+now_threshold);
+                        if(native_threshold != now_threshold){
+                            native_threshold = now_threshold;
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    viewBinding.textNativeThreshold.setText(String.valueOf(native_threshold));
+                                }
+                            });
+                        }
                     }
-                    // modelID
-                    tempModelID=modelID;
-                    updateModel(tempModelID);
-                    updateSpinnerData(tempModelID);
+                    if(modelID!=0){
+                        // modelID
+                        tempModelID=modelID;
+                        updateModel(tempModelID);
+                        updateSpinnerData(tempModelID);
+                    }
 
-                    Log.d("savedID", "onTargetDetectingNew: "+ savedID);
+//                    Log.d("savedID", "onTargetDetectingNew: "+ savedID);
                     // savedID
                     if(savedID!=0 && FlightActivity.this.savedID!=savedID){
                         FlightActivity.this.savedID = (int) savedID;
@@ -599,7 +599,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         attributePopupWindow.setOutsideTouchable(true);
     }
 
-//    @SuppressLint("InflateParams")
+    //    @SuppressLint("InflateParams")
 //    public void initKnowLedgeGraph(){
 //        LayoutInflater.from(FlightActivity.this).inflate(R.layout.knowledge_graph, null);
 //    }
@@ -663,7 +663,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
     @SuppressLint({"SetJavaScriptEnabled", "InflateParams"})
     public void initKnowledgeGraph(){
         // 加载弹出窗口布局
-     View popupView = getLayoutInflater().inflate(R.layout.webview_popup, null);
+        View popupView = getLayoutInflater().inflate(R.layout.webview_popup, null);
 
         // 初始化WebView
         webView=popupView.findViewById(R.id.knowledge_graph_webView);
@@ -756,27 +756,27 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
 //            if(thirdImageID==0){
 //                thirdImageID = 1;
 //            }
-            String picture1=storageManager.getAbsolutePath(IMAGE_DIR,firstImageID);
+        String picture1=storageManager.getAbsolutePath(IMAGE_DIR,firstImageID);
 //            String picture2=storageManager.getAbsolutePath(IMAGE_DIR,secondImageID);
 //            String picture3=storageManager.getAbsolutePath(IMAGE_DIR,thirdImageID);
-            List<ImageItem> newItems = new ArrayList<>();
+        List<ImageItem> newItems = new ArrayList<>();
 //            storageManager.loadImageToView(lastSavedNumber, mYUVImageView);
-            Log.d("picture1",""+firstImageID);
+        Log.d("picture1",""+firstImageID);
 //            newItems.add(new ImageItem(picture1, object_labels.get(8)));
 //            newItems.add(new ImageItem(picture2, object_labels.get(9)));
 //            newItems.add(new ImageItem(picture3, object_labels.get(10)));
-            int i=lightSelectedView.get_irselected();
-            if(i==1) {
-                newItems.add(new ImageItem("images/08.jpg", object_labels.get(8)));
-            }else if(i==2){
-                newItems.add(new ImageItem("images/image9.jpg", object_labels.get(8)));
-            }
-            GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-            assert layoutManager != null;
-            adapter1.addNewItems(newItems, layoutManager);
-            handler1.postDelayed(()->{
-                    recyclerView.smoothScrollToPosition(0);
-            },500);
+        int i=lightSelectedView.get_irselected();
+        if(i==1) {
+            newItems.add(new ImageItem("images/08.jpg", object_labels.get(8)));
+        }else if(i==2){
+            newItems.add(new ImageItem("images/image9.jpg", object_labels.get(8)));
+        }
+        GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+        assert layoutManager != null;
+        adapter1.addNewItems(newItems, layoutManager);
+        handler1.postDelayed(()->{
+            recyclerView.smoothScrollToPosition(0);
+        },500);
     }
     public void showNineGridShow(boolean show) {
         viewBinding.nightGridView.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -1198,6 +1198,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 break;
             case R.id.button_gimbal_rotate:
                 mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+                if(mGDUGimbal==null){
+                    showToast("请初始化相机");
+                    break;
+                }
                 Rotation rotation = new Rotation();
                 rotation.setMode(RotationMode.ABSOLUTE_ANGLE);
                 rotation.setPitch(-90);
@@ -1209,6 +1213,10 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 break;
             case R.id.button_gimbal_reset:
                 mGDUGimbal = (GDUGimbal) ((ourGDUAircraft) SdkDemoApplication.getProductInstance()).getGimbal();
+                if(mGDUGimbal==null){
+                    showToast("请初始化相机");
+                    break;
+                }
                 mGDUGimbal.reset(error -> {
                     if (error == null) {
                         showToast("云台回正");
@@ -1217,7 +1225,6 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                 break;
             case R.id.button_start_incremental:
                 if (mGduVision != null) {
-
                     int temp = latestModelID % 100000000;
                     int unknown_num = temp / 1000000;
                     if(unknown_num <3){
@@ -1294,7 +1301,34 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
                     startActivity(intent);
                 }
                 break;
-
+            case R.id.button_substract_threshold:
+                if (mGduVision != null) {
+                    mGduVision.targetDetect((byte) 4, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, error -> {
+                        if (error == null) {
+                            showToast("算法阈值-1");
+                        } else {
+                            showToast("调整算法阈值失败");
+                        }
+                    });
+                } else {
+                    showToast("请检查初始化是否成功");
+                    isIncrementalMode=false;
+                }
+                break;
+            case R.id.button_add_threshold:
+                if (mGduVision != null) {
+                    mGduVision.targetDetect((byte) 5, (short) 0, (short) 0, (short) 0, (short) 0, (byte) 0, (byte) 0, error -> {
+                        if (error == null) {
+                            showToast("算法阈值+1");
+                        } else {
+                            showToast("调整算法阈值失败");
+                        }
+                    });
+                } else {
+                    showToast("请检查初始化是否成功");
+                    isIncrementalMode=false;
+                }
+                break;
         }
     }
 

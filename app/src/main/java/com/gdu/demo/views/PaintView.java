@@ -81,12 +81,6 @@ public class PaintView extends AppCompatImageView {
     {
         class_label.add("尼米兹号");
         class_label.add("类2");
-        class_label.add("类3");
-        class_label.add("类4");
-        class_label.add("类5");
-        class_label.add("类6");
-        class_label.add("类7");
-        class_label.add("类8");
 //        class_label.add("库兹涅佐夫号");
         class_label.add("新类1");
         class_label.add("保存类别");
