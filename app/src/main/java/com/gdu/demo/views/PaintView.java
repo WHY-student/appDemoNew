@@ -79,11 +79,11 @@ public class PaintView extends AppCompatImageView {
 
     List<String> class_label = new ArrayList<>();
     {
-        class_label.add("尼米兹号");
+        class_label.add("尼米兹航空母舰");
         class_label.add("类2");
-        class_label.add("类3");
-        class_label.add("类4");
-        class_label.add("类5");
+        class_label.add("新类1");
+        class_label.add("未知类别");
+        class_label.add("未知类别");
         class_label.add("类6");
         class_label.add("类7");
         class_label.add("类8");
@@ -249,34 +249,9 @@ public class PaintView extends AppCompatImageView {
         // 初始化后台线程的 Handler
         backgroundHandler = new Handler(backgroundThread.getLooper());
         GlobalVariable.targetDetectLabels = new ArrayList<>();
-        // 启动后台任务
-        startBackgroundTask();
-
-
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                while (true) {
-//                    try {
-//
-//                        // 在后台线程中更新数据后，通知UI线程重绘
-//                        handler.post(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                PaintView.this.invalidate();  // 触发视图重绘
-//                            }
-//                        });
-//
-//                        // 等待一段时间后继续执行
-//                        Thread.sleep(30);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//        }).start();
     }
-    private void startBackgroundTask() {
+
+    public void startBackgroundTask() {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -318,7 +293,12 @@ public class PaintView extends AppCompatImageView {
 //                Log.d("BKTaskTime", "backgroundTask" + drawDuration + " ms");
             }
         });
+    }
 
+    public void stopBackgroundTask(){
+        if (backgroundThread != null) {
+            backgroundThread.quit();
+        }
     }
 
     @Override
@@ -381,7 +361,11 @@ public class PaintView extends AppCompatImageView {
             }
             if (x >= 0 && y >= 0 && maxX <= 1920 && maxY <= 1200) {
                 canvas.drawRect(new Rect(x, y, maxX, maxY), paint); // 绘制矩形
-                canvas.drawText(label, x, y - 5, paint2); // 绘制文本
+                if(y<5){
+                    canvas.drawText(label, x, maxY + 5, paint2); // 绘制文本
+                }else{
+                    canvas.drawText(label, x, y - 5, paint2); // 绘制文本
+                }
             }
 //            Log.d("detection id", "检测框id " + aiState + " ms");
 //            Log.d("detectionifo", "长宽 " + x+y+ " ms");

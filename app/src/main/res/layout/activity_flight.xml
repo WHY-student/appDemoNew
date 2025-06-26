@@ -232,7 +232,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="#80FFFFFF"
-            android:layout_marginTop="3dp">
+            android:layout_gravity="center"
+            >
 
             <TextView
                 android:id="@+id/ai_state"
@@ -536,15 +537,15 @@
         />
 
     <!--相机参数-->
+
     <com.gdu.demo.widgetlist.camerapara.CameraParaView
         android:id="@+id/camera_para_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginLeft="12dp"
+        android:layout_marginBottom="12dp"
         app:layout_constraintBottom_toTopOf="@+id/start_fly"
-        android:layout_marginStart="@dimen/dp_10"
-        android:layout_marginBottom="@dimen/dp_10"
-        />
+        app:layout_constraintLeft_toLeftOf="parent" />
 
     <ImageView
         android:id="@+id/imageView"
