@@ -843,4 +843,5 @@
     <string name="clound_checking">Calibrating, please ensure that the Aircraft is stationary</string>
     <string name="string_gimbal_reset_params_dialog_content">Restore the default settings of gimbal</string>
     <string name="spinner_prompt">Unknown number</string> <!-- 下拉菜单标题 -->
+    <string name="accessibility_service_description">我的无障碍服务</string> <!-- 下拉菜单标题 -->
 </resources>

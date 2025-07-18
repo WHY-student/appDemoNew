@@ -928,7 +928,7 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         // 后台状态
         codecManager.enabledYuvData(true);
         FlightActivity.this.savedID=-1;
-        viewBinding.aiPaintView.startBackgroundTask();
+//        viewBinding.aiPaintView.startBackgroundTask();
 
         //弹框
         if(attributePopupView == null){
@@ -980,8 +980,8 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         storageManager.clearDirectory(IMAGE_DIR);
         FlightActivity.this.savedID=-1;
         isIncrementalMode=false;
-        //应该要加一个关闭AI绘制的后台线程
-        viewBinding.aiPaintView.stopBackgroundTask();
+//        //应该要加一个关闭AI绘制的后台线程
+//        viewBinding.aiPaintView.stopBackgroundTask();
 
         // 前台展示文字
         updateSpinnerData(0);

@@ -81,6 +81,7 @@ public class PaintView extends AppCompatImageView {
     {
         class_label.add("尼米兹航空母舰");
         class_label.add("类2");
+        class_label.add("类3");
         class_label.add("新类1");
         class_label.add("未知类别");
         class_label.add("未知类别");
@@ -229,6 +230,7 @@ public class PaintView extends AppCompatImageView {
 //        gdu_class_label.add(ResourceUtil.getStringById(R.string.target_label_0006));
 //    }
     private final Rect temp=new Rect();
+    private volatile boolean isBackgroundThreadRunning = true;
 
     private final long timestamp = System.currentTimeMillis();
 
@@ -249,6 +251,7 @@ public class PaintView extends AppCompatImageView {
         // 初始化后台线程的 Handler
         backgroundHandler = new Handler(backgroundThread.getLooper());
         GlobalVariable.targetDetectLabels = new ArrayList<>();
+        startBackgroundTask();
     }
 
     public void startBackgroundTask() {
@@ -256,6 +259,9 @@ public class PaintView extends AppCompatImageView {
             @Override
             public void run() {
                 // 在后台线程中执行任务
+                if (!isBackgroundThreadRunning) {
+                    return;
+                }
                 try {
                     Thread.sleep(57); // 模拟耗时操作
                 } catch (InterruptedException e) {
@@ -295,19 +301,39 @@ public class PaintView extends AppCompatImageView {
         });
     }
 
-    public void stopBackgroundTask(){
+//    public void stopBackgroundTask(){
+//        if (backgroundThread != null) {
+//            backgroundThread.quit();
+//        }
+//    }
+//
+//    @Override
+//    protected void onDetachedFromWindow() {
+//        super.onDetachedFromWindow();
+//        // 停止后台线程
+//        if (backgroundThread != null) {
+//            backgroundThread.quit();
+//        }
+//    }
+    public void stopBackgroundTask() {
+    // 设置停止标志
+        isBackgroundThreadRunning = false;
+
+        // 移除所有待处理任务
+        if (backgroundHandler != null) {
+            backgroundHandler.removeCallbacksAndMessages(null);
+        }
+
+        // 安全终止线程
         if (backgroundThread != null) {
-            backgroundThread.quit();
+            backgroundThread.quitSafely();
         }
     }
 
     @Override
     protected void onDetachedFromWindow() {
+        stopBackgroundTask(); // 确保在视图销毁时停止任务
         super.onDetachedFromWindow();
-        // 停止后台线程
-        if (backgroundThread != null) {
-            backgroundThread.quit();
-        }
     }
 
     Paint paint = new Paint();
