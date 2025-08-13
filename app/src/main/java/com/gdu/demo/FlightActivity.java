@@ -581,7 +581,16 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         if (yuvData != null) {
             Bitmap bitmap = mImageProcessingManager.convertYUVtoRGB(yuvData, codecManager.getVideoWidth(), codecManager.getVideoHeight());
 //            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX() ), (int) (clickBox.getLeftY() * 1200.0 / 1080.0), (int) (clickBox.getWidth()), (int) (clickBox.getHeight() * 1200.0 / 1080.0 ));
-            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX() ), (int) (clickBox.getLeftY()), (int) (clickBox.getWidth()), (int) (clickBox.getHeight()));
+//            Log.d("CropMap", "cropImage: X:"+(int) (clickBox.getLeftX() )+"Y:"+clickBox.getLeftY()+"W:"+clickBox.getWidth()+"H:"+clickBox.getHeight());
+//            Log.d("CropMap", "Image: W:"+codecManager.getVideoWidth()+ "H:"+codecManager.getVideoHeight());
+            // 需要同时适应两个分辨率，所以加上判断
+            Bitmap bitmap2;
+            if(codecManager.getVideoHeight()==720){
+                bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX()/1.5), (int) (clickBox.getLeftY()/1.5), (int) (clickBox.getWidth()/1.5), (int) (clickBox.getHeight()/1.5));
+            }
+            else{
+                bitmap2 = Bitmap.createBitmap(bitmap, (int) (clickBox.getLeftX() ), (int) (clickBox.getLeftY()), (int) (clickBox.getWidth()), (int) (clickBox.getHeight()));
+            }
             bitmap.recycle();
             return bitmap2;
         }else {
@@ -926,7 +935,9 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         lightSelectedView.setButtonBackgroundColor(R.color.color_A8A8A8);
 
         // 后台状态
-        codecManager.enabledYuvData(true);
+        if(codecManager!=null){
+            codecManager.enabledYuvData(true);
+        }
         FlightActivity.this.savedID=-1;
 //        viewBinding.aiPaintView.startBackgroundTask();
 
@@ -976,8 +987,12 @@ public class FlightActivity extends FragmentActivity implements TextureView.Surf
         lightSelectedView.setButtonBackgroundColor(R.color.white);
 
         // 后台状态
-        codecManager.enabledYuvData(false);
-        storageManager.clearDirectory(IMAGE_DIR);
+        if(codecManager!=null){
+            codecManager.enabledYuvData(false);
+        }
+        if(storageManager!=null){
+            storageManager.clearDirectory(IMAGE_DIR);
+        }
         FlightActivity.this.savedID=-1;
         isIncrementalMode=false;
 //        //应该要加一个关闭AI绘制的后台线程
